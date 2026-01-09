@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "": { "model": "genomeworkbench:block/extraction_bench" }
+  }
+}

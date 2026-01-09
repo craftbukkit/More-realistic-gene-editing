@@ -1,0 +1,15 @@
+{
+    "type": "morerealisticgeneediting:cell_processing",
+    "ingredients": [
+        {
+            "item": "minecraft:dirt"
+        },
+        {
+            "item": "minecraft:gravel"
+        }
+    ],
+    "output": {
+        "item": "minecraft:diamond",
+        "count": 1
+    }
+}

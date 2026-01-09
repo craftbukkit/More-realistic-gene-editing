@@ -1,0 +1,79 @@
+plugins {
+    id 'fabric-loom' version '1.6-SNAPSHOT'
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+	archivesName = project.archives_base_name
+}
+
+repositories {
+    exclusiveContent {
+        forRepository {
+            maven {
+                name = 'Fabric'
+                url = 'https://maven.fabricmc.net/'
+            }
+        }
+        filter {
+            includeGroup 'net.fabricmc'
+            includeGroup 'net.fabricmc.fabric-api'
+        }
+    }
+}
+
+loom {
+	splitEnvironmentSourceSets()
+
+	mods {
+		"genomeworkbench" {
+			sourceSet sourceSets.main
+			sourceSet sourceSets.client
+		}
+	}
+
+}
+
+dependencies {
+	minecraft "com.mojang:minecraft:${project.minecraft_version}"
+	mappings loom.officialMojangMappings()
+	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
+
+	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
+
+	testImplementation "org.junit.jupiter:junit-jupiter-api:5.8.1"
+	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.8.1"
+}
+
+processResources {
+	inputs.property "version", project.version
+
+	filesMatching("fabric.mod.json") {
+		expand "version": inputs.properties.version
+	}
+}
+
+tasks.withType(JavaCompile).configureEach {
+	it.options.release = 21
+}
+
+java {
+	withSourcesJar()
+
+	sourceCompatibility = JavaVersion.VERSION_21
+	targetCompatibility = JavaVersion.VERSION_21
+}
+
+jar {
+	inputs.property "archivesName", project.base.archivesName
+
+	from("LICENSE") {
+		rename { "${it}_${inputs.properties.archivesName}"}
+	}
+}
+
+tasks.withType(Test) {
+    useJUnitPlatform()
+}
