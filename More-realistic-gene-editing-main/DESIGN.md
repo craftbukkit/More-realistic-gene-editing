@@ -1,4 +1,4 @@
-# GenomeWorkbench 设计文档 (DESIGN.md)
+# MRGE 设计文档
 
 ## 1. 系统架构
 
