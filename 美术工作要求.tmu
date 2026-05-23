@@ -1,0 +1,1149 @@
+<TMU|<tuple|1.1.0|2026.1.5>>
+
+<style|<tuple|generic|chinese|table-captions-above|number-europe|preview-ref>>
+
+<\body>
+  <section*|MRGE 美术工作要求><label|mrge-ux7f8eux672fux5de5ux4f5cux8981ux6c42>
+
+  <quote-env|<with|font-series|bold|MoreRealisticGeneEditing 模组 - 美术资源需求文档>>
+
+  <hrule>
+
+  <with|font-series|bold|文档信息>\ 
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|项目>|<cell|内容>>|<row|<cell|版本>|<cell|v1.0>>|<row|<cell|编写日期>|<cell|2026年2月19日>>|<row|<cell|状态>|<cell|第一版，后续可能调整>>|<row|<cell|美术负责人>|<cell|[待定]>>|<row|<cell|项目周期>|<cell|1周>>>>>
+
+  <hrule>
+
+  <subsection*|目录><label|ux76eeux5f55>
+
+  <\enumerate>
+    <assign|labelenumi|<macro|<number|<enumi-nr>|arabic>.>>
+
+    <item><hyperref*|1-ux9879ux76eeux6982ux8ff0|项目概述>
+
+    <item><hyperref*|2-ux6574ux4f53ux98ceux683cux6307ux5357|整体风格指南>
+
+    <item><hyperref*|3-ux65b9ux5757ux6a21ux578bux9700ux6c42|方块模型需求>
+
+    <item><hyperref*|4-ux7269ux54c1ux6750ux8d28ux9700ux6c42|物品材质需求>
+
+    <item><hyperref*|5-guiux7d20ux6750ux9700ux6c42|GUI素材需求>
+
+    <item><hyperref*|6-ux7c92ux5b50ux6548ux679cux9700ux6c42|粒子效果需求>
+
+    <item><hyperref*|7-ux52a8ux753bux76f8ux5173|动画相关>
+
+    <item><hyperref*|8-ux8f93ux51faux89c4ux683c|输出规格>
+
+    <item><hyperref*|9-ux4f18ux5148ux7ea7ux4e0eux65f6ux95f4ux8868|优先级与时间表>
+
+    <item><hyperref*|10-ux53c2ux8003ux8d44ux6599|参考资料>
+
+    <item><hyperref*|11-ux6587ux4ef6ux547dux540dux89c4ux8303|文件命名规范>
+  </enumerate>
+
+  <hrule>
+
+  <subsection*|1. 项目概述><label|ux9879ux76eeux6982ux8ff0>
+
+  <subsubsection*|1.1 项目背景><label|ux9879ux76eeux80ccux666f>
+
+  MRGE 是一个基于真实 CAR-T 细胞疗法流程的 Minecraft 基因编辑科普模组。首版需要在<with|font-series|bold|一周内>完成功能完整的全自动细胞处理系统。\ 
+
+  <subsubsection*|1.2 美术工作范围><label|ux7f8eux672fux5de5ux4f5cux8303ux56f4>
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|类别>|<cell|数量>|<cell|优先级>|<cell|状态>>|<row|<cell|方块模型>|<cell|6个>|<cell|P0>|<cell|待制作>>|<row|<cell|物品材质>|<cell|11种>|<cell|P0>|<cell|待制作>>|<row|<cell|GUI背景>|<cell|1张>|<cell|P0>|<cell|待制作>>|<row|<cell|粒子效果>|<cell|4种>|<cell|P1>|<cell|待制作>>|<row|<cell|连接管路>|<cell|1种>|<cell|P1>|<cell|待制作>>>>>
+
+  <subsubsection*|1.3 重要说明><label|ux91cdux8981ux8bf4ux660e>
+
+  ⚠️ <with|font-series|bold|首版不允许使用占位符>，所有资源需要是最终版本。\ 
+
+  <hrule>
+
+  <subsection*|2. 整体风格指南><label|ux6574ux4f53ux98ceux683cux6307ux5357>
+
+  <subsubsection*|2.1 配色方案><label|ux914dux8272ux65b9ux6848>
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|颜色用途>|<cell|色值>|<cell|使用场景>>|<row|<cell|<strong|主色 - 实验室白>>|<cell|<code*|#F5F5F5>>|<cell|方块主体、背景>>|<row|<cell|<strong|辅助色 - 科技蓝>>|<cell|<code*|#4A90D9>>|<cell|按钮、高亮、指示灯>>|<row|<cell|<strong|点缀色 - 医疗绿>>|<cell|<code*|#55FF55>>|<cell|正常状态、成功指示>>|<row|<cell|<strong|警告色 - 橙黄>>|<cell|<code*|#FFAA00>>|<cell|警告状态>>|<row|<cell|<strong|危险色 - 红>>|<cell|<code*|#FF5555>>|<cell|错误、警报>>|<row|<cell|<strong|透明管路>>|<cell|<code*|#FFFFFF 30%透明>>|<cell|管路、培养室>>>>>
+
+  <subsubsection*|2.2 材质风格><label|ux6750ux8d28ux98ceux683c>
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|风格要素>|<cell|描述>>|<row|<cell|<strong|整体风格>>|<cell|现代实验室风格，简洁专业>>|<row|<cell|<strong|参考材质>>|<cell|石英块、平滑石头、铁块>>|<row|<cell|<strong|细节处理>>|<cell|边缘圆滑，带有科技感线条>>|<row|<cell|<strong|光影>>|<cell|适度高光，体现塑料/金属质感>>|<row|<cell|<strong|像素风格>>|<cell|保持 Minecraft 像素风格，16\<times\>16 基础单位>>>>>
+
+  <subsubsection*|2.3 图标风格><label|ux56feux6807ux98ceux683c>
+
+  <\itemize>
+    <item>简洁的科技图标
+
+    <item>使用1-2种主色
+
+    <item>避免过多细节
+
+    <item>16\<times\>16 或 32\<times\>32 像素
+  </itemize>
+
+  <hrule>
+
+  <subsection*|3. 方块模型需求><label|ux65b9ux5757ux6a21ux578bux9700ux6c42>
+
+  <subsubsection*|3.1 CliniMACS Prodigy 主方块（5种状态）><label|clinimacs-prodigy-ux4e3bux65b9ux57575ux79cdux72b6ux6001>
+
+  <paragraph*|3.1.1 基本信息><label|ux57faux672cux4fe1ux606f>\ 
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|项目>|<cell|规格>>|<row|<cell|<strong|方块ID>>|<cell|<code*|mrge:clini_macs_prodigy>>>|<row|<cell|<strong|尺寸>>|<cell|2格宽 \<times\> 2格高 \<times\> 1格深（主方块部分）>>|<row|<cell|<strong|模型类型>>|<cell|JSON Block Model>>|<row|<cell|<strong|状态数>>|<cell|5种>>>>>
+
+  <paragraph*|3.1.2 各状态模型需求><label|ux5404ux72b6ux6001ux6a21ux578bux9700ux6c42>\ 
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|状态>|<cell|文件名>|<cell|视觉变化>|<cell|特殊要求>>|<row|<cell|<strong|IDLE>>|<cell|<code*|prodigy_idle.json>>|<cell|无管路，视窗暗色，顶部空挂杆>|<cell|培养室位置为空凹槽>>|<row|<cell|<strong|READY>>|<cell|<code*|prodigy_ready.json>>|<cell|管路已安装，视窗亮起，空袋子>|<cell|培养室透明，管路可见>>|<row|<cell|<strong|RUNNING>>|<cell|<code*|prodigy_running.json>>|<cell|同READY + 发光效果>|<cell|需要发光纹理版本>>|<row|<cell|<strong|ALARM>>|<cell|<code*|prodigy_alarm.json>>|<cell|红色警示灯闪烁>|<cell|红色指示灯纹理>>|<row|<cell|<strong|COMPLETE>>|<cell|<code*|prodigy_complete.json>>|<cell|绿色指示灯，收获提示>|<cell|绿色指示灯纹理>>>>>
+
+  <paragraph*|3.1.3 模型结构组成><label|ux6a21ux578bux7ed3ux6784ux7ec4ux6210>\ 
+
+  <\code>
+    CliniMACS Prodigy 结构:
+
+    ┌─────────────────────────────────────┐
+
+    │ \ \ \ \ ┌───┬───┬───┬───┐ \ \ \ \ \ \ \ \ \ \ \ \ \ \ │ ← 顶部挂杆 + 袋子
+
+    │ \ \ \ \ │袋1│袋2│袋3│袋4│ \ \ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ (可变：空/满)
+
+    │ \ \ \ \ └───┴───┴───┴───┘ \ \ \ \ \ \ \ \ \ \ \ \ \ \ │
+
+    │ ┌───────────────────────────────┐ \ \ │
+
+    │ │ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ │ ← 主体面板
+
+    │ │ \ \ ┌─────────────────────┐ \ \ \ \ │ \ \ │
+
+    │ │ \ \ │ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ \ \ │ \ \ │
+
+    │ │ \ \ │ \ \ CentriCult 盘 \ \ \ \ │ \ \ \ \ │ \ \ │ ← 圆形培养室视窗
+
+    │ │ \ \ │ \ \ (透明/旋转/摇摆) \ \ │ \ \ \ \ │ \ \ │ \ \ (透明材质)
+
+    │ │ \ \ │ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ \ \ │ \ \ │
+
+    │ │ \ \ └─────────────────────┘ \ \ \ \ │ \ \ │
+
+    │ │ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ │
+
+    │ │ \ \ ┌─────┐ ┌─────┐ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ │
+
+    │ │ \ \ │管路 │ │管路 │ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ │ ← 透明管路系统
+
+    │ │ \ \ └─────┘ └─────┘ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ │ \ \ (仅READY+状态)
+
+    │ │ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ │
+
+    │ │ \ \ \ \ \ \ \ \ [显示屏] \ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ │ ← 状态显示屏
+
+    │ │ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ │
+
+    │ └───────────────────────────────┘ \ \ │
+
+    │ \ \ \ \ \ \ \ ┌─────────────────┐ \ \ \ \ \ \ \ \ \ │ ← 底座
+
+    │ \ \ \ \ \ \ \ │ \ \ ● \ ● \ ● \ ● \ \ │ \ \ \ \ \ \ \ \ \ │ \ \ 控制面板/指示灯
+
+    │ \ \ \ \ \ \ \ └─────────────────┘ \ \ \ \ \ \ \ \ \ │
+
+    └─────────────────────────────────────┘
+  </code>
+
+  <paragraph*|3.1.4 纹理需求><label|ux7eb9ux7406ux9700ux6c42>\ 
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|纹理文件>|<cell|尺寸>|<cell|内容>>|<row|<cell|<code*|prodigy_front.png>>|<cell|64\<times\>64>|<cell|正面纹理（含视窗、管路区、显示屏）>>|<row|<cell|<code*|prodigy_side.png>>|<cell|64\<times\>64>|<cell|侧面纹理（含接口）>>|<row|<cell|<code*|prodigy_top.png>>|<cell|32\<times\>32>|<cell|顶部纹理（挂杆）>>|<row|<cell|<code*|prodigy_bottom.png>>|<cell|32\<times\>32>|<cell|底部纹理>>|<row|<cell|<code*|prodigy_back.png>>|<cell|64\<times\>64>|<cell|背面纹理（气体接口）>>|<row|<cell|<code*|prodigy_tubing.png>>|<cell|32\<times\>32>|<cell|透明管路纹理（叠加层）>>|<row|<cell|<code*|prodigy_bags.png>>|<cell|32\<times\>32>|<cell|袋子纹理（多帧动画）>>|<row|<cell|<code*|prodigy_indicator.png>>|<cell|16\<times\>16>|<cell|指示灯（绿/黄/红）>>>>>
+
+  <subsubsection*|3.2 CO2气瓶方块><label|co2ux6c14ux74f6ux65b9ux5757>
+
+  <paragraph*|3.2.1 基本信息><label|ux57faux672cux4fe1ux606f>\ 
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|项目>|<cell|规格>>|<row|<cell|<strong|方块ID>>|<cell|<code*|mrge:co2_cylinder>>>|<row|<cell|<strong|尺寸>>|<cell|1格宽 \<times\> 2格高 \<times\> 1格深>>|<row|<cell|<strong|模型类型>>|<cell|JSON Block Model>>|<row|<cell|<strong|状态数>>|<cell|5种（容量等级 0-4）>>>>>
+
+  <paragraph*|3.2.2 模型结构><label|ux6a21ux578bux7ed3ux6784>\ 
+
+  <\code>
+    CO2气瓶结构:
+
+    \ \ \ \ \ ┌───┐
+
+    \ \ \ \ \ │ ○ │ ← 顶部阀门
+
+    \ \ \ \ \ ├───┤
+
+    \ \ \ \ \ │ \ \ │
+
+    \ \ \ \ \ │ \ \ │ ← 瓶身
+
+    \ \ \ \ \ │ ▓ │ \ \ (带容量刻度)
+
+    \ \ \ \ \ │ ▓ │
+
+    \ \ \ \ \ │ ▓ │
+
+    \ \ \ \ \ │ ▓ │
+
+    \ \ \ \ \ └───┘
+
+    \ \ \ \ \ \ 底座
+  </code>
+
+  <paragraph*|3.2.3 纹理需求><label|ux7eb9ux7406ux9700ux6c42>\ 
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|纹理文件>|<cell|尺寸>|<cell|内容>>|<row|<cell|<code*|co2_cylinder_top.png>>|<cell|16\<times\>16>|<cell|顶部阀门>>|<row|<cell|<code*|co2_cylinder_side.png>>|<cell|16\<times\>32>|<cell|瓶身（带刻度）>>|<row|<cell|<code*|co2_cylinder_bottom.png>>|<cell|16\<times\>16>|<cell|底座>>>>>
+
+  <paragraph*|3.2.4 容量显示><label|ux5bb9ux91cfux663eux793a>\ 
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|状态>|<cell|刻度显示>|<cell|颜色>>|<row|<cell|Level 4 (100%-75%)>|<cell|████████>|<cell|绿色>>|<row|<cell|Level 3 (75%-50%)>|<cell|██████░░>|<cell|绿色>>|<row|<cell|Level 2 (50%-25%)>|<cell|████░░░░>|<cell|黄色>>|<row|<cell|Level 1 (25%-10%)>|<cell|██░░░░░░>|<cell|橙色>>|<row|<cell|Level 0 (10%-0%)>|<cell|░░░░░░░░>|<cell|红色>>>>>
+
+  <hrule>
+
+  <subsection*|4. 物品材质需求><label|ux7269ux54c1ux6750ux8d28ux9700ux6c42>
+
+  <subsubsection*|4.1 物品清单><label|ux7269ux54c1ux6e05ux5355>
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|编号>|<cell|物品ID>|<cell|中文名称>|<cell|英文名称>|<cell|尺寸>|<cell|优先级>>|<row|<cell|1>|<cell|<code*|mrge:leukopak>>|<cell|白细胞袋>|<cell|Leukopak>|<cell|16\<times\>16>|<cell|P0>>|<row|<cell|2>|<cell|<code*|mrge:buffer>>|<cell|缓冲液>|<cell|Buffer>|<cell|16\<times\>16>|<cell|P0>>|<row|<cell|3>|<cell|<code*|mrge:media>>|<cell|培养基>|<cell|Culture Media>|<cell|16\<times\>16>|<cell|P0>>|<row|<cell|4>|<cell|<code*|mrge:magnetic_beads>>|<cell|磁珠>|<cell|Magnetic Beads>|<cell|16\<times\>16>|<cell|P0>>|<row|<cell|5>|<cell|<code*|mrge:activator>>|<cell|激活剂>|<cell|Activator>|<cell|16\<times\>16>|<cell|P0>>|<row|<cell|6>|<cell|<code*|mrge:viral_vector>>|<cell|病毒载体>|<cell|Viral Vector>|<cell|16\<times\>16>|<cell|P0>>|<row|<cell|7>|<cell|<code*|mrge:tubing_set_520>>|<cell|TS520管路套件>|<cell|TS520 Tubing Set>|<cell|16\<times\>16>|<cell|P0>>|<row|<cell|8>|<cell|<code*|mrge:gas_tubing>>|<cell|气体管路>|<cell|Gas Tubing>|<cell|16\<times\>16>|<cell|P0>>|<row|<cell|9>|<cell|<code*|mrge:car_t_alpha>>|<cell|CAR-T \<alpha\>型>|<cell|CAR-T Alpha>|<cell|16\<times\>16>|<cell|P0>>|<row|<cell|10>|<cell|<code*|mrge:car_t_beta>>|<cell|CAR-T \<beta\>型>|<cell|CAR-T Beta>|<cell|16\<times\>16>|<cell|P0>>|<row|<cell|11>|<cell|<code*|mrge:car_t_gamma>>|<cell|CAR-T \<gamma\>型>|<cell|CAR-T Gamma>|<cell|16\<times\>16>|<cell|P0>>>>>
+
+  <subsubsection*|4.2 物品设计参考><label|ux7269ux54c1ux8bbeux8ba1ux53c2ux8003>
+
+  <paragraph*|4.2.1 原料与消耗品><label|ux539fux6599ux4e0eux6d88ux8017ux54c1>\ 
+
+  <with|font-series|bold|1. 白细胞袋 (Leukopak)>\ 
+
+  <\code>
+    ┌────────────┐
+
+    │ \ ╔══════╗ \ │
+
+    │ \ ║ 血袋 ║ \ │ ← 红色半透明袋
+
+    │ \ ║ ▓▓▓▓ ║ \ │ \ \ 带白色标签
+
+    │ \ ╚══════╝ \ │
+
+    │ \ \ \ │││ \ \ \ \ │ ← 连接管口
+
+    └────────────┘
+
+    主色: #CC4444 (红)
+
+    辅色: #FFFFFF (标签)
+  </code>
+
+  <with|font-series|bold|2. 缓冲液 (Buffer)>\ 
+
+  <\code>
+    ┌────────────┐
+
+    │ \ \ ┌────┐ \ \ │
+
+    │ \ \ │ \ \ \ │ \ \ │ ← 透明玻璃瓶
+
+    │ \ \ │▓▓▓▓│ \ \ │ \ \ 白色液体
+
+    │ \ \ │▓▓▓▓│ \ \ │
+
+    │ \ \ └────┘ \ \ │
+
+    │ \ \ \ ──── \ \ \ │ ← 瓶盖
+
+    └────────────┘
+
+    主色: #FFFFFF (液体透明)
+
+    辅色: #AAAAAA (玻璃边框)
+  </code>
+
+  <with|font-series|bold|3. 培养基 (Culture Media)>\ 
+
+  <\code>
+    ┌────────────┐
+
+    │ \ \ ┌────┐ \ \ │
+
+    │ \ \ │ \ \ \ │ \ \ │ ← 透明玻璃瓶
+
+    │ \ \ │████│ \ \ │ \ \ 黄色液体
+
+    │ \ \ │████│ \ \ │
+
+    │ \ \ └────┘ \ \ │
+
+    │ \ \ \ ──── \ \ \ │ ← 瓶盖
+
+    └────────────┘
+
+    主色: #FFFF66 (黄)
+
+    辅色: #AAAAAA (玻璃边框)
+  </code>
+
+  <paragraph*|4.2.2 试剂><label|ux8bd5ux5242>\ 
+
+  <with|font-series|bold|4. 磁珠 (Magnetic Beads)>\ 
+
+  <\code>
+    ┌────────────┐
+
+    │ \ \ ┌────┐ \ \ │
+
+    │ \ \ │●●●●│ \ \ │ ← 小玻璃瓶
+
+    │ \ \ │●●●●│ \ \ │ \ \ 黑色小珠
+
+    │ \ \ │●●●●│ \ \ │ \ \ 带磁力光晕
+
+    │ \ \ └────┘ \ \ │
+
+    └────────────┘
+
+    主色: #333333 (黑珠)
+
+    辅色: #4444FF (蓝色磁力光晕)
+  </code>
+
+  <with|font-series|bold|5. 激活剂 (Activator)>\ 
+
+  <\code>
+    ┌────────────┐
+
+    │ \ \ ┌────┐ \ \ │
+
+    │ \ \ │ \ \ \ │ \ \ │ ← 试剂瓶
+
+    │ \ \ │⚡⚡│ \ \ │ \ \ 橙色液体
+
+    │ \ \ │▓▓▓▓│ \ \ │ \ \ 带闪电标记
+
+    │ \ \ └────┘ \ \ │
+
+    └────────────┘
+
+    主色: #FF8800 (橙)
+
+    辅色: #FFFF00 (闪电)
+  </code>
+
+  <with|font-series|bold|6. 病毒载体 (Viral Vector)>\ 
+
+  <\code>
+    ┌────────────┐
+
+    │ \ \ ╔════╗ \ \ │
+
+    │ \ \ ║⚠╠╣ ║ \ \ │ ← 危险品容器
+
+    │ \ \ ║▓▓▓▓║ \ \ │ \ \ 紫色液体
+
+    │ \ \ ║▓▓▓▓║ \ \ │ \ \ 带警告标志
+
+    │ \ \ ╚════╝ \ \ │
+
+    └────────────┘
+
+    主色: #9900FF (紫)
+
+    辅色: #FF0000 (警告标志)
+
+    特殊: 需要在Tooltip显示伦理警告图标
+  </code>
+
+  <paragraph*|4.2.3 耗材与工具><label|ux8017ux6750ux4e0eux5de5ux5177>\ 
+
+  <with|font-series|bold|7. TS520管路套件 (Tubing Set)>\ 
+
+  <\code>
+    ┌────────────┐
+
+    │ ╱╲ \ ╱╲ \ \ \ │ ← 袋子（折叠状态）
+
+    │╱ \ ╲╱ \ ╲ \ \ │
+
+    │ \ ══╪══ \ \ \ │ ← 管路
+
+    │ ══╪══╪══ \ │
+
+    └────────────┘
+
+    主色: #FFFFFF (透明管路)
+
+    辅色: #FFB6C1 (粉红色袋子)
+  </code>
+
+  <with|font-series|bold|8. 气体管路 (Gas Tubing)>\ 
+
+  <\code>
+    ┌────────────┐
+
+    │ \ ╭─────╮ \ \ │
+
+    │ \ │ \ \ \ \ │ \ \ │ ← 透明软管
+
+    │ \ ╰─────╯ \ \ │ \ \ 盘绕状态
+
+    │ \ \ \ ○ \ \ \ \ \ \ │ ← 接口
+
+    └────────────┘
+
+    主色: #CCCCCC (透明灰)
+
+    辅色: #666666 (接口)
+  </code>
+
+  <paragraph*|4.2.4 CAR-T制剂><label|car-tux5236ux5242>\ 
+
+  <with|font-series|bold|9-11. CAR-T制剂（三种变体）>\ 
+
+  <\code>
+    CAR-T α型 (抗亡灵)
+
+    ┌────────────┐
+
+    │ \ \ ┌────┐ \ \ │
+
+    │ \ \ │💀 \ │ \ \ │ ← 注射器造型
+
+    │ \ \ │▓▓▓▓│ \ \ │ \ \ 蓝色液体
+
+    │ \ \ │▓▓▓▓│ \ \ │ \ \ 亡灵骷髅标记
+
+    │ \ \ └────┘ \ \ │
+
+    └────────────┘
+
+    主色: #4A90D9 (蓝)
+
+    标记: 骷髅图标
+
+    CAR-T β型 (抗毒素)
+
+    ┌────────────┐
+
+    │ \ \ ┌────┐ \ \ │
+
+    │ \ \ │🕷️ \ │ \ \ │ ← 注射器造型
+
+    │ \ \ │▓▓▓▓│ \ \ │ \ \ 绿色液体
+
+    │ \ \ │▓▓▓▓│ \ \ │ \ \ 蜘蛛标记
+
+    │ \ \ └────┘ \ \ │
+
+    └────────────┘
+
+    主色: #55AA55 (绿)
+
+    标记: 蜘蛛图标
+
+    CAR-T γ型 (抗末地)
+
+    ┌────────────┐
+
+    │ \ \ ┌────┐ \ \ │
+
+    │ \ \ │👁️ \ │ \ \ │ ← 注射器造型
+
+    │ \ \ │▓▓▓▓│ \ \ │ \ \ 紫色液体
+
+    │ \ \ │▓▓▓▓│ \ \ │ \ \ 末影眼标记
+
+    │ \ \ └────┘ \ \ │
+
+    └────────────┘
+
+    主色: #AA55AA (紫)
+
+    标记: 末影眼图标
+  </code>
+
+  <subsubsection*|4.3 合成组件物品（可选，后续迭代）><label|ux5408ux6210ux7ec4ux4ef6ux7269ux54c1ux53efux9009ux540eux7eedux8fedux4ee3>
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|编号>|<cell|物品ID>|<cell|中文名称>|<cell|尺寸>|<cell|说明>>|<row|<cell|C1>|<cell|<code*|mrge:centri_cult_chamber>>|<cell|离心培养室>|<cell|16\<times\>16>|<cell|多级合成用>>|<row|<cell|C2>|<cell|<code*|mrge:magnetic_separation_unit>>|<cell|磁性分选单元>|<cell|16\<times\>16>|<cell|多级合成用>>|<row|<cell|C3>|<cell|<code*|mrge:fluid_control_pump>>|<cell|流体控制泵>|<cell|16\<times\>16>|<cell|多级合成用>>|<row|<cell|C4>|<cell|<code*|mrge:display_screen>>|<cell|显示屏>|<cell|16\<times\>16>|<cell|多级合成用>>>>>
+
+  <hrule>
+
+  <subsection*|5. GUI素材需求><label|guiux7d20ux6750ux9700ux6c42>
+
+  <subsubsection*|5.1 主GUI背景><label|ux4e3bguiux80ccux666f>
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|项目>|<cell|规格>>|<row|<cell|<strong|文件名>>|<cell|<code*|textures/gui/prodigy_bg.png>>>|<row|<cell|<strong|尺寸>>|<cell|320 \<times\> 240 像素>>|<row|<cell|<strong|格式>>|<cell|PNG (带透明通道)>>|<row|<cell|<strong|优先级>>|<cell|P0>>>>>
+
+  <paragraph*|5.1.1 GUI布局区域><label|guiux5e03ux5c40ux533aux57df>\ 
+
+  <\code>
+    ┌─────────────────────────────────────────────────────────────────┐
+
+    │ \ 标题栏 (深色背景) \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ [X] \ \ │ 24px
+
+    ├──────────────┬──────────────────────────┬──────────────────────┤
+
+    │ \ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ │
+
+    │ \ 输入槽位区 \ \ │ \ \ \ \ \ \ 状态监控区 \ \ \ \ \ \ \ \ \ │ \ \ \ 活动矩阵区 \ \ \ \ \ \ \ │
+
+    │ \ \ 90px \ \ \ \ \ \ │ \ \ \ \ \ \ \ \ 130px \ \ \ \ \ \ \ \ \ \ \ │ \ \ \ \ \ \ 100px \ \ \ \ \ \ \ \ \ │
+
+    │ \ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ │
+
+    │ \ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ │ 180px
+
+    │ \ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ │
+
+    │ \ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ │ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ │
+
+    ├──────────────┴──────────────────────────┴──────────────────────┤
+
+    │ \ 控制栏 (深色背景 + 按钮位) \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ │ 36px
+
+    └─────────────────────────────────────────────────────────────────┘
+  </code>
+
+  <paragraph*|5.1.2 颜色方案><label|ux989cux8272ux65b9ux6848>\ 
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|区域>|<cell|背景色>|<cell|边框色>|<cell|说明>>|<row|<cell|标题栏>|<cell|<code*|#2A2A2A>>|<cell|<code*|#4A4A4A>>|<cell|深灰背景>>|<row|<cell|输入区>|<cell|<code*|#3A3A3A>>|<cell|<code*|#5A5A5A>>|<cell|中灰背景>>|<row|<cell|状态区>|<cell|<code*|#1A1A2A>>|<cell|<code*|#3A3A4A>>|<cell|深蓝灰背景>>|<row|<cell|矩阵区>|<cell|<code*|#2A3A2A>>|<cell|<code*|#4A5A4A>>|<cell|深绿灰背景>>|<row|<cell|控制栏>|<cell|<code*|#2A2A2A>>|<cell|<code*|#4A4A4A>>|<cell|深灰背景>>|<row|<cell|槽位>|<cell|<code*|#8B8B8B>>|<cell|<code*|#373737>>|<cell|标准槽位色>>>>>
+
+  <paragraph*|5.1.3 GUI元素需求><label|guiux5143ux7d20ux9700ux6c42>\ 
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|元素>|<cell|文件名>|<cell|尺寸>|<cell|说明>>|<row|<cell|背景>|<cell|<code*|prodigy_bg.png>>|<cell|320\<times\>240>|<cell|主背景>>|<row|<cell|槽位底>|<cell|<code*|slot_bg.png>>|<cell|18\<times\>18>|<cell|输入槽位底>>|<row|<cell|进度条底>|<cell|<code*|progress_bg.png>>|<cell|100\<times\>16>|<cell|进度条背景>>|<row|<cell|进度条填充>|<cell|<code*|progress_fill.png>>|<cell|100\<times\>16>|<cell|进度条填充（可拉伸）>>|<row|<cell|按钮常态>|<cell|<code*|button_normal.png>>|<cell|60\<times\>20>|<cell|按钮常态>>|<row|<cell|按钮悬停>|<cell|<code*|button_hover.png>>|<cell|60\<times\>20>|<cell|按钮悬停>>|<row|<cell|按钮按下>|<cell|<code*|button_pressed.png>>|<cell|60\<times\>20>|<cell|按钮按下>>|<row|<cell|指示灯绿>|<cell|<code*|indicator_green.png>>|<cell|8\<times\>8>|<cell|正常指示灯>>|<row|<cell|指示灯黄>|<cell|<code*|indicator_yellow.png>>|<cell|8\<times\>8>|<cell|警告指示灯>>|<row|<cell|指示灯红>|<cell|<code*|indicator_red.png>>|<cell|8\<times\>8>|<cell|错误指示灯>>>>>
+
+  <subsubsection*|5.2 自检弹窗><label|ux81eaux68c0ux5f39ux7a97>
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|项目>|<cell|规格>>|<row|<cell|<strong|文件名>>|<cell|<code*|textures/gui/integrity_test.png>>>|<row|<cell|<strong|尺寸>>|<cell|200 \<times\> 120 像素>>|<row|<cell|<strong|格式>>|<cell|PNG (带透明通道)>>|<row|<cell|<strong|优先级>>|<cell|P1>>>>>
+
+  <hrule>
+
+  <subsection*|6. 粒子效果需求><label|ux7c92ux5b50ux6548ux679cux9700ux6c42>
+
+  <subsubsection*|6.1 流体粒子><label|ux6d41ux4f53ux7c92ux5b50>
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|粒子名称>|<cell|文件名>|<cell|尺寸>|<cell|颜色>|<cell|说明>>|<row|<cell|缓冲液粒子>|<cell|<code*|particle/buffer_particle.png>>|<cell|4\<times\>4>|<cell|<code*|#FFFFFF>>|<cell|白色小圆点>>|<row|<cell|培养基粒子>|<cell|<code*|particle/media_particle.png>>|<cell|4\<times\>4>|<cell|<code*|#FFFF66>>|<cell|黄色小圆点>>|<row|<cell|细胞粒子>|<cell|<code*|particle/cell_particle.png>>|<cell|6\<times\>6>|<cell|<code*|#FFB6C1>\<rightarrow\><code*|#F5DEB3>>|<cell|粉色\<rightarrow\>米黄渐变>>|<row|<cell|病毒粒子>|<cell|<code*|particle/virus_particle.png>>|<cell|3\<times\>3>|<cell|<code*|#9900FF>>|<cell|紫色小点>>>>>
+
+  <subsubsection*|6.2 特效粒子><label|ux7279ux6548ux7c92ux5b50>
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|粒子名称>|<cell|文件名>|<cell|尺寸>|<cell|颜色>|<cell|说明>>|<row|<cell|电磁效果>|<cell|<code*|particle/magnetic_glow.png>>|<cell|8\<times\>8>|<cell|<code*|#4444FF>>|<cell|蓝色光晕>>|<row|<cell|警报闪烁>|<cell|<code*|particle/alarm_flash.png>>|<cell|16\<times\>16>|<cell|<code*|#FF0000>>|<cell|红色闪烁>>|<row|<cell|成功光效>|<cell|<code*|particle/success_glow.png>>|<cell|16\<times\>16>|<cell|<code*|#55FF55>>|<cell|绿色光效>>|<row|<cell|生物危害>|<cell|<code*|particle/biohazard.png>>|<cell|8\<times\>8>|<cell|<code*|#AAFF00>>|<cell|黄绿色雾气>>>>>
+
+  <subsubsection*|6.3 粒子动画规格><label|ux7c92ux5b50ux52a8ux753bux89c4ux683c>
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|粒子>|<cell|发射频率>|<cell|生命周期>|<cell|速度>|<cell|大小变化>>|<row|<cell|缓冲液>|<cell|每消耗1%发射5个>|<cell|40 ticks>|<cell|0.05>|<cell|恒定>>|<row|<cell|培养基>|<cell|每消耗1%发射5个>|<cell|40 ticks>|<cell|0.05>|<cell|恒定>>|<row|<cell|细胞>|<cell|每秒10个>|<cell|60 ticks>|<cell|0.02>|<cell|0.5\<rightarrow\>1.0倍>>|<row|<cell|病毒>|<cell|转导期间持续>|<cell|30 ticks>|<cell|0.08>|<cell|恒定>>>>>
+
+  <hrule>
+
+  <subsection*|7. 动画相关><label|ux52a8ux753bux76f8ux5173>
+
+  <subsubsection*|7.1 CentriCult培养室动画><label|centricultux57f9ux517bux5ba4ux52a8ux753b>
+
+  <with|font-series|bold|动画类型>：\ 
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|类型>|<cell|触发阶段>|<cell|参数>|<cell|实现方式>>|<row|<cell|高速旋转>|<cell|Day 0, 2, 11>|<cell|2500 RPM>|<cell|程序控制旋转>>|<row|<cell|缓慢摇摆>|<cell|Day 1, 3-10>|<cell|100\<degree\>角度>|<cell|程序控制旋转>>|<row|<cell|液体颜色>|<cell|Day 3-10>|<cell|粉红\<rightarrow\>米黄>|<cell|粒子颜色插值>>>>>
+
+  <subsubsection*|7.2 袋子动画><label|ux888bux5b50ux52a8ux753b>
+
+  <with|font-series|bold|袋子液面下降效果>：\ 
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|阶段>|<cell|液面高度>|<cell|视觉表现>>|<row|<cell|100%>|<cell|满袋>|<cell|完整填充>>|<row|<cell|75%>|<cell|3/4>|<cell|略有下降>>|<row|<cell|50%>|<cell|1/2>|<cell|明显下降>>|<row|<cell|25%>|<cell|1/4>|<cell|接近空>>|<row|<cell|0%>|<cell|空袋>|<cell|扁平状>>>>>
+
+  <with|font-series|bold|实现方式>：通过多个帧的纹理实现（可选：程序控制UV偏移）\ 
+
+  <subsubsection*|7.3 指示灯闪烁><label|ux6307ux793aux706fux95eaux70c1>
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|状态>|<cell|闪烁频率>|<cell|颜色变化>>|<row|<cell|正常>|<cell|无>|<cell|恒定绿>>|<row|<cell|警告>|<cell|1Hz>|<cell|绿\<leftrightarrow\>︎黄>>|<row|<cell|错误>|<cell|2Hz>|<cell|红\<leftrightarrow\>︎暗红>>|<row|<cell|完成>|<cell|0.5Hz>|<cell|绿\<leftrightarrow\>︎亮绿>>>>>
+
+  <hrule>
+
+  <subsection*|8. 输出规格><label|ux8f93ux51faux89c4ux683c>
+
+  <subsubsection*|8.1 文件格式><label|ux6587ux4ef6ux683cux5f0f>
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|类型>|<cell|格式>|<cell|色深>|<cell|说明>>|<row|<cell|方块纹理>|<cell|PNG>|<cell|32位 (RGBA)>|<cell|支持透明>>|<row|<cell|物品纹理>|<cell|PNG>|<cell|32位 (RGBA)>|<cell|支持透明>>|<row|<cell|模型文件>|<cell|JSON>|<cell|->|<cell|Minecraft标准格式>>|<row|<cell|GUI素材>|<cell|PNG>|<cell|32位 (RGBA)>|<cell|支持透明>>|<row|<cell|粒子纹理>|<cell|PNG>|<cell|32位 (RGBA)>|<cell|支持透明>>>>>
+
+  <subsubsection*|8.2 文件尺寸标准><label|ux6587ux4ef6ux5c3aux5bf8ux6807ux51c6>
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|类型>|<cell|标准尺寸>|<cell|说明>>|<row|<cell|方块纹理>|<cell|16\<times\>16, 32\<times\>32, 64\<times\>64>|<cell|2的幂次>>|<row|<cell|物品纹理>|<cell|16\<times\>16>|<cell|标准>>|<row|<cell|GUI>|<cell|按需>|<cell|320\<times\>240等>>|<row|<cell|粒子>|<cell|4\<times\>4, 8\<times\>8, 16\<times\>16>|<cell|小尺寸>>>>>
+
+  <subsubsection*|8.3 命名规范><label|ux547dux540dux89c4ux8303>
+
+  <\code>
+    方块纹理: block/xxx.png
+
+    物品纹理: item/xxx.png
+
+    模型文件: models/block/xxx.json, models/item/xxx.json
+
+    GUI素材: textures/gui/xxx.png
+
+    粒子纹理: textures/particle/xxx.png
+  </code>
+
+  <hrule>
+
+  <subsection*|9. 优先级与时间表><label|ux4f18ux5148ux7ea7ux4e0eux65f6ux95f4ux8868>
+
+  <subsubsection*|9.1 总体时间表（1周）><label|ux603bux4f53ux65f6ux95f4ux88681ux5468>
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|天数>|<cell|任务>|<cell|产出物>|<cell|优先级>>|<row|<cell|Day 1>|<cell|物品材质 (1-5)>|<cell|白细胞袋、缓冲液、培养基、磁珠、激活剂>|<cell|P0>>|<row|<cell|Day 2>|<cell|物品材质 (6-11)>|<cell|病毒载体、管路套件、气体管路、3种CAR-T>|<cell|P0>>|<row|<cell|Day 3>|<cell|方块模型 - CliniMACS主方块>|<cell|IDLE/READY状态模型 + 纹理>|<cell|P0>>|<row|<cell|Day 4>|<cell|方块模型 - CliniMACS其余状态>|<cell|RUNNING/ALARM/COMPLETE状态>|<cell|P0>>|<row|<cell|Day 5>|<cell|方块模型 - CO2气瓶>|<cell|CO2气瓶5种容量状态>|<cell|P0>>|<row|<cell|Day 5>|<cell|GUI背景>|<cell|主GUI背景 + 槽位 + 按钮>|<cell|P0>>|<row|<cell|Day 6>|<cell|粒子效果>|<cell|4种流体粒子 + 特效粒子>|<cell|P1>>|<row|<cell|Day 7>|<cell|优化修正>|<cell|根据测试反馈调整>|<cell|P1>>>>>
+
+  <subsubsection*|9.2 详细任务清单><label|ux8be6ux7ec6ux4efbux52a1ux6e05ux5355>
+
+  <paragraph*|Day 1: 物品材质 (第1批)><label|day-1-ux7269ux54c1ux6750ux8d28-ux7b2c1ux6279>\ 
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|任务>|<cell|文件>|<cell|尺寸>|<cell|预计工时>|<cell|状态>>|<row|<cell|白细胞袋>|<cell|<code*|item/leukopak.png>>|<cell|16\<times\>16>|<cell|0.5h>|<cell|⬜>>|<row|<cell|缓冲液>|<cell|<code*|item/buffer.png>>|<cell|16\<times\>16>|<cell|0.5h>|<cell|⬜>>|<row|<cell|培养基>|<cell|<code*|item/media.png>>|<cell|16\<times\>16>|<cell|0.5h>|<cell|⬜>>|<row|<cell|磁珠>|<cell|<code*|item/magnetic_beads.png>>|<cell|16\<times\>16>|<cell|0.5h>|<cell|⬜>>|<row|<cell|激活剂>|<cell|<code*|item/activator.png>>|<cell|16\<times\>16>|<cell|0.5h>|<cell|⬜>>>>>
+
+  <paragraph*|Day 2: 物品材质 (第2批)><label|day-2-ux7269ux54c1ux6750ux8d28-ux7b2c2ux6279>\ 
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|任务>|<cell|文件>|<cell|尺寸>|<cell|预计工时>|<cell|状态>>|<row|<cell|病毒载体>|<cell|<code*|item/viral_vector.png>>|<cell|16\<times\>16>|<cell|0.5h>|<cell|⬜>>|<row|<cell|TS520管路套件>|<cell|<code*|item/tubing_set_520.png>>|<cell|16\<times\>16>|<cell|0.5h>|<cell|⬜>>|<row|<cell|气体管路>|<cell|<code*|item/gas_tubing.png>>|<cell|16\<times\>16>|<cell|0.5h>|<cell|⬜>>|<row|<cell|CAR-T \<alpha\>型>|<cell|<code*|item/car_t_alpha.png>>|<cell|16\<times\>16>|<cell|0.5h>|<cell|⬜>>|<row|<cell|CAR-T \<beta\>型>|<cell|<code*|item/car_t_beta.png>>|<cell|16\<times\>16>|<cell|0.5h>|<cell|⬜>>|<row|<cell|CAR-T \<gamma\>型>|<cell|<code*|item/car_t_gamma.png>>|<cell|16\<times\>16>|<cell|0.5h>|<cell|⬜>>>>>
+
+  <paragraph*|Day 3: CliniMACS 主方块 (第1批)><label|day-3-clinimacs-ux4e3bux65b9ux5757-ux7b2c1ux6279>\ 
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|任务>|<cell|文件>|<cell|预计工时>|<cell|状态>>|<row|<cell|IDLE状态模型>|<cell|<code*|models/block/prodigy_idle.json>>|<cell|1h>|<cell|⬜>>|<row|<cell|IDLE状态纹理>|<cell|<code*|block/prodigy_*.png> (6张)>|<cell|2h>|<cell|⬜>>|<row|<cell|READY状态模型>|<cell|<code*|models/block/prodigy_ready.json>>|<cell|1h>|<cell|⬜>>|<row|<cell|管路纹理>|<cell|<code*|block/prodigy_tubing.png>>|<cell|0.5h>|<cell|⬜>>|<row|<cell|袋子纹理>|<cell|<code*|block/prodigy_bags.png>>|<cell|0.5h>|<cell|⬜>>>>>
+
+  <paragraph*|Day 4: CliniMACS 主方块 (第2批)><label|day-4-clinimacs-ux4e3bux65b9ux5757-ux7b2c2ux6279>\ 
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|任务>|<cell|文件>|<cell|预计工时>|<cell|状态>>|<row|<cell|RUNNING状态模型>|<cell|<code*|models/block/prodigy_running.json>>|<cell|0.5h>|<cell|⬜>>|<row|<cell|RUNNING发光纹理>|<cell|<code*|block/prodigy_*_emission.png>>|<cell|1h>|<cell|⬜>>|<row|<cell|ALARM状态模型>|<cell|<code*|models/block/prodigy_alarm.json>>|<cell|0.5h>|<cell|⬜>>|<row|<cell|COMPLETE状态模型>|<cell|<code*|models/block/prodigy_complete.json>>|<cell|0.5h>|<cell|⬜>>|<row|<cell|指示灯纹理>|<cell|<code*|block/prodigy_indicator.png>>|<cell|0.5h>|<cell|⬜>>>>>
+
+  <paragraph*|Day 5: CO2气瓶 + GUI><label|day-5-co2ux6c14ux74f6-gui>\ 
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|任务>|<cell|文件>|<cell|预计工时>|<cell|状态>>|<row|<cell|CO2气瓶模型 (5状态)>|<cell|<code*|models/block/co2_cylinder_*.json>>|<cell|1.5h>|<cell|⬜>>|<row|<cell|CO2气瓶纹理>|<cell|<code*|block/co2_cylinder_*.png>>|<cell|1h>|<cell|⬜>>|<row|<cell|GUI背景>|<cell|<code*|textures/gui/prodigy_bg.png>>|<cell|2h>|<cell|⬜>>|<row|<cell|GUI元素>|<cell|<code*|textures/gui/slot_*.png> 等>|<cell|1h>|<cell|⬜>>>>>
+
+  <paragraph*|Day 6: 粒子效果><label|day-6-ux7c92ux5b50ux6548ux679c>\ 
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|任务>|<cell|文件>|<cell|预计工时>|<cell|状态>>|<row|<cell|缓冲液粒子>|<cell|<code*|particle/buffer_particle.png>>|<cell|0.25h>|<cell|⬜>>|<row|<cell|培养基粒子>|<cell|<code*|particle/media_particle.png>>|<cell|0.25h>|<cell|⬜>>|<row|<cell|细胞粒子>|<cell|<code*|particle/cell_particle.png>>|<cell|0.5h>|<cell|⬜>>|<row|<cell|病毒粒子>|<cell|<code*|particle/virus_particle.png>>|<cell|0.25h>|<cell|⬜>>|<row|<cell|特效粒子 (4种)>|<cell|<code*|particle/*.png>>|<cell|1h>|<cell|⬜>>>>>
+
+  <paragraph*|Day 7: 优化修正><label|day-7-ux4f18ux5316ux4feeux6b63>\ 
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|任务>|<cell|说明>|<cell|预计工时>|<cell|状态>>|<row|<cell|修正物品>|<cell|根据反馈调整物品材质>|<cell|1h>|<cell|⬜>>|<row|<cell|修正方块>|<cell|根据反馈调整方块模型>|<cell|1h>|<cell|⬜>>|<row|<cell|修正GUI>|<cell|根据反馈调整GUI>|<cell|1h>|<cell|⬜>>|<row|<cell|最终检查>|<cell|确保所有资源完整>|<cell|1h>|<cell|⬜>>>>>
+
+  <subsubsection*|9.3 里程碑><label|ux91ccux7a0bux7891>
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|里程碑>|<cell|日期>|<cell|交付物>>|<row|<cell|M1>|<cell|Day 2 结束>|<cell|11种物品材质完成>>|<row|<cell|M2>|<cell|Day 4 结束>|<cell|CliniMACS 5种状态完成>>|<row|<cell|M3>|<cell|Day 5 结束>|<cell|CO2气瓶 + GUI 完成>>|<row|<cell|M4>|<cell|Day 6 结束>|<cell|所有粒子效果完成>>|<row|<cell|M5>|<cell|Day 7 结束>|<cell|最终版本交付>>>>>
+
+  <hrule>
+
+  <subsection*|10. 参考资料><label|ux53c2ux8003ux8d44ux6599>
+
+  <subsubsection*|10.1 现实设备参考图><label|ux73b0ux5b9eux8bbeux5907ux53c2ux8003ux56fe>
+
+  以下参考图位于 Obsidian Vault 中：\ 
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|参考图>|<cell|路径>|<cell|用途>>|<row|<cell|CliniMACS Prodigy 现实图1>|<cell|<code*|802169.44041.1080p.jpeg>>|<cell|方块整体造型>>|<row|<cell|CliniMACS Prodigy 现实图2>|<cell|<code*|33963(3).jpg>>|<cell|方块细节参考>>|<row|<cell|CentriCult 离心培养室>|<cell|<code*|Image_1769492732462_848.jpg>>|<cell|培养室造型>>|<row|<cell|磁性分选单元>|<cell|<code*|miltenyi_magnet_unit_cover_800.png>>|<cell|分选模块造型>>|<row|<cell|流体控制泵>|<cell|<code*|Image_1769492810876_464.jpg>>|<cell|泵造型参考>>>>>
+
+  <subsubsection*|10.2 Minecraft风格参考图><label|minecraftux98ceux683cux53c2ux8003ux56fe>
+
+  以下参考图位于 Obsidian Vault 中：\ 
+
+  <tabular|<tformat|<twith|table-hmode|min>|<twith|table-width|1par>|<cwith|1|-1|1|-1|cell-hyphen|t>|<table|<row|<cell|参考图>|<cell|路径>|<cell|用途>>|<row|<cell|CentriCult MC风格>|<cell|<code*|Gemini_Generated_Image_pb15prpb15prpb15.png>>|<cell|培养室MC化参考>>|<row|<cell|磁性分选单元 MC风格>|<cell|<code*|Gemini_Generated_Image_hi5ct8hi5ct8hi5c.png>>|<cell|分选模块MC化参考>>|<row|<cell|流体控制泵 MC风格>|<cell|<code*|unnamed (8).jpg>>|<cell|泵MC化参考>>>>>
+
+  <subsubsection*|10.3 参考图路径><label|ux53c2ux8003ux56feux8defux5f84>
+
+  <\code>
+    /home/craftbukkit/文档/Obsidian Vault/
+
+    ├── 802169.44041.1080p.jpeg \ \ \ \ \ \ \ \ \ # CliniMACS 现实图
+
+    ├── 33963(3).jpg \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ # CliniMACS 现实图2
+
+    ├── -S1920x960.png \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ # 设备截图
+
+    ├── Image_1769492732462_848.jpg \ \ \ \ \ \ # CentriCult 参考
+
+    ├── Image_1769492810876_464.jpg \ \ \ \ \ \ # 流体泵参考
+
+    ├── miltenyi_magnet_unit_cover_800.png # 磁性分选单元
+
+    ├── Gemini_Generated_Image_pb15prpb15prpb15.png \ # MC风格1
+
+    ├── Gemini_Generated_Image_hi5ct8hi5ct8hi5c.png \ # MC风格2
+
+    ├── unnamed (6).jpg \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ # MC风格效果图
+
+    ├── unnamed (7).jpg \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ # 其他参考
+
+    ├── unnamed (8).jpg \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ \ # 泵MC风格
+
+    └── ...
+  </code>
+
+  <hrule>
+
+  <subsection*|11. 文件命名规范><label|ux6587ux4ef6ux547dux540dux89c4ux8303>
+
+  <subsubsection*|11.1 纹理文件><label|ux7eb9ux7406ux6587ux4ef6>
+
+  <\code>
+    方块纹理: \ textures/block/\<name\>.png
+
+    物品纹理: \ textures/item/\<name\>.png
+
+    GUI素材: \ \ textures/gui/\<name\>.png
+
+    粒子纹理: \ textures/particle/\<name\>.png
+  </code>
+
+  <subsubsection*|11.2 模型文件><label|ux6a21ux578bux6587ux4ef6>
+
+  <\code>
+    方块模型: \ assets/mrge/models/block/\<name\>.json
+
+    物品模型: \ assets/mrge/models/item/\<name\>.json
+  </code>
+
+  <subsubsection*|11.3 Blockstate文件><label|blockstateux6587ux4ef6>
+
+  <\code>
+    方块状态: \ assets/mrge/blockstates/\<name\>.json
+  </code>
+
+  <subsubsection*|11.4 完整目录结构><label|ux5b8cux6574ux76eeux5f55ux7ed3ux6784>
+
+  <\code>
+    src/main/resources/assets/mrge/
+
+    ├── blockstates/
+
+    │ \ \ ├── clini_macs_prodigy.json
+
+    │ \ \ └── co2_cylinder.json
+
+    │
+
+    ├── models/
+
+    │ \ \ ├── block/
+
+    │ \ \ │ \ \ ├── prodigy_idle.json
+
+    │ \ \ │ \ \ ├── prodigy_ready.json
+
+    │ \ \ │ \ \ ├── prodigy_running.json
+
+    │ \ \ │ \ \ ├── prodigy_alarm.json
+
+    │ \ \ │ \ \ ├── prodigy_complete.json
+
+    │ \ \ │ \ \ ├── co2_cylinder_0.json
+
+    │ \ \ │ \ \ ├── co2_cylinder_1.json
+
+    │ \ \ │ \ \ ├── co2_cylinder_2.json
+
+    │ \ \ │ \ \ ├── co2_cylinder_3.json
+
+    │ \ \ │ \ \ └── co2_cylinder_4.json
+
+    │ \ \ └── item/
+
+    │ \ \ \ \ \ \ ├── clini_macs_prodigy.json
+
+    │ \ \ \ \ \ \ ├── co2_cylinder.json
+
+    │ \ \ \ \ \ \ ├── leukopak.json
+
+    │ \ \ \ \ \ \ ├── buffer.json
+
+    │ \ \ \ \ \ \ ├── media.json
+
+    │ \ \ \ \ \ \ ├── magnetic_beads.json
+
+    │ \ \ \ \ \ \ ├── activator.json
+
+    │ \ \ \ \ \ \ ├── viral_vector.json
+
+    │ \ \ \ \ \ \ ├── tubing_set_520.json
+
+    │ \ \ \ \ \ \ ├── gas_tubing.json
+
+    │ \ \ \ \ \ \ ├── car_t_alpha.json
+
+    │ \ \ \ \ \ \ ├── car_t_beta.json
+
+    │ \ \ \ \ \ \ └── car_t_gamma.json
+
+    │
+
+    ├── textures/
+
+    │ \ \ ├── block/
+
+    │ \ \ │ \ \ ├── prodigy_front.png
+
+    │ \ \ │ \ \ ├── prodigy_side.png
+
+    │ \ \ │ \ \ ├── prodigy_top.png
+
+    │ \ \ │ \ \ ├── prodigy_bottom.png
+
+    │ \ \ │ \ \ ├── prodigy_back.png
+
+    │ \ \ │ \ \ ├── prodigy_tubing.png
+
+    │ \ \ │ \ \ ├── prodigy_bags.png
+
+    │ \ \ │ \ \ ├── prodigy_indicator.png
+
+    │ \ \ │ \ \ ├── co2_cylinder_top.png
+
+    │ \ \ │ \ \ ├── co2_cylinder_side.png
+
+    │ \ \ │ \ \ └── co2_cylinder_bottom.png
+
+    │ \ \ ├── item/
+
+    │ \ \ │ \ \ ├── leukopak.png
+
+    │ \ \ │ \ \ ├── buffer.png
+
+    │ \ \ │ \ \ ├── media.png
+
+    │ \ \ │ \ \ ├── magnetic_beads.png
+
+    │ \ \ │ \ \ ├── activator.png
+
+    │ \ \ │ \ \ ├── viral_vector.png
+
+    │ \ \ │ \ \ ├── tubing_set_520.png
+
+    │ \ \ │ \ \ ├── gas_tubing.png
+
+    │ \ \ │ \ \ ├── car_t_alpha.png
+
+    │ \ \ │ \ \ ├── car_t_beta.png
+
+    │ \ \ │ \ \ └── car_t_gamma.png
+
+    │ \ \ ├── gui/
+
+    │ \ \ │ \ \ ├── prodigy_bg.png
+
+    │ \ \ │ \ \ ├── slot_bg.png
+
+    │ \ \ │ \ \ ├── progress_bg.png
+
+    │ \ \ │ \ \ ├── progress_fill.png
+
+    │ \ \ │ \ \ ├── button_normal.png
+
+    │ \ \ │ \ \ ├── button_hover.png
+
+    │ \ \ │ \ \ ├── button_pressed.png
+
+    │ \ \ │ \ \ ├── indicator_green.png
+
+    │ \ \ │ \ \ ├── indicator_yellow.png
+
+    │ \ \ │ \ \ └── indicator_red.png
+
+    │ \ \ └── particle/
+
+    │ \ \ \ \ \ \ ├── buffer_particle.png
+
+    │ \ \ \ \ \ \ ├── media_particle.png
+
+    │ \ \ \ \ \ \ ├── cell_particle.png
+
+    │ \ \ \ \ \ \ ├── virus_particle.png
+
+    │ \ \ \ \ \ \ ├── magnetic_glow.png
+
+    │ \ \ \ \ \ \ ├── alarm_flash.png
+
+    │ \ \ \ \ \ \ ├── success_glow.png
+
+    │ \ \ \ \ \ \ └── biohazard.png
+
+    │
+
+    └── lang/
+
+    \ \ \ \ ├── zh_cn.json
+
+    \ \ \ \ └── en_us.json
+  </code>
+
+  <hrule>
+
+  <with|font-series|bold|MRGE制作委员会> <em|2026年2月27日>\ 
+</body>
+
+<\initial>
+  <\collection>
+    <associate|page-medium|paper>
+    <associate|page-screen-margin|false>
+  </collection>
+</initial>
+
+<\references>
+  <\collection>
+    <associate|auto-1|<tuple|?|1>>
+    <associate|auto-10|<tuple|11|2>>
+    <associate|auto-11|<tuple|<with|mode|<quote|math>|\<bullet\>>|2>>
+    <associate|auto-12|<tuple|<with|mode|<quote|math>|\<bullet\>>|2>>
+    <associate|auto-13|<tuple|<with|mode|<quote|math>|\<bullet\>>|2>>
+    <associate|auto-14|<tuple|<with|mode|<quote|math>|\<bullet\>>|2>>
+    <associate|auto-15|<tuple|<with|mode|<quote|math>|\<bullet\>>|3>>
+    <associate|auto-16|<tuple|<with|mode|<quote|math>|\<bullet\>>|3>>
+    <associate|auto-17|<tuple|<with|mode|<quote|math>|\<bullet\>>|3>>
+    <associate|auto-18|<tuple|<with|mode|<quote|math>|\<bullet\>>|3>>
+    <associate|auto-19|<tuple|<with|mode|<quote|math>|\<bullet\>>|3>>
+    <associate|auto-2|<tuple|?|1>>
+    <associate|auto-20|<tuple|<with|mode|<quote|math>|\<bullet\>>|4>>
+    <associate|auto-21|<tuple|<with|mode|<quote|math>|\<bullet\>>|4>>
+    <associate|auto-22|<tuple|<with|mode|<quote|math>|\<bullet\>>|4>>
+    <associate|auto-23|<tuple|<with|mode|<quote|math>|\<bullet\>>|4>>
+    <associate|auto-24|<tuple|<with|mode|<quote|math>|\<bullet\>>|4>>
+    <associate|auto-25|<tuple|<with|mode|<quote|math>|\<bullet\>>|4>>
+    <associate|auto-26|<tuple|<with|mode|<quote|math>|\<bullet\>>|5>>
+    <associate|auto-27|<tuple|<with|mode|<quote|math>|\<bullet\>>|6>>
+    <associate|auto-28|<tuple|<with|mode|<quote|math>|\<bullet\>>|6>>
+    <associate|auto-29|<tuple|<with|mode|<quote|math>|\<bullet\>>|7>>
+    <associate|auto-3|<tuple|11|1>>
+    <associate|auto-30|<tuple|<with|mode|<quote|math>|\<bullet\>>|7>>
+    <associate|auto-31|<tuple|<with|mode|<quote|math>|\<bullet\>>|7>>
+    <associate|auto-32|<tuple|<with|mode|<quote|math>|\<bullet\>>|7>>
+    <associate|auto-33|<tuple|<with|mode|<quote|math>|\<bullet\>>|8>>
+    <associate|auto-34|<tuple|<with|mode|<quote|math>|\<bullet\>>|8>>
+    <associate|auto-35|<tuple|<with|mode|<quote|math>|\<bullet\>>|8>>
+    <associate|auto-36|<tuple|<with|mode|<quote|math>|\<bullet\>>|8>>
+    <associate|auto-37|<tuple|<with|mode|<quote|math>|\<bullet\>>|8>>
+    <associate|auto-38|<tuple|<with|mode|<quote|math>|\<bullet\>>|8>>
+    <associate|auto-39|<tuple|<with|mode|<quote|math>|\<bullet\>>|9>>
+    <associate|auto-4|<tuple|11|1>>
+    <associate|auto-40|<tuple|<with|mode|<quote|math>|\<bullet\>>|9>>
+    <associate|auto-41|<tuple|<with|mode|<quote|math>|\<bullet\>>|9>>
+    <associate|auto-42|<tuple|<with|mode|<quote|math>|\<bullet\>>|9>>
+    <associate|auto-43|<tuple|<with|mode|<quote|math>|\<bullet\>>|9>>
+    <associate|auto-44|<tuple|<with|mode|<quote|math>|\<bullet\>>|9>>
+    <associate|auto-45|<tuple|<with|mode|<quote|math>|\<bullet\>>|9>>
+    <associate|auto-46|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
+    <associate|auto-47|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
+    <associate|auto-48|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
+    <associate|auto-49|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
+    <associate|auto-5|<tuple|11|1>>
+    <associate|auto-50|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
+    <associate|auto-51|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
+    <associate|auto-52|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
+    <associate|auto-53|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
+    <associate|auto-54|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|auto-55|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|auto-56|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|auto-57|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|auto-58|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|auto-59|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|auto-6|<tuple|11|1>>
+    <associate|auto-60|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|auto-61|<tuple|<with|mode|<quote|math>|\<bullet\>>|12>>
+    <associate|auto-62|<tuple|<with|mode|<quote|math>|\<bullet\>>|12>>
+    <associate|auto-63|<tuple|<with|mode|<quote|math>|\<bullet\>>|12>>
+    <associate|auto-64|<tuple|<with|mode|<quote|math>|\<bullet\>>|12>>
+    <associate|auto-65|<tuple|<with|mode|<quote|math>|\<bullet\>>|12>>
+    <associate|auto-66|<tuple|<with|mode|<quote|math>|\<bullet\>>|12>>
+    <associate|auto-67|<tuple|<with|mode|<quote|math>|\<bullet\>>|13>>
+    <associate|auto-7|<tuple|11|2>>
+    <associate|auto-8|<tuple|11|2>>
+    <associate|auto-9|<tuple|11|2>>
+    <associate|blockstateux6587ux4ef6|<tuple|<with|mode|<quote|math>|\<bullet\>>|12>>
+    <associate|car-tux5236ux5242|<tuple|<with|mode|<quote|math>|\<bullet\>>|6>>
+    <associate|centricultux57f9ux517bux5ba4ux52a8ux753b|<tuple|<with|mode|<quote|math>|\<bullet\>>|9>>
+    <associate|clinimacs-prodigy-ux4e3bux65b9ux57575ux79cdux72b6ux6001|<tuple|<with|mode|<quote|math>|\<bullet\>>|2>>
+    <associate|co2ux6c14ux74f6ux65b9ux5757|<tuple|<with|mode|<quote|math>|\<bullet\>>|3>>
+    <associate|day-1-ux7269ux54c1ux6750ux8d28-ux7b2c1ux6279|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
+    <associate|day-2-ux7269ux54c1ux6750ux8d28-ux7b2c2ux6279|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
+    <associate|day-3-clinimacs-ux4e3bux65b9ux5757-ux7b2c1ux6279|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
+    <associate|day-4-clinimacs-ux4e3bux65b9ux5757-ux7b2c2ux6279|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|day-5-co2ux6c14ux74f6-gui|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|day-6-ux7c92ux5b50ux6548ux679c|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|day-7-ux4f18ux5316ux4feeux6b63|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|guiux5143ux7d20ux9700ux6c42|<tuple|<with|mode|<quote|math>|\<bullet\>>|8>>
+    <associate|guiux5e03ux5c40ux533aux57df|<tuple|<with|mode|<quote|math>|\<bullet\>>|7>>
+    <associate|guiux7d20ux6750ux9700ux6c42|<tuple|<with|mode|<quote|math>|\<bullet\>>|7>>
+    <associate|minecraftux98ceux683cux53c2ux8003ux56fe|<tuple|<with|mode|<quote|math>|\<bullet\>>|12>>
+    <associate|mrge-ux7f8eux672fux5de5ux4f5cux8981ux6c42|<tuple|?|1>>
+    <associate|ux4e3bguiux80ccux666f|<tuple|<with|mode|<quote|math>|\<bullet\>>|7>>
+    <associate|ux4f18ux5148ux7ea7ux4e0eux65f6ux95f4ux8868|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
+    <associate|ux52a8ux753bux76f8ux5173|<tuple|<with|mode|<quote|math>|\<bullet\>>|9>>
+    <associate|ux539fux6599ux4e0eux6d88ux8017ux54c1|<tuple|<with|mode|<quote|math>|\<bullet\>>|4>>
+    <associate|ux53c2ux8003ux56feux8defux5f84|<tuple|<with|mode|<quote|math>|\<bullet\>>|12>>
+    <associate|ux53c2ux8003ux8d44ux6599|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|ux5404ux72b6ux6001ux6a21ux578bux9700ux6c42|<tuple|<with|mode|<quote|math>|\<bullet\>>|2>>
+    <associate|ux5408ux6210ux7ec4ux4ef6ux7269ux54c1ux53efux9009ux540eux7eedux8fedux4ee3|<tuple|<with|mode|<quote|math>|\<bullet\>>|7>>
+    <associate|ux547dux540dux89c4ux8303|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
+    <associate|ux56feux6807ux98ceux683c|<tuple|11|2>>
+    <associate|ux57faux672cux4fe1ux606f|<tuple|<with|mode|<quote|math>|\<bullet\>>|3>>
+    <associate|ux5b8cux6574ux76eeux5f55ux7ed3ux6784|<tuple|<with|mode|<quote|math>|\<bullet\>>|13>>
+    <associate|ux5bb9ux91cfux663eux793a|<tuple|<with|mode|<quote|math>|\<bullet\>>|4>>
+    <associate|ux603bux4f53ux65f6ux95f4ux88681ux5468|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
+    <associate|ux6307ux793aux706fux95eaux70c1|<tuple|<with|mode|<quote|math>|\<bullet\>>|9>>
+    <associate|ux6574ux4f53ux98ceux683cux6307ux5357|<tuple|11|2>>
+    <associate|ux6587ux4ef6ux547dux540dux89c4ux8303|<tuple|<with|mode|<quote|math>|\<bullet\>>|12>>
+    <associate|ux6587ux4ef6ux5c3aux5bf8ux6807ux51c6|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
+    <associate|ux6587ux4ef6ux683cux5f0f|<tuple|<with|mode|<quote|math>|\<bullet\>>|9>>
+    <associate|ux65b9ux5757ux6a21ux578bux9700ux6c42|<tuple|<with|mode|<quote|math>|\<bullet\>>|2>>
+    <associate|ux6750ux8d28ux98ceux683c|<tuple|11|2>>
+    <associate|ux6a21ux578bux6587ux4ef6|<tuple|<with|mode|<quote|math>|\<bullet\>>|12>>
+    <associate|ux6a21ux578bux7ed3ux6784|<tuple|<with|mode|<quote|math>|\<bullet\>>|3>>
+    <associate|ux6a21ux578bux7ed3ux6784ux7ec4ux6210|<tuple|<with|mode|<quote|math>|\<bullet\>>|3>>
+    <associate|ux6d41ux4f53ux7c92ux5b50|<tuple|<with|mode|<quote|math>|\<bullet\>>|8>>
+    <associate|ux7269ux54c1ux6750ux8d28ux9700ux6c42|<tuple|<with|mode|<quote|math>|\<bullet\>>|4>>
+    <associate|ux7269ux54c1ux6e05ux5355|<tuple|<with|mode|<quote|math>|\<bullet\>>|4>>
+    <associate|ux7269ux54c1ux8bbeux8ba1ux53c2ux8003|<tuple|<with|mode|<quote|math>|\<bullet\>>|4>>
+    <associate|ux7279ux6548ux7c92ux5b50|<tuple|<with|mode|<quote|math>|\<bullet\>>|8>>
+    <associate|ux73b0ux5b9eux8bbeux5907ux53c2ux8003ux56fe|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|ux76eeux5f55|<tuple|?|1>>
+    <associate|ux7c92ux5b50ux52a8ux753bux89c4ux683c|<tuple|<with|mode|<quote|math>|\<bullet\>>|9>>
+    <associate|ux7c92ux5b50ux6548ux679cux9700ux6c42|<tuple|<with|mode|<quote|math>|\<bullet\>>|8>>
+    <associate|ux7eb9ux7406ux6587ux4ef6|<tuple|<with|mode|<quote|math>|\<bullet\>>|12>>
+    <associate|ux7eb9ux7406ux9700ux6c42|<tuple|<with|mode|<quote|math>|\<bullet\>>|4>>
+    <associate|ux7f8eux672fux5de5ux4f5cux8303ux56f4|<tuple|11|1>>
+    <associate|ux8017ux6750ux4e0eux5de5ux5177|<tuple|<with|mode|<quote|math>|\<bullet\>>|6>>
+    <associate|ux81eaux68c0ux5f39ux7a97|<tuple|<with|mode|<quote|math>|\<bullet\>>|8>>
+    <associate|ux888bux5b50ux52a8ux753b|<tuple|<with|mode|<quote|math>|\<bullet\>>|9>>
+    <associate|ux8bd5ux5242|<tuple|<with|mode|<quote|math>|\<bullet\>>|5>>
+    <associate|ux8be6ux7ec6ux4efbux52a1ux6e05ux5355|<tuple|<with|mode|<quote|math>|\<bullet\>>|10>>
+    <associate|ux8f93ux51faux89c4ux683c|<tuple|<with|mode|<quote|math>|\<bullet\>>|9>>
+    <associate|ux914dux8272ux65b9ux6848|<tuple|11|2>>
+    <associate|ux91ccux7a0bux7891|<tuple|<with|mode|<quote|math>|\<bullet\>>|11>>
+    <associate|ux91cdux8981ux8bf4ux660e|<tuple|11|1>>
+    <associate|ux9879ux76eeux6982ux8ff0|<tuple|11|1>>
+    <associate|ux9879ux76eeux80ccux666f|<tuple|11|1>>
+    <associate|ux989cux8272ux65b9ux6848|<tuple|<with|mode|<quote|math>|\<bullet\>>|8>>
+  </collection>
+</references>
+
+<\auxiliary>
+  <\collection>
+    <\associate|toc>
+      <vspace*|1fn><with|font-series|<quote|bold>|math-font-series|<quote|bold>|MRGE 美术工作要求><datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-1><vspace|0.5fn>
+
+      <with|par-left|<quote|1tab>|目录<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-2>>
+
+      <with|par-left|<quote|1tab>|1. 项目概述<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-3>>
+
+      <with|par-left|<quote|2tab>|1.1 项目背景<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-4>>
+
+      <with|par-left|<quote|2tab>|1.2 美术工作范围<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-5>>
+
+      <with|par-left|<quote|2tab>|1.3 重要说明<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-6>>
+
+      <with|par-left|<quote|1tab>|2. 整体风格指南<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-7>>
+
+      <with|par-left|<quote|2tab>|2.1 配色方案<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-8>>
+
+      <with|par-left|<quote|2tab>|2.2 材质风格<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-9>>
+
+      <with|par-left|<quote|2tab>|2.3 图标风格<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-10>>
+
+      <with|par-left|<quote|1tab>|3. 方块模型需求<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-11>>
+
+      <with|par-left|<quote|2tab>|3.1 CliniMACS Prodigy 主方块（5种状态）<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-12>>
+
+      <with|par-left|<quote|3tab>|3.1.1 基本信息<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-13>>
+
+      <with|par-left|<quote|3tab>|3.1.2 各状态模型需求<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-14>>
+
+      <with|par-left|<quote|3tab>|3.1.3 模型结构组成<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-15>>
+
+      <with|par-left|<quote|3tab>|3.1.4 纹理需求<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-16>>
+
+      <with|par-left|<quote|2tab>|3.2 CO2气瓶方块<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-17>>
+
+      <with|par-left|<quote|3tab>|3.2.1 基本信息<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-18>>
+
+      <with|par-left|<quote|3tab>|3.2.2 模型结构<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-19>>
+
+      <with|par-left|<quote|3tab>|3.2.3 纹理需求<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-20>>
+
+      <with|par-left|<quote|3tab>|3.2.4 容量显示<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-21>>
+
+      <with|par-left|<quote|1tab>|4. 物品材质需求<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-22>>
+
+      <with|par-left|<quote|2tab>|4.1 物品清单<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-23>>
+
+      <with|par-left|<quote|2tab>|4.2 物品设计参考<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-24>>
+
+      <with|par-left|<quote|3tab>|4.2.1 原料与消耗品<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-25>>
+
+      <with|par-left|<quote|3tab>|4.2.2 试剂<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-26>>
+
+      <with|par-left|<quote|3tab>|4.2.3 耗材与工具<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-27>>
+
+      <with|par-left|<quote|3tab>|4.2.4 CAR-T制剂<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-28>>
+
+      <with|par-left|<quote|2tab>|4.3 合成组件物品（可选，后续迭代）<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-29>>
+
+      <with|par-left|<quote|1tab>|5. GUI素材需求<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-30>>
+
+      <with|par-left|<quote|2tab>|5.1 主GUI背景<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-31>>
+
+      <with|par-left|<quote|3tab>|5.1.1 GUI布局区域<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-32>>
+
+      <with|par-left|<quote|3tab>|5.1.2 颜色方案<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-33>>
+
+      <with|par-left|<quote|3tab>|5.1.3 GUI元素需求<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-34>>
+
+      <with|par-left|<quote|2tab>|5.2 自检弹窗<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-35>>
+
+      <with|par-left|<quote|1tab>|6. 粒子效果需求<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-36>>
+
+      <with|par-left|<quote|2tab>|6.1 流体粒子<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-37>>
+
+      <with|par-left|<quote|2tab>|6.2 特效粒子<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-38>>
+
+      <with|par-left|<quote|2tab>|6.3 粒子动画规格<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-39>>
+
+      <with|par-left|<quote|1tab>|7. 动画相关<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-40>>
+
+      <with|par-left|<quote|2tab>|7.1 CentriCult培养室动画<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-41>>
+
+      <with|par-left|<quote|2tab>|7.2 袋子动画<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-42>>
+
+      <with|par-left|<quote|2tab>|7.3 指示灯闪烁<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-43>>
+
+      <with|par-left|<quote|1tab>|8. 输出规格<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-44>>
+
+      <with|par-left|<quote|2tab>|8.1 文件格式<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-45>>
+
+      <with|par-left|<quote|2tab>|8.2 文件尺寸标准<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-46>>
+
+      <with|par-left|<quote|2tab>|8.3 命名规范<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-47>>
+
+      <with|par-left|<quote|1tab>|9. 优先级与时间表<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-48>>
+
+      <with|par-left|<quote|2tab>|9.1 总体时间表（1周）<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-49>>
+
+      <with|par-left|<quote|2tab>|9.2 详细任务清单<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-50>>
+
+      <with|par-left|<quote|3tab>|Day 1: 物品材质 (第1批)<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-51>>
+
+      <with|par-left|<quote|3tab>|Day 2: 物品材质 (第2批)<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-52>>
+
+      <with|par-left|<quote|3tab>|Day 3: CliniMACS 主方块 (第1批)<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-53>>
+
+      <with|par-left|<quote|3tab>|Day 4: CliniMACS 主方块 (第2批)<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-54>>
+
+      <with|par-left|<quote|3tab>|Day 5: CO2气瓶 + GUI<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-55>>
+
+      <with|par-left|<quote|3tab>|Day 6: 粒子效果<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-56>>
+
+      <with|par-left|<quote|3tab>|Day 7: 优化修正<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-57>>
+
+      <with|par-left|<quote|2tab>|9.3 里程碑<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-58>>
+
+      <with|par-left|<quote|1tab>|10. 参考资料<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-59>>
+
+      <with|par-left|<quote|2tab>|10.1 现实设备参考图<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-60>>
+
+      <with|par-left|<quote|2tab>|10.2 Minecraft风格参考图<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-61>>
+
+      <with|par-left|<quote|2tab>|10.3 参考图路径<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-62>>
+
+      <with|par-left|<quote|1tab>|11. 文件命名规范<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-63>>
+
+      <with|par-left|<quote|2tab>|11.1 纹理文件<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-64>>
+
+      <with|par-left|<quote|2tab>|11.2 模型文件<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-65>>
+
+      <with|par-left|<quote|2tab>|11.3 Blockstate文件<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-66>>
+
+      <with|par-left|<quote|2tab>|11.4 完整目录结构<datoms|<macro|x|<repeat|<arg|x>|<with|font-series|medium|<with|font-size|1|<space|0.05fn>.<space|0.05fn>>>>>|<htab|5mm>><no-break><pageref|auto-67>>
+    </associate>
+  </collection>
+</auxiliary>
