@@ -9,14 +9,20 @@ import net.minecraft.text.Text;
 public class EthicsCaseScreen extends HandledScreen<EthicsCaseScreenHandler> {
     private EthicsCase.EthicsOption selected;
     private int textScroll;
+    private int optionPage;
     public EthicsCaseScreen(EthicsCaseScreenHandler handler,PlayerInventory inventory,Text title){super(handler,inventory,title);backgroundWidth=320;backgroundHeight=240;}
     @Override protected void init(){super.init();buildChoices();}
     private void buildChoices(){
         clearChildren();if(handler.ethicsCase==null)return;
         if(selected==null){
-            for(int i=0;i<handler.ethicsCase.options().size();i++) {
+            int first=optionPage*4;
+            for(int i=first;i<Math.min(first+4,handler.ethicsCase.options().size());i++) {
                 int choice=i;EthicsCase.EthicsOption option=handler.ethicsCase.options().get(i);
-                addDrawableChild(ButtonWidget.builder(Text.literal(option.text()),b->{if(client!=null&&client.interactionManager!=null){client.interactionManager.clickButton(handler.syncId,choice);selected=option;textScroll=0;buildChoices();}}).tooltip(Tooltip.of(Text.literal(option.text()))).dimensions(x+8,y+110+i*25,304,20).build());
+                addDrawableChild(ButtonWidget.builder(Text.literal(option.text()),b->{if(client!=null&&client.interactionManager!=null){client.interactionManager.clickButton(handler.syncId,choice);selected=option;textScroll=0;buildChoices();}}).tooltip(Tooltip.of(Text.literal(option.text()))).dimensions(x+8,y+110+(i-first)*25,304,20).build());
+            }
+            if(handler.ethicsCase.options().size()>4){
+                addDrawableChild(ButtonWidget.builder(Text.translatable("button.mrge.previous"),b->{optionPage=Math.max(0,optionPage-1);buildChoices();}).dimensions(x+8,y+211,100,20).build());
+                addDrawableChild(ButtonWidget.builder(Text.translatable("button.mrge.next"),b->{if((optionPage+1)*4<handler.ethicsCase.options().size())optionPage++;buildChoices();}).dimensions(x+212,y+211,100,20).build());
             }
         }else addDrawableChild(ButtonWidget.builder(Text.translatable("gui.done"),b->close()).dimensions(x+110,y+211,100,20).build());
     }

@@ -89,6 +89,10 @@ public class GenomeTerminalScreen extends HandledScreen<GenomeTerminalScreenHand
         searchSummary=Text.translatable("screen.mrge.search_result",p.positions().length,p.scanStart(),p.scanStart()+p.scannedLength(),p.truncated()?"+":"").getString();
     }
     private boolean matches(UUID id,int sync,long revision){return id.equals(handler.genomeId)&&sync==handler.syncId&&revision==handler.revision;}
+    @Override public boolean keyPressed(int keyCode,int scanCode,int modifiers){
+        if(!projectTab&&motif!=null&&motif.isFocused()&&client!=null&&client.options.inventoryKey.matchesKey(keyCode,scanCode))return true;
+        return super.keyPressed(keyCode,scanCode,modifiers);
+    }
     @Override protected void drawBackground(DrawContext context,float delta,int mouseX,int mouseY){
         context.fill(x,y,x+backgroundWidth,y+backgroundHeight,0xFFDFE6E9);
         context.fill(x,y,x+backgroundWidth,y+18,0xFF183E4E);

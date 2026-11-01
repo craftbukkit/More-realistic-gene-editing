@@ -87,7 +87,7 @@ public final class C2SPackets {
         long start=Math.max(0,pamPosition-32);
         int length=(int)Math.min(96,genome.getTotalLength()-start);
         return engine.findPamSites(genome,start,length,CrisprEngine.SPCAS9_PAM).stream()
-            .filter(t->t.position()==pamPosition&&t.protospacer().equals(genome.getSequence(pamPosition-20,20)))
+            .filter(t->t.strand()==CrisprEngine.Strand.FORWARD&&t.position()==pamPosition&&t.protospacer().equals(genome.getSequence(pamPosition-20,20)))
             .findFirst().orElse(null);
     }
     private static void openInsertion(ServerPlayerEntity player,C2SOpenGeneInsertionScreenPacket p) {
@@ -155,6 +155,7 @@ public final class C2SPackets {
                     var data = GenomeSampleItem.readData(held);
                     data.putLong("Revision", updated.getRevision());
                     data.putLong("GenomeLength", updated.getTotalLength());
+                    data.putInt("FragmentLength", Math.toIntExact(updated.getTotalLength()));
                     GenomeSampleItem.writeData(held, data);
                 }
             }

@@ -67,7 +67,10 @@ public class LiquidHandlerBlockEntity extends LabEquipmentBlockEntity {
         CHERRY_PICK("Cherry Picking", 400),
         PLATE_REPLICATE("Plate Replication", 800),
         NORMALIZATION("DNA Normalization", 1000),
-        CUSTOM("Custom Protocol", 500)
+        CUSTOM("Custom Protocol", 500);
+        public final String displayName;
+        public final int duration;
+        Protocol(String displayName,int duration){this.displayName=displayName;this.duration=duration;}
     }
 
     // State
@@ -160,7 +163,7 @@ public class LiquidHandlerBlockEntity extends LabEquipmentBlockEntity {
         totalVolumeTransferred = 0;
         protocolLog.clear();
         
-        logProtocol("Starting protocol: " + currentProtocol.name);
+        logProtocol("Starting protocol: " + currentProtocol.displayName);
         setActive(true);
         markDirty();
     }
@@ -335,7 +338,7 @@ public class LiquidHandlerBlockEntity extends LabEquipmentBlockEntity {
         if (!destPlate.isEmpty()) {
             NbtCompound nbt = StackData.read(destPlate);
             nbt.putString("ProcessedBy", "LiquidHandler");
-            nbt.putString("Protocol", currentProtocol.name);
+            nbt.putString("Protocol", currentProtocol.displayName);
             nbt.putInt("TransfersCompleted", transfersCompleted);
             nbt.putFloat("TotalVolume", totalVolumeTransferred);
             nbt.putBoolean("Simulation",true);StackData.write(destPlate,nbt);

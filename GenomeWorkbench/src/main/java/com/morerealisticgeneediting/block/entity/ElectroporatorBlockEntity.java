@@ -39,14 +39,14 @@ public class ElectroporatorBlockEntity extends LabEquipmentBlockEntity {
     @Override protected boolean isInputSlot(int slot){return slot>=0&&slot<4;}
     @Override protected boolean isOutputSlot(int slot){return slot==OUTPUT_SLOT;}
     @Override public boolean isValid(int slot,ItemStack stack){return switch(slot){
-        case CELLS_SLOT->stack.isOf(ModItems.GENOME_SAMPLE);
+        case CELLS_SLOT->stack.isOf(ModItems.CELL_CULTURE_FLASK)&&"virtual_cell_culture".equals(StackData.read(stack).getString("SampleType"));
         case DNA_SLOT->stack.isOf(ModItems.DNA_SAMPLE)||stack.isOf(ModItems.AMPLIFIED_GENE_FRAGMENT)||stack.isOf(ModItems.RECOMBINANT_PLASMID);
         case BUFFER_SLOT->stack.isOf(LabEquipmentItems.ELECTROPORATION_BUFFER);
         case CUVETTE_SLOT->stack.isOf(ModItems.ELECTROPORATION_CUVETTE);
         default->false;
     };}
     @Override protected boolean canProcess(){
-        if(isPulsing||!getStack(OUTPUT_SLOT).isEmpty())return false;
+        if(isPulsing||reserved.stream().anyMatch(stack->!stack.isEmpty())||!getStack(OUTPUT_SLOT).isEmpty())return false;
         for(int i=0;i<4;i++)if(!isValid(i,getStack(i)))return false;
         return !StackData.read(getStack(CELLS_SLOT)).getString("CellType").isBlank();
     }
@@ -62,7 +62,7 @@ public class ElectroporatorBlockEntity extends LabEquipmentBlockEntity {
     }
     @Override public void tick(){
         if(world==null||world.isClient)return;
-        if(!isPulsing){if(isProcessing())setActive(false);return;}
+        if(!isPulsing){if(reserved.stream().anyMatch(stack->!stack.isEmpty()))cancel();else if(isProcessing())setActive(false);return;}
         if(pulseProgress<pulseTicks){pulseProgress++;markDirty();}
         if(pulseProgress>=pulseTicks)completePulse();
     }

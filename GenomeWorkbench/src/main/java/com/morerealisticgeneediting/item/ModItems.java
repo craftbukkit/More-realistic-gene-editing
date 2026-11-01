@@ -78,7 +78,7 @@ public class ModItems {
     // ========== Cell Culture Items ==========
     
     public static final Item CELL_CULTURE_FLASK = registerItem("cell_culture_flask",
-            new Item(new Item.Settings().maxCount(8)));
+            new VirtualCellCultureItem(new Item.Settings().maxCount(1)));
     
     public static final Item GROWTH_MEDIUM = registerItem("growth_medium",
             new Item(new Item.Settings().maxCount(64)));

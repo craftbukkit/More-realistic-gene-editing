@@ -54,6 +54,23 @@ class ScientificAlgorithmsTest {
         assertThrows(IllegalArgumentException.class,()->c.performEditing(g,target,"NNN"));
         assertThrows(IllegalArgumentException.class,()->c.findPamSites(g,-1,23,CrisprEngine.SPCAS9_PAM));
     }
+    @Test void identicalDonorDoesNotCreateEditEvidence() {
+        Genome g=genome("A".repeat(20)+"AGG"+"A".repeat(100));
+        CrisprEngine c=new CrisprEngine(0);
+        var target=c.findPamSites(g,0,23,CrisprEngine.SPCAS9_PAM).get(0);
+        int donorRepairs=0;
+        for(int i=0;i<1000;i++) {
+            var result=c.performEditing(g,target,"AAA");
+            if(result.repairPathway().equals("HDR")) {
+                donorRepairs++;
+                assertEquals(EditOutcome.Type.NO_CHANGE,result.primaryOutcome().getType());
+                assertEquals(0,result.editingEfficiency());
+                assertEquals(0,result.primaryOutcome().size());
+                assertTrue(result.byproducts().isEmpty());
+            }
+        }
+        assertTrue(donorRepairs>0);
+    }
     @Test void primerFormulaNoLongerDoubleSubtractsLengthAndDefaultCandidatesExist() {
         assertEquals(51.78,PcrSimulator.Primer.design("ACGT".repeat(5),true).meltingTemperature(),1e-9);
         var highGc=PcrSimulator.Primer.design("GC".repeat(6)+"AT".repeat(4),true);

@@ -120,8 +120,13 @@ public class CrisprEngine {
             outcome = new EditOutcome(EditOutcome.Type.NO_CHANGE, target.cutPosition(), 0, "", "No simulated edit");
         } else if (hdrTemplate != null && roll < 0.15) {
             pathway = "HDR";
-            outcome = new EditOutcome(EditOutcome.Type.REPLACEMENT, target.cutPosition(), hdrTemplate.length(),
-                    hdrTemplate, "Schematic donor-directed replacement; homology/repair not mechanistically modeled");
+            if (hdrTemplate.equals(genome.getSequence(target.cutPosition(), hdrTemplate.length()))) {
+                outcome = new EditOutcome(EditOutcome.Type.NO_CHANGE, target.cutPosition(), 0, "",
+                        "Donor matches the stored sequence; no simulated sequence change");
+            } else {
+                outcome = new EditOutcome(EditOutcome.Type.REPLACEMENT, target.cutPosition(), hdrTemplate.length(),
+                        hdrTemplate, "Schematic donor-directed replacement; homology/repair not mechanistically modeled");
+            }
         } else {
             pathway = "NHEJ";
             long remaining = genome.getTotalLength() - target.cutPosition();

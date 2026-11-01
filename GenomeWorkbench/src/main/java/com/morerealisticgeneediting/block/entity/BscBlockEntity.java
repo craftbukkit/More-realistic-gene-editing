@@ -1,4 +1,6 @@
 package com.morerealisticgeneediting.block.entity;
+
+import net.minecraft.item.ItemStack;
 import com.morerealisticgeneediting.util.StackData;
 import com.morerealisticgeneediting.screen.LabEquipmentScreenHandler;
 

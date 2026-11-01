@@ -26,7 +26,7 @@ class SafeNBTTest {
         assertTrue(SafeNBT.isValidSize(payload, 1024));
     }
 
-    @Test void ExcessivelyNestedPayloadIsRejectedWithoutCrashing() {
+    @Test void excessivelyNestedPayloadIsRejectedWithoutCrashing() {
         NbtCompound root = new NbtCompound();
         NbtCompound child = root;
         for (int i = 0; i < SafeNBT.MAX_NBT_DEPTH + 2; i++) {

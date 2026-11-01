@@ -4,11 +4,13 @@ MRGE uses fictional Minecraft samples and teaching models. A stored sample, its 
 
 ## Playable sample exercise
 
-Use `/research list`, start and complete `welcome_to_the_lab`, then start `simulated_sample_edit`. Capture a virtual sample, submit an actual sequence edit, and run sequencing concordance validation of the same sample's current revision. `/research status` shows its sample UUID and sampled, edited and verified revisions. Completion is server-controlled; starting a project is insufficient.
+Use `/research list`, start and complete `welcome_to_the_lab`, then start `simulated_sample_edit`. Capture a virtual DNA aliquot, submit an actual sequence edit, and run sequencing concordance validation of the same sample's current revision. `/research status` shows its sample UUID and sampled, edited and verified revisions. Completion is server-controlled; starting a project is insufficient.
+
+Two sample materials are kept distinct. Using the genome sampler creates a virtual DNA aliquot after a schematic extraction step; its source-cell metadata describes provenance, not living cells. Using the cell-culture flask creates a separate virtual cell culture for culture and electroporation exercises. A DNA aliquot is not accepted as a living-cell input.
 
 Verification means sequence concordance within this virtual model: newly simulated reads must provide quality-supported coverage and consensus agreement with the stored edited sample. Normalizing read orientation is required. Editing provenance establishes the preceding change. This does not assert blind indel discovery, detection of every off-target event, protein function or efficacy. Merely requesting a genome window, generating a read-set label or renaming an animal is not verification.
 
-Project evidence is isolated by player and sample and persists with the world. A newer edit invalidates the older verification. At most 32 sample evidence histories per player are retained; capturing additional samples can evict the oldest history. Old project saves that predate evidence validation do not retain unverified completion flags.
+Project evidence is isolated by player and sample and persists with the world. A completed machine job can credit its authenticated owner while the player is offline, provided the owned sample still has the exact validated revision. A newer edit invalidates the older verification. At most 32 sample evidence histories per player are retained; capturing additional samples can evict the oldest history. Old project saves that predate evidence validation do not retain unverified completion flags.
 
 ## Corrected real-world reference cases
 

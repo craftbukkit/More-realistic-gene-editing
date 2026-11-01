@@ -36,11 +36,10 @@ public class SequencerBlockEntity extends TimedMachineBlockEntity {
     }
     @Override protected void onJobCommitted(java.util.UUID owner,ItemStack output) {
         if(owner==null || world==null || world.getServer()==null)return;
-        var player=world.getServer().getPlayerManager().getPlayer(owner);
         var id=GenomeSampleItem.getGenomeId(output); NbtCompound data=StackData.read(output);
-        if(player!=null && id!=null && data.getBoolean("ConcordancePassed") && data.getInt("ConcordanceCoveredBases")==data.getLong("RegionLength"))
+        if(id!=null && data.getBoolean("ConcordancePassed") && data.getInt("ConcordanceCoveredBases")==data.getLong("RegionLength"))
             GenomeRepository.get(world.getServer()).findOwned(id,owner).filter(g->g.getRevision()==data.getLong("GenomeRevision")).ifPresent(g->
-                com.morerealisticgeneediting.project.ServerProjectManager.recordVerified(player,id,g.getRevision()));
+                com.morerealisticgeneediting.project.ServerProjectManager.recordVerified(world.getServer(),owner,id,g.getRevision()));
     }
     public static void tick(World world,BlockPos pos,BlockState state,SequencerBlockEntity entity) { entity.tickJob(); }
     @Override public Text getDisplayName() { return Text.translatable("block.morerealisticgeneediting.sequencer"); }

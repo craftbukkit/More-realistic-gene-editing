@@ -124,10 +124,9 @@ public class BenchtopSequencerBlockEntity extends LabEquipmentBlockEntity {
         if(current.isEmpty())setStack(channel+5,output.copy());else current.increment(output.getCount());
         run.held=DefaultedList.ofSize(4,ItemStack.EMPTY);run.phase=SequencingPhase.COMPLETE;
         if(run.concordant&&run.actor!=null&&run.sample!=null){
-            var actor=world.getServer().getPlayerManager().getPlayer(run.actor);
             var currentSample=GenomeRepository.get(world.getServer()).findOwned(run.sample,run.actor);
-            if(actor!=null&&currentSample.isPresent()&&currentSample.get().getRevision()==run.revision)
-                ServerProjectManager.recordVerified(actor,run.sample,run.revision);
+            if(currentSample.isPresent()&&currentSample.get().getRevision()==run.revision)
+                ServerProjectManager.recordVerified(world.getServer(),run.actor,run.sample,run.revision);
         }
         markDirty();
     }

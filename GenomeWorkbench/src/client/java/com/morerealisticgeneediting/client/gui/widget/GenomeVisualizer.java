@@ -5,9 +5,13 @@ import net.minecraft.client.font.TextRenderer;
 import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.Drawable;
 import net.minecraft.client.gui.Element;
+import net.minecraft.client.gui.Selectable;
+import net.minecraft.client.gui.screen.narration.NarrationMessageBuilder;
+import net.minecraft.client.gui.screen.narration.NarrationPart;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.MathHelper;
 /** A bounded viewer of a supplied sample. DrawContext converts GUI scissor coordinates for every GUI scale. */
-public class GenomeVisualizer implements Drawable,Element {
+public class GenomeVisualizer implements Drawable,Element,Selectable {
     private Genome genome;
     private final int x,y,width,height;
     private double scroll,zoom=10;
@@ -41,5 +45,7 @@ public class GenomeVisualizer implements Drawable,Element {
     @Override public boolean isMouseOver(double mx,double my){return mx>=x&&my>=y&&mx<x+width&&my<y+height;}
     @Override public void setFocused(boolean focused){this.focused=focused;}
     @Override public boolean isFocused(){return focused;}
+    @Override public SelectionType getType(){return focused?SelectionType.FOCUSED:SelectionType.NONE;}
+    @Override public void appendNarrations(NarrationMessageBuilder builder){builder.put(NarrationPart.TITLE,Text.translatable("screen.mrge.genome_title"));}
     public void setGenome(Genome genome){this.genome=genome;scroll=0;zoom=10;}
 }

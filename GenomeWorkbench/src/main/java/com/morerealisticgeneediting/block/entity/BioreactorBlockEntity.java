@@ -362,10 +362,11 @@ public class BioreactorBlockEntity extends LabEquipmentBlockEntity {
         if(!getStack(OUTPUT_SLOT).isEmpty())return;
         // Create output based on final culture state
         if (cellDensity > 1e6f && viability > 0.5f) {
-            ItemStack output = new ItemStack(ModItems.GENOME_SAMPLE);
+            ItemStack output = new ItemStack(ModItems.CELL_CULTURE_FLASK);
             
             NbtCompound nbt = StackData.read(getStack(CULTURE_SLOT));
             nbt.putString("Type", "cell_culture");
+            nbt.putString("SampleType","virtual_cell_culture");
             nbt.putString("CellType", cultureType);
             nbt.putFloat("CellDensity", cellDensity);
             nbt.putFloat("Viability", viability);
@@ -411,7 +412,7 @@ public class BioreactorBlockEntity extends LabEquipmentBlockEntity {
     // ========== Validation ==========
 
     private boolean isValidCulture(ItemStack stack) {
-        return stack.isOf(ModItems.GENOME_SAMPLE) && StackData.read(stack).contains("CellType");
+        return stack.isOf(ModItems.CELL_CULTURE_FLASK) && "virtual_cell_culture".equals(StackData.read(stack).getString("SampleType")) && StackData.read(stack).contains("CellType");
     }
 
     private boolean isValidMedium(ItemStack stack) {

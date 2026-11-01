@@ -93,7 +93,7 @@ public abstract class TimedMachineBlockEntity extends BlockEntity implements Imp
         NbtCompound job=new NbtCompound(); Inventories.writeNbt(job,reserved,lookup);
         if(jobOwner!=null)job.putUuid("Owner",jobOwner);
         job.putInt("State",state); job.putInt("Remaining",remainingTicks);
-        if(!pendingOutput.isEmpty()) job.put("Output",pendingOutput.toNbt(lookup));
+        if(!pendingOutput.isEmpty()) job.put("Output",pendingOutput.encode(lookup));
         nbt.put("MachineJob",job);
     }
     @Override protected void readNbt(NbtCompound nbt,RegistryWrapper.WrapperLookup lookup) {

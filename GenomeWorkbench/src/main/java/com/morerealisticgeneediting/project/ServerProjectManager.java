@@ -3,6 +3,7 @@ package com.morerealisticgeneediting.project;
 import com.morerealisticgeneediting.network.s2c.S2CPlayerProjectStatePacket;
 import com.morerealisticgeneediting.genome.GenomeRepository;
 import net.minecraft.server.network.ServerPlayerEntity;
+import net.minecraft.server.MinecraftServer;
 import net.minecraft.text.Text;
 import java.util.HashSet;
 import java.util.UUID;
@@ -49,8 +50,14 @@ public final class ServerProjectManager {
     }
     /** Call only after a completed server-run sequence concordance validation of this exact revision. */
     public static void recordVerified(ServerPlayerEntity player,UUID sample,long revision) {
-        if (!ownsCurrentRevision(player,sample,revision)) return;
-        ProjectStatePersistence store=store(player);
-        store.getEvidence(player.getUuid(),sample).ifPresent(e->store.putEvidence(player.getUuid(),e.verified(revision)));
+        recordVerified(player.getServer(),player.getUuid(),sample,revision);
+    }
+    /** Machine jobs retain their authenticated owner when that player logs out before completion. */
+    public static void recordVerified(MinecraftServer server,UUID owner,UUID sample,long revision) {
+        if (server == null || owner == null || sample == null || revision < 0) return;
+        if (GenomeRepository.get(server).findOwned(sample,owner)
+                .filter(genome -> genome.getRevision() == revision).isEmpty()) return;
+        ProjectStatePersistence store=ProjectStatePersistence.getServerState(server);
+        store.getEvidence(owner,sample).ifPresent(e->store.putEvidence(owner,e.verified(revision)));
     }
 }
