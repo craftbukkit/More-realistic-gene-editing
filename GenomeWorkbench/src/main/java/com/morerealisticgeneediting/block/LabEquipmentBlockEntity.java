@@ -28,7 +28,7 @@ import org.jetbrains.annotations.Nullable;
 
 /**
  * Base class for laboratory equipment block entities.
- * 
+ *
  * Provides:
  * - Inventory management with sided access
  * - Progress tracking for processes
@@ -36,15 +36,15 @@ import org.jetbrains.annotations.Nullable;
  * - NBT serialization
  * - Network synchronization
  */
-public abstract class LabEquipmentBlockEntity extends BlockEntity 
+public abstract class LabEquipmentBlockEntity extends BlockEntity
         implements NamedScreenHandlerFactory, SidedInventory {
-    
+
     protected DefaultedList<ItemStack> inventory;
     protected int progress = 0;
     protected int maxProgress = 200;
     protected EquipmentTier tier = EquipmentTier.BASIC;
     protected boolean isProcessing = false;
-    
+
     // Property delegate for GUI sync
     protected final PropertyDelegate propertyDelegate = new PropertyDelegate() {
         @Override
@@ -57,7 +57,7 @@ public abstract class LabEquipmentBlockEntity extends BlockEntity
                 default -> 0;
             };
         }
-        
+
         @Override
         public void set(int index, int value) {
             switch (index) {
@@ -66,70 +66,70 @@ public abstract class LabEquipmentBlockEntity extends BlockEntity
                 case 3 -> isProcessing = value != 0;
             }
         }
-        
+
         @Override
         public int size() {
             return 4;
         }
     };
-    
+
     public LabEquipmentBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state, int inventorySize) {
         super(type, pos, state);
         this.inventory = DefaultedList.ofSize(inventorySize, ItemStack.EMPTY);
     }
-    
+
     // ========== Inventory Implementation ==========
-    
+
     @Override
     public int size() {
         return inventory.size();
     }
-    
+
     @Override
     public boolean isEmpty() {
         return inventory.stream().allMatch(ItemStack::isEmpty);
     }
-    
+
     @Override
     public ItemStack getStack(int slot) {
         return inventory.get(slot);
     }
-    
+
     @Override
     public ItemStack removeStack(int slot, int amount) {
         if(!canExtractForPlayer(slot))return ItemStack.EMPTY;
         ItemStack result=Inventories.splitStack(inventory, slot, amount);markDirty();return result;
     }
-    
+
     @Override
     public ItemStack removeStack(int slot) {
         if(!canExtractForPlayer(slot))return ItemStack.EMPTY;
         ItemStack result=Inventories.removeStack(inventory, slot);markDirty();return result;
     }
-    
+
     @Override
     public void setStack(int slot, ItemStack stack) {
         inventory.set(slot, stack);
-        if (stack.getCount() > getMaxCountPerStack()) {
-            stack.setCount(getMaxCountPerStack());
+        if (stack.getCount() > Math.min(getMaxCountPerStack(),stack.getMaxCount())) {
+            stack.setCount(Math.min(getMaxCountPerStack(),stack.getMaxCount()));
         }
         markDirty();
     }
-    
+
     @Override
     public boolean canPlayerUse(PlayerEntity player) {
-        return world != null && player.getWorld()==world && 
-               world.getBlockEntity(pos) == this && 
+        return world != null && player.getWorld()==world &&
+               world.getBlockEntity(pos) == this &&
                player.squaredDistanceTo(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 64.0;
     }
-    
+
     @Override
     public void clear() {
-        inventory.clear();
+        inventory.clear();markDirty();
     }
-    
+
     // ========== Sided Inventory ==========
-    
+
     @Override
     public int[] getAvailableSlots(Direction side) {
         int[] slots = new int[inventory.size()];
@@ -138,33 +138,33 @@ public abstract class LabEquipmentBlockEntity extends BlockEntity
         }
         return slots;
     }
-    
+
     @Override
     public boolean canInsert(int slot, ItemStack stack, @Nullable Direction dir) {
         return isInputSlot(slot) && !isProcessing && isValid(slot,stack);
     }
-    
+
     @Override
     public boolean canExtract(int slot, ItemStack stack, Direction dir) {
         return isOutputSlot(slot);
     }
-    
+
     /**
      * Check if slot is for input items
      */
     protected abstract boolean isInputSlot(int slot);
-    
+
     /**
      * Check if slot is for output items
      */
     protected abstract boolean isOutputSlot(int slot);
-    
+
     public boolean canExtractForPlayer(int slot) { return isOutputSlot(slot) || !isProcessing; }
     public boolean isOutputForPlayer(int slot) { return isOutputSlot(slot); }
     @Override public boolean isValid(int slot,ItemStack stack) { return slot>=0 && slot<size() && isInputSlot(slot) && !isProcessing; }
 
     // ========== NBT Serialization ==========
-    
+
     @Override
     protected void writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
         super.writeNbt(nbt, registryLookup);
@@ -174,7 +174,7 @@ public abstract class LabEquipmentBlockEntity extends BlockEntity
         nbt.putInt("Tier", tier.getLevel());
         nbt.putBoolean("IsProcessing", isProcessing);
     }
-    
+
     @Override
     protected void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
         super.readNbt(nbt, registryLookup);
@@ -190,22 +190,22 @@ public abstract class LabEquipmentBlockEntity extends BlockEntity
         };
         isProcessing = nbt.getBoolean("IsProcessing");
     }
-    
+
     // ========== Network Sync ==========
-    
+
     @Nullable
     @Override
     public Packet<ClientPlayPacketListener> toUpdatePacket() {
         return BlockEntityUpdateS2CPacket.create(this);
     }
-    
+
     @Override
     public NbtCompound toInitialChunkDataNbt(RegistryWrapper.WrapperLookup registryLookup) {
         return createNbt(registryLookup);
     }
-    
+
     // ========== Processing Logic ==========
-    
+
     /**
      * Tick method for processing logic
      */
@@ -215,60 +215,60 @@ public abstract class LabEquipmentBlockEntity extends BlockEntity
      * Check if processing can continue
      */
     protected abstract boolean canProcess();
-    
+
     /**
      * Called when processing completes
      */
     protected abstract void completeProcess();
-    
+
     /**
      * Get adjusted max progress based on tier
      */
     protected int getAdjustedMaxProgress() {
         return (int) (maxProgress * tier.getSpeedMultiplier());
     }
-    
+
     // ========== Utility Methods ==========
-    
+
     /**
      * Drop all contents when block is broken
      */
     public void dropContents(World world, BlockPos pos) {
         ItemScatterer.spawn(world, pos, inventory);
     }
-    
+
     public PropertyDelegate getPropertyDelegate() {
         return propertyDelegate;
     }
-    
+
     public EquipmentTier getTier() {
         return tier;
     }
-    
+
     public void setTier(EquipmentTier tier) {
         this.tier = tier;
         // Subclasses update their own run configuration; do not compound duration on repeated assignment.
     }
-    
+
     public int getProgress() {
         return progress;
     }
-    
+
     public int getMaxProgress() {
         return maxProgress;
     }
-    
+
     public boolean isProcessing() {
         return isProcessing;
     }
-    
+
     /**
      * Get processing progress as percentage (0-1)
      */
     public float getProgressPercent() {
         return maxProgress > 0 ? (float) progress / maxProgress : 0;
     }
-    
+
     /**
      * Set active state (for block state updates)
      */
@@ -282,22 +282,22 @@ public abstract class LabEquipmentBlockEntity extends BlockEntity
         }
         markDirty();
     }
-    
+
     /**
      * Instance tick method - override this in subclasses for custom logic
      */
     public void tick() {
         if (world == null || world.isClient || isRemoved() || world.getBlockEntity(pos)!=this) return;
-        
+
         if (canProcess()) {
             isProcessing = true;
             progress++;
-            
+
             if (progress >= maxProgress) {
                 completeProcess();
                 progress = 0;
             }
-            
+
             markDirty();
         } else {
             if (progress > 0) {
@@ -309,7 +309,7 @@ public abstract class LabEquipmentBlockEntity extends BlockEntity
             }
         }
     }
-    
+
     /**
      * Check if can process with slot validation
      */

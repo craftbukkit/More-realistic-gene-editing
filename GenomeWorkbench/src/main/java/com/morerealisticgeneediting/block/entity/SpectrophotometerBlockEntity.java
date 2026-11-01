@@ -28,8 +28,8 @@ public class SpectrophotometerBlockEntity extends LabEquipmentBlockEntity {
     private EquipmentSpecs.SpectrophotometerSpec spec;
     private final PropertyDelegate measurements = new PropertyDelegate() {
         public int get(int index) { return switch(index) {
-            case 0 -> scaled(tier==EquipmentTier.BASIC ? visibleAbsorbance : absorbance260, 1000);
-            case 1 -> scaled(concentration,100);
+            case 0 -> hasResults() ? scaled(tier==EquipmentTier.BASIC ? visibleAbsorbance : absorbance260, 1000) : -1;
+            case 1 -> hasResults() ? scaled(concentration,100) : -1;
             case 2 -> tier==EquipmentTier.BASIC ? 600 : 260;
             case 3 -> tier.getLevel();
             case 4 -> hasResults() ? 1 : 0;

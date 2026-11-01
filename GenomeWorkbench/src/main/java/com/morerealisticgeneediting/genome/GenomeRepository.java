@@ -1,5 +1,6 @@
 package com.morerealisticgeneediting.genome;
 import net.minecraft.nbt.*;
+import com.morerealisticgeneediting.data.GenomePatch;
 import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.world.PersistentState;
@@ -27,18 +28,25 @@ public final class GenomeRepository extends PersistentState {
         genomes.put(genome.getUUID(),genome);markDirty();
     }
     public void recordDelivery(UUID entityId,Genome genome){
-        if(!genomes.containsKey(genome.getUUID()))throw new IllegalArgumentException("Unknown sample");
+        if(genomes.get(genome.getUUID())!=genome)throw new IllegalArgumentException("Delivery requires the current stored sample revision");
         if(!deliveries.containsKey(entityId)&&deliveries.size()>=MAX_SAMPLES)throw new IllegalStateException("World delivery record capacity reached");
         NbtCompound record=new NbtCompound();record.putUuid("entity",entityId);record.putUuid("sample",genome.getUUID());record.putUuid("owner",genome.getOwner());record.putLong("revision",genome.getRevision());deliveries.put(entityId,record);markDirty();
     }
     public static GenomeRepository fromNbt(NbtCompound n,RegistryWrapper.WrapperLookup registries){
-        GenomeRepository store=new GenomeRepository();NbtList list=n.getList("genomes",NbtElement.COMPOUND_TYPE);
+        GenomeRepository store=new GenomeRepository();NbtList list=GenomePatch.requireCompoundList(n,"genomes");
         if(list.size()>MAX_SAMPLES)throw new IllegalArgumentException("Too many saved samples");
         for(int i=0;i<list.size();i++){Genome g=Genome.fromNbt(list.getCompound(i));if(store.genomes.putIfAbsent(g.getUUID(),g)!=null)throw new IllegalArgumentException("Duplicate sample identity");}
         if(store.genomes.values().stream().mapToLong(Genome::getStoredBaseCount).sum()>MAX_TOTAL_BASES)throw new IllegalArgumentException("Saved sequence storage budget exceeded");
-        NbtList delivered=n.getList("deliveries",NbtElement.COMPOUND_TYPE);
+        NbtList delivered=GenomePatch.requireCompoundList(n,"deliveries");
         if(delivered.size()>MAX_SAMPLES)throw new IllegalArgumentException("Too many delivery records");
-        for(int i=0;i<delivered.size();i++){NbtCompound record=delivered.getCompound(i);store.deliveries.put(record.getUuid("entity"),record.copy());}
+        for(int i=0;i<delivered.size();i++){
+            NbtCompound record=delivered.getCompound(i);
+            if(!record.containsUuid("entity")||!record.containsUuid("sample")||!record.containsUuid("owner"))throw new IllegalArgumentException("Missing delivery identity");
+            GenomePatch.requireField(record,"revision",NbtElement.LONG_TYPE);
+            Genome g=store.genomes.get(record.getUuid("sample"));long revision=record.getLong("revision");
+            if(g==null||!g.getOwner().equals(record.getUuid("owner"))||revision<0||revision>g.getRevision())throw new IllegalArgumentException("Invalid delivery provenance");
+            if(store.deliveries.putIfAbsent(record.getUuid("entity"),record.copy())!=null)throw new IllegalArgumentException("Duplicate delivery identity");
+        }
         return store;
     }
     @Override public NbtCompound writeNbt(NbtCompound n,RegistryWrapper.WrapperLookup registries){NbtList list=new NbtList();genomes.values().forEach(g->list.add(g.writeNbt()));n.put("genomes",list);NbtList delivered=new NbtList();deliveries.values().forEach(record->delivered.add(record.copy()));n.put("deliveries",delivered);return n;}

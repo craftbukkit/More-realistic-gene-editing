@@ -42,6 +42,10 @@ public class EthicsCaseBlockEntity extends BlockEntity implements ExtendedScreen
     }
     @Override public DefaultedList<ItemStack> getItems() { return inventory; }
     @Override public Text getDisplayName() { return Text.translatable("block.morerealisticgeneediting.ethics_case_block"); }
-    @Override public EthicsCaseOpenData getScreenOpeningData(ServerPlayerEntity player) { return new EthicsCaseOpenData(pos,ethicsCase); }
-    @Override public ScreenHandler createMenu(int syncId,PlayerInventory inventory,PlayerEntity player) { return new EthicsCaseScreenHandler(syncId,inventory,this,this); }
+    private void ensureCase(PlayerEntity player){
+        if(ethicsCase==null && world!=null && !world.isClient && canPlayerUse(player))
+            EthicsCasebook.getAllCases().values().stream().findFirst().ifPresent(value->setEthicsCase(value,player));
+    }
+    @Override public EthicsCaseOpenData getScreenOpeningData(ServerPlayerEntity player) { ensureCase(player);return new EthicsCaseOpenData(pos,ethicsCase); }
+    @Override public ScreenHandler createMenu(int syncId,PlayerInventory inventory,PlayerEntity player) { ensureCase(player);return new EthicsCaseScreenHandler(syncId,inventory,this,this); }
 }

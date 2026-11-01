@@ -96,6 +96,11 @@ public class BscBlockEntity extends LabEquipmentBlockEntity {
         return false;
     }
 
+    // Airflow is continuous environmental control, not an inventory transaction.
+    @Override public boolean canExtractForPlayer(int slot){return !uvCycleActive && slot>=0 && slot<size();}
+    @Override public boolean isValid(int slot,ItemStack stack){return !uvCycleActive && slot>=0 && slot<size();}
+    @Override public boolean canInsert(int slot,ItemStack stack,net.minecraft.util.math.Direction side){return isValid(slot,stack);}
+
     @Override
     protected boolean canProcess() {
         return airflowOn;
@@ -103,7 +108,7 @@ public class BscBlockEntity extends LabEquipmentBlockEntity {
 
     @Override
     public void tick() {
-        if (world == null || world.isClient) return;
+        if (world == null || world.isClient || isRemoved() || world.getBlockEntity(pos)!=this) return;
 
         if (airflowOn) {
             updateAirflow();
@@ -226,7 +231,7 @@ public class BscBlockEntity extends LabEquipmentBlockEntity {
     }
 
     public void startUvCycle() {
-        if (!spec.hasUV() || uvCycleActive) return;
+        if (!spec.hasUV() || uvCycleActive || !isEmpty()) return;
         if (tier != EquipmentTier.ELITE) {
             sashOpen = false;
             sashHeight = 0;

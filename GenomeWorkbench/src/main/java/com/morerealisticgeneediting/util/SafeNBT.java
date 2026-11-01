@@ -3,6 +3,9 @@ package com.morerealisticgeneediting.util;
 import net.minecraft.nbt.NbtCompound;
 import net.minecraft.nbt.NbtElement;
 import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.NbtByteArray;
+import net.minecraft.nbt.NbtIntArray;
+import net.minecraft.nbt.NbtLongArray;
 import org.jetbrains.annotations.Nullable;
 
 import java.util.Optional;
@@ -21,7 +24,7 @@ public final class SafeNBT {
     // ========== Constants ==========
     public static final int MAX_STRING_LENGTH = 32767;
     public static final int MAX_LIST_SIZE = 512;
-    public static final int MAX_NBT_DEPTH = 512;
+    public static final int MAX_NBT_DEPTH = 64;
     public static final long MAX_NBT_SIZE = 2 * 1024 * 1024; // 2MB
 
     private SafeNBT() {} // Prevent instantiation
@@ -56,6 +59,7 @@ public final class SafeNBT {
      */
     public static void putStringTruncated(NbtCompound nbt, String key, @Nullable String value, int maxLength) {
         if (nbt == null || key == null || value == null) return;
+        if (maxLength < 0) throw new IllegalArgumentException("Negative string length limit");
         String truncated = value.length() > maxLength ? value.substring(0, maxLength) : value;
         nbt.putString(key, truncated);
     }
@@ -231,7 +235,8 @@ public final class SafeNBT {
         
         if (element instanceof NbtCompound compound) {
             for (String key : compound.getKeys()) {
-                size += 2 + key.length();
+                // Modified UTF-8 requires up to three bytes per Java character.
+                size += 2L + 3L * key.length();
                 size += estimateSizeRecursive(compound.get(key), depth + 1);
             }
         } else if (element instanceof NbtList list) {
@@ -239,8 +244,14 @@ public final class SafeNBT {
             for (int i = 0; i < list.size(); i++) {
                 size += estimateSizeRecursive(list.get(i), depth + 1);
             }
+        } else if (element instanceof NbtByteArray array) {
+            size += 4L + array.size();
+        } else if (element instanceof NbtIntArray array) {
+            size += 4L + 4L * array.size();
+        } else if (element instanceof NbtLongArray array) {
+            size += 4L + 8L * array.size();
         } else if (element.getType() == NbtElement.STRING_TYPE) {
-            size += 2 + element.asString().length();
+            size += 2L + 3L * element.asString().length();
         } else {
             size += 8; // For primitives (overestimate)
         }

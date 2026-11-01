@@ -57,11 +57,18 @@ public final class GenomePatch {
     public static GenomePatch fromNbt(NbtCompound n){
         if(!n.containsUuid("patchId")||!n.containsUuid("baseGenomeId"))throw new IllegalArgumentException("Missing patch identity");
         GenomePatch p=new GenomePatch(n.getUuid("patchId"),n.getUuid("baseGenomeId"));
-        NbtList points=n.getList("points",NbtElement.COMPOUND_TYPE),ins=n.getList("insertions",NbtElement.COMPOUND_TYPE),del=n.getList("deletions",NbtElement.COMPOUND_TYPE);
+        NbtList points=requireCompoundList(n,"points"),ins=requireCompoundList(n,"insertions"),del=requireCompoundList(n,"deletions");
         if((long)points.size()+ins.size()+del.size()>MAX_MUTATIONS)throw new IllegalArgumentException("Too many edits in saved patch");
-        for(int j=0;j<points.size();j++){var x=points.getCompound(j);p.addPointMutation(x.getLong("position"),x.getByte("base"));}
-        for(int j=0;j<ins.size();j++){var x=ins.getCompound(j);p.addInsertion(x.getLong("position"),x.getString("sequence"));}
-        for(int j=0;j<del.size();j++){var x=del.getCompound(j);p.addDeletion(x.getLong("position"),x.getInt("length"));}
+        for(int j=0;j<points.size();j++){var x=points.getCompound(j);requireField(x,"position",NbtElement.LONG_TYPE);requireField(x,"base",NbtElement.BYTE_TYPE);p.addPointMutation(x.getLong("position"),x.getByte("base"));}
+        for(int j=0;j<ins.size();j++){var x=ins.getCompound(j);requireField(x,"position",NbtElement.LONG_TYPE);requireField(x,"sequence",NbtElement.STRING_TYPE);p.addInsertion(x.getLong("position"),x.getString("sequence"));}
+        for(int j=0;j<del.size();j++){var x=del.getCompound(j);requireField(x,"position",NbtElement.LONG_TYPE);requireField(x,"length",NbtElement.INT_TYPE);p.addDeletion(x.getLong("position"),x.getInt("length"));}
         return p;
+    }
+    public static void requireField(NbtCompound n,String key,int type){
+        if(!n.contains(key,type))throw new IllegalArgumentException("Missing or invalid saved field: "+key);
+    }
+    public static NbtList requireCompoundList(NbtCompound n,String key){
+        if(!(n.get(key) instanceof NbtList list)||(!list.isEmpty()&&list.getHeldType()!=NbtElement.COMPOUND_TYPE))throw new IllegalArgumentException("Invalid saved compound list: "+key);
+        return list;
     }
 }

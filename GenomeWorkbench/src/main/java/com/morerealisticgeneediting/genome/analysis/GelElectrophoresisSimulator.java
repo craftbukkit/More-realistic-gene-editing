@@ -114,7 +114,7 @@ public class GelElectrophoresisSimulator {
     public record GelQualityMetrics(
         double resolution,        // How well-separated bands are
         double bandSharpness,     // Average band sharpness
-        boolean hasSmearing,      // Indicates degradation
+        boolean hasSmearing,      // Appearance flag; does not identify a cause
         boolean hasOverloading,   // Too much DNA
         double overallQuality     // 0-1 overall score
     ) {}
@@ -267,7 +267,7 @@ public class GelElectrophoresisSimulator {
     
     /**
      * Calculate migration distance based on fragment size.
-     * DNA migration is inversely proportional to log10 of size.
+     * This display approximation decreases affinely with log10 of size.
      */
     private double calculateMigrationDistance(int sizeInBp, GelConcentration gel, double drive) {
         // Log-linear display approximation, limited to the simulated size range.

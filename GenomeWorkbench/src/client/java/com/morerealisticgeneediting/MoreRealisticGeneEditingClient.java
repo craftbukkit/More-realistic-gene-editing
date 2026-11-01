@@ -17,6 +17,7 @@ public class MoreRealisticGeneEditingClient implements ClientModInitializer {
         HandledScreens.register(ModScreenHandlers.GENOME_TERMINAL_SCREEN_HANDLER,GenomeTerminalScreen::new);
         HandledScreens.register(ModScreenHandlers.GENE_INSERTION_SCREEN_HANDLER,GeneInsertionScreen::new);
         HandledScreens.register(ModScreenHandlers.ETHICS_CASE_SCREEN_HANDLER,EthicsCaseScreen::new);
+        HandledScreens.register(ModScreenHandlers.LAB_EQUIPMENT,GenericLaboratoryScreen::new);
         ModEquipmentScreens.registerScreens();ClientPacketHandler.register();
     }
 }

@@ -4,18 +4,11 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Equipment Specifications based on real laboratory equipment.
- * 
- * This class contains detailed specifications derived from actual equipment manuals:
- * - DLAB D1008 Palm Micro Centrifuge
- * - Haier LX-165T2R Refrigerated Centrifuge
- * - Beckman Coulter Optima XPN-100 Ultracentrifuge
- * - Bio-Rad T100 Thermal Cycler
- * - Roche LightCycler 480 II
- * - Oxford Nanopore MinION Mk1C
- * - Thermo NanoDrop One
- * - Bio-Rad Gene Pulser Xcell
- * - And more...
+ * Illustrative equipment presets for the game, inspired by instrument categories.
+ * Legacy product names are display labels only. Constants combine game balance with
+ * approximate ranges and are not manufacturer specifications, performance guarantees,
+ * calibrated measurements or instructions for operating real equipment.
+ * Success probabilities and shortened durations are explicitly game parameters.
  */
 public final class EquipmentSpecs {
 
@@ -244,7 +237,7 @@ public final class EquipmentSpecs {
      * - Wavelength: 190-850 nm
      * - Sample volume: 0.5-2 μl
      * - Direct measurement (no cuvette)
-     * - Auto-blanking
+     * - Blanking requires a separately measured reference
      */
     public static final SpectrophotometerSpec NANODROP_ONE = new SpectrophotometerSpec(
         "NanoDrop One",

@@ -51,4 +51,21 @@ class MeasurementModelsTest {
         assertThrows(IllegalArgumentException.class,()->MeasurementModels.delivery(Float.NaN,1));
         assertThrows(IllegalArgumentException.class,()->MeasurementModels.delivery(.5f,0));
     }
+    @Test void unknownOrMalformedFragmentsCannotProduceInventedBands() {
+        assertArrayEquals(new int[0],MeasurementModels.fragmentSizes(new int[0],0));
+        assertArrayEquals(new int[0],MeasurementModels.fragmentSizes(new int[]{100,-1},0));
+        assertArrayEquals(new int[0],MeasurementModels.fragmentSizes(new int[11],0));
+        assertArrayEquals(new int[0],MeasurementModels.fragmentSizes(new int[]{1_000_001},0));
+        assertArrayEquals(new int[]{4000},MeasurementModels.fragmentSizes(new int[0],4000));
+        int[] source={500,1000};int[] result=MeasurementModels.fragmentSizes(source,0);source[0]=1;
+        assertArrayEquals(new int[]{500,1000},result);
+    }
+    @Test void gelMigrationNeverReversesLargeFragmentsOrMovesWithoutDrive() {
+        assertEquals(0,MeasurementModels.bandPosition(100,0,1,1));
+        assertEquals(0,MeasurementModels.bandPosition(100,1,0,1));
+        float small=MeasurementModels.bandPosition(500,1,1,1);
+        float large=MeasurementModels.bandPosition(12000,1,1,1);
+        assertTrue(large>0);assertTrue(small>large);assertTrue(small<=100);
+        assertTrue(Float.isNaN(MeasurementModels.bandPosition(0,1,1,1)));
+    }
 }

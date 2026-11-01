@@ -6,6 +6,7 @@ import com.morerealisticgeneediting.genome.Genome;
 import com.morerealisticgeneediting.genome.GenomeRepository;
 import com.morerealisticgeneediting.genome.crispr.CrisprEngine;
 import com.morerealisticgeneediting.item.ModItems;
+import com.morerealisticgeneediting.item.GenomeSampleItem;
 import com.morerealisticgeneediting.network.s2c.*;
 import com.morerealisticgeneediting.project.ServerProjectManager;
 import com.morerealisticgeneediting.screens.*;
@@ -149,6 +150,14 @@ public final class C2SPackets {
             CrisprEngine.EditingResult result=engine.performEditing(genome,site,hdr?sequence.toUpperCase(Locale.ROOT):null);
             Genome updated=apply(genome,result.primaryOutcome());
             GenomeRepository.get(player.getServer()).put(updated);
+            for (ItemStack held : List.of(player.getMainHandStack(), player.getOffHandStack())) {
+                if (id.equals(GenomeSampleItem.getGenomeId(held))) {
+                    var data = GenomeSampleItem.readData(held);
+                    data.putLong("Revision", updated.getRevision());
+                    data.putLong("GenomeLength", updated.getTotalLength());
+                    GenomeSampleItem.writeData(held, data);
+                }
+            }
             enzyme.decrement(1);guide.decrement(1);if(hdr)donor.decrement(1);
             player.getInventory().markDirty();
             if(result.primaryOutcome().getType()!=EditOutcome.Type.NO_CHANGE)ServerProjectManager.recordEdited(player,id,updated.getRevision());
@@ -156,6 +165,8 @@ public final class C2SPackets {
             player.closeHandledScreen();
         } catch(IllegalArgumentException ex) {
             player.sendMessage(Text.translatable("message.mrge.edit_conflict"),false);
+        } catch(IllegalStateException ex) {
+            player.sendMessage(Text.translatable("message.mrge.storage_full"),false);
         }
     }
 }

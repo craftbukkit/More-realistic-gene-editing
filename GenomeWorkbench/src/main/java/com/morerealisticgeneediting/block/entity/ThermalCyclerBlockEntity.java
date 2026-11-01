@@ -298,9 +298,9 @@ public class ThermalCyclerBlockEntity extends LabEquipmentBlockEntity {
     @Override
     protected void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
         super.readNbt(nbt, registryLookup);
-        currentCycle = nbt.getInt("CurrentCycle");
-        totalCycles = nbt.getInt("TotalCycles");
-        currentStep = nbt.getInt("CurrentStep");
+        currentCycle = Math.max(0,Math.min(50,nbt.getInt("CurrentCycle")));
+        totalCycles = Math.max(1,Math.min(50,nbt.getInt("TotalCycles")));
+        currentStep = Math.max(0,Math.min(3,nbt.getInt("CurrentStep")));
         currentTemperature = nbt.getFloat("CurrentTemp");
         targetTemperature = nbt.getFloat("TargetTemp");
         annealingTemp = nbt.getFloat("AnnealingTemp");

@@ -103,7 +103,11 @@ public final class Genome {
     }
     public static Genome fromNbt(NbtCompound n){
         if(n.getInt("schemaVersion")!=1||!n.containsUuid("id")||!n.containsUuid("owner"))throw new IllegalArgumentException("Invalid genome save schema");
-        NbtList ps=n.getList("patches",NbtElement.COMPOUND_TYPE);if(ps.size()>MAX_PATCHES)throw new IllegalArgumentException("Too many saved patches");
+        GenomePatch.requireField(n,"referenceId",NbtElement.STRING_TYPE);
+        GenomePatch.requireField(n,"revision",NbtElement.LONG_TYPE);
+        GenomePatch.requireField(n,"baseLength",NbtElement.INT_TYPE);
+        GenomePatch.requireField(n,"packedBases",NbtElement.BYTE_ARRAY_TYPE);
+        NbtList ps=GenomePatch.requireCompoundList(n,"patches");if(ps.size()>MAX_PATCHES)throw new IllegalArgumentException("Too many saved patches");
         List<GenomePatch> patches=new ArrayList<>();for(int i=0;i<ps.size();i++)patches.add(GenomePatch.fromNbt(ps.getCompound(i)));
         return new Genome(n.getUuid("id"),n.getUuid("owner"),n.getByteArray("packedBases"),n.getInt("baseLength"),n.getString("referenceId"),n.getLong("revision"),patches);
     }

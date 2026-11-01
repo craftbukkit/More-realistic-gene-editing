@@ -50,15 +50,15 @@ public interface ImplementedInventory extends Inventory {
     @Override
     default void setStack(int slot, ItemStack stack) {
         getItems().set(slot, stack);
-        if (stack.getCount() > getMaxCountPerStack()) {
-            stack.setCount(getMaxCountPerStack());
+        if (stack.getCount() > Math.min(getMaxCountPerStack(),stack.getMaxCount())) {
+            stack.setCount(Math.min(getMaxCountPerStack(),stack.getMaxCount()));
         }
         markDirty();
     }
 
     @Override
     default void clear() {
-        getItems().clear();
+        getItems().clear();markDirty();
     }
 
     @Override

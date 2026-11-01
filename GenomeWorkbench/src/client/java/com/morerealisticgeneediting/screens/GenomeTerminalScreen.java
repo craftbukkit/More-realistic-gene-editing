@@ -9,13 +9,14 @@ import net.minecraft.client.gui.DrawContext;
 import net.minecraft.client.gui.screen.ingame.HandledScreen;
 import net.minecraft.client.gui.widget.ButtonWidget;
 import net.minecraft.client.gui.widget.TextFieldWidget;
+import net.minecraft.client.gui.tooltip.Tooltip;
 import net.minecraft.entity.player.PlayerInventory;
 import net.minecraft.text.Text;
 import java.util.*;
 
 /** Displays only versioned server responses. Coordinates are zero-based in the edited sequence. */
 public class GenomeTerminalScreen extends HandledScreen<GenomeTerminalScreenHandler> {
-    private static final int BASES=40, ROWS=12, PAGE=BASES*ROWS;
+    private static final int BASES=40, ROWS=11, PAGE=BASES*ROWS;
     private String sequence="";
     private long start;
     private long selectedPam=-1;
@@ -56,8 +57,11 @@ public class GenomeTerminalScreen extends HandledScreen<GenomeTerminalScreenHand
         int first=projectPage*4;
         for(int i=first;i<Math.min(first+4,projects.size());i++) {
             ResearchProject project=projects.get(i);int yLine=35+(i-first)*39;
-            button("button.mrge.start",8,yLine,90,()->ClientPlayNetworking.send(new C2SStartProjectPacket(project.id())));
-            button("button.mrge.complete",110,yLine,90,()->ClientPlayNetworking.send(new C2SCompleteProjectPacket(project.id())));
+            ButtonWidget begin=button(project.isReferenceOnly()?"button.mrge.reference":"button.mrge.start",8,yLine,90,()->ClientPlayNetworking.send(new C2SStartProjectPacket(project.id())));
+            begin.active=!project.isReferenceOnly();
+            begin.setTooltip(Tooltip.of(Text.literal(project.description()+"\n"+String.join("\n",project.objectives()))));
+            ButtonWidget complete=button("button.mrge.complete",110,yLine,90,()->ClientPlayNetworking.send(new C2SCompleteProjectPacket(project.id())));
+            complete.active=!project.isReferenceOnly();
         }
         button("button.mrge.previous",8,201,90,()->{projectPage=Math.max(0,projectPage-1);refreshWidgets();});
         button("button.mrge.next",222,201,90,()->{if((projectPage+1)*4<projects.size())projectPage++;refreshWidgets();});

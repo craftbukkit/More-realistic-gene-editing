@@ -430,20 +430,20 @@ public class LiquidHandlerBlockEntity extends LabEquipmentBlockEntity {
                 currentProtocol = Protocol.valueOf(nbt.getString("Protocol"));
             }
         } catch (Exception e) {
-            currentProtocol = null;
+            currentProtocol = Protocol.PLATE_REPLICATE;
         }
         
         isRunning = nbt.getBoolean("IsRunning");
         protocolProgress = nbt.getInt("ProtocolProgress");
-        protocolMaxProgress = nbt.getInt("ProtocolMaxProgress");
+        protocolMaxProgress = Math.max(1,Math.min(72000,nbt.getInt("ProtocolMaxProgress")));
         currentStep = nbt.getInt("CurrentStep");
         totalSteps = nbt.getInt("TotalSteps");
         tipsUsed = nbt.getInt("TipsUsed");
         transfersCompleted = nbt.getInt("TransfersCompleted");
         totalVolumeTransferred = nbt.getFloat("TotalVolumeTransferred");
         transferVolume = nbt.getFloat("TransferVolume");
-        dilutionFactor = nbt.getInt("DilutionFactor");
-        dilutionSteps = nbt.getInt("DilutionSteps");
+        dilutionFactor = Math.max(1,Math.min(100,nbt.getInt("DilutionFactor")));
+        dilutionSteps = Math.max(1,Math.min(12,nbt.getInt("DilutionSteps")));
         targetConcentration = nbt.getFloat("TargetConcentration");
         armPositionX = nbt.getInt("ArmX");
         armPositionY = nbt.getInt("ArmY");

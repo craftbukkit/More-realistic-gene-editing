@@ -74,7 +74,8 @@ public class PcrSimulator {
                 if (c == 'G' || c == 'C') gc++;
                 else if (c == 'A' || c == 'T') at++;
             }
-            // Basic formula: Tm = 4(G+C) + 2(A+T) for short oligos
+            // Short inputs are accepted only as toy sequences; this long-oligo
+            // approximation is not a thermodynamic model for short oligomers.
             // Sequence-only approximation: Tm = 64.9 + 41*(G+C-16.4)/N
             return TM_BASE + TM_GC_CONTRIB * (gc - 16.4) * 100 / seq.length();
         }
@@ -87,7 +88,7 @@ public class PcrSimulator {
         }
         
         private static double calculateSpecificity(String seq) {
-            // Simplified specificity score based on sequence uniqueness
+            // Sequence-complexity ranking; no genome-wide specificity search.
             double score = 0.8; // Complexity ranking only; not a reference-genome specificity measurement.
             
             // Penalize repetitive sequences
@@ -186,9 +187,9 @@ public class PcrSimulator {
      */
     public record PcrQualityMetrics(
         double efficiency,      // Per-cycle efficiency
-        double specificity,     // Single band vs multiple bands
-        boolean hasPrimerDimers,
-        boolean hasNonSpecificBands,
+        double specificity,     // Legacy name for sequence-complexity ranking
+        boolean hasPrimerDimers, // Legacy name: heuristic risk, not observed dimers
+        boolean hasNonSpecificBands, // False means not modeled, not excluded
         double estimatedPurity
     ) {}
     

@@ -115,7 +115,8 @@ public class EditOutcome {
     public double getChimerism() { return chimerism; }
 
     /**
-     * Check if this outcome causes a frameshift (deletion/insertion not divisible by 3)
+     * Coding context is absent from this result. Legacy false means not established,
+     * not proof that an edit preserves a reading frame. Use the explicit-context overload.
      */
     public boolean causesFrameshift() { return false; }
     public boolean causesFrameshift(boolean codingContextEstablished) {

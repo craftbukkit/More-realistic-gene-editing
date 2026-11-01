@@ -443,8 +443,8 @@ public class ThermalCyclerBlockEntityV2 extends LabEquipmentBlockEntity {
         }
         currentTemp = nbt.getFloat("CurrentTemp");
         targetTemp = nbt.getFloat("TargetTemp");
-        currentCycle = nbt.getInt("CurrentCycle");
-        totalCycles = nbt.getInt("TotalCycles");
+        currentCycle = Math.max(0,Math.min(50,nbt.getInt("CurrentCycle")));
+        totalCycles = Math.max(1,Math.min(50,nbt.getInt("TotalCycles")));
         annealingTemp = nbt.getFloat("AnnealingTemp");
         denatureTime = nbt.getInt("DenatureTime");
         annealTime = nbt.getInt("AnnealTime");

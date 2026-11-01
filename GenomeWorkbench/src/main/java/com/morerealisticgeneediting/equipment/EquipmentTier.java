@@ -41,7 +41,7 @@ public enum EquipmentTier {
     }
     
     /**
-     * Get success rate bonus
+     * Get the arbitrary game-balancing success bonus (not a biological prediction)
      */
     public float getSuccessRateBonus() {
         return switch (this) {

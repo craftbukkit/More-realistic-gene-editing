@@ -38,6 +38,19 @@ public final class MeasurementModels {
         float dose = driveFraction * pulseCount;
         return new DeliveryOutcome((float) (1 - Math.exp(-dose)), (float) Math.exp(-dose * .35));
     }
+    /** Explicit virtual fragment metadata only; never infer discrete bands from an item name. */
+    public static int[] fragmentSizes(int[] sizes, int singleSize) {
+        int[] candidates = sizes.length == 0 && singleSize > 0 ? new int[]{singleSize} : sizes;
+        if (candidates.length == 0 || candidates.length > 10) return new int[0];
+        for (int size : candidates) if (size < 1 || size > 1_000_000) return new int[0];
+        return candidates.clone();
+    }
+    /** Monotonic, nonnegative game distance; not a calibrated electrophoresis prediction. */
+    public static float bandPosition(int size, float drive, float elapsed, float gelFraction) {
+        if (size < 1 || !Float.isFinite(drive) || !Float.isFinite(elapsed) || !Float.isFinite(gelFraction)
+                || drive < 0 || elapsed < 0 || gelFraction <= 0) return Float.NaN;
+        return (float)Math.min(100, Math.log1p(10000.0 / size) * drive * elapsed * 12 / gelFraction);
+    }
     public static int cycleCount(int readLength, boolean pairedEnd) {
         if (readLength < 1 || readLength > 150) throw new IllegalArgumentException("Invalid read length");
         return readLength * (pairedEnd ? 2 : 1);

@@ -73,9 +73,13 @@ class ScientificAlgorithmsTest {
     @Test void pcrDoesNotAmplifyWithoutRequiredComponents() {
         var forward=PcrSimulator.Primer.design("GC".repeat(6)+"AT".repeat(4),true);
         var reverse=PcrSimulator.Primer.design("GC".repeat(6)+"AT".repeat(4),false);
-        var result=new PcrSimulator(0).runPcr(genome("ACGT".repeat(100)),forward,reverse,
+        Genome template=genome(forward.sequence()+"AAAACCCC"+"AT".repeat(4)+"GC".repeat(6));
+        assertTrue(new PcrSimulator(0).runPcr(template,forward,reverse,PcrSimulator.ReactionParameters.standard()).success());
+        var result=new PcrSimulator(0).runPcr(template,forward,reverse,
                 new PcrSimulator.ReactionParameters(30,55,60,false,1.5,0));
         assertFalse(result.success());assertEquals(0,result.totalCopies());
+        assertFalse(new PcrSimulator(0).runPcr(template,forward,reverse,
+                new PcrSimulator.ReactionParameters(30,55,60,false,0,200)).success());
     }
     @Test void perfectReverseReadDoesNotCreateVariants() {
         assertTrue(new SequencingSimulator(0).callVariants(List.of(read("CGGGTTTT",true)),genome("AAAACCCG"),1,20).isEmpty());

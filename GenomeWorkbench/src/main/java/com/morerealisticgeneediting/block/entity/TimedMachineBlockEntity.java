@@ -41,7 +41,7 @@ public abstract class TimedMachineBlockEntity extends BlockEntity implements Imp
     protected abstract boolean acceptsInput(int slot, ItemStack stack);
     protected final boolean startJob(PlayerEntity player, ItemStack output, int ticks, int... inputSlots) {
         if (world == null || world.isClient || !canPlayerUse(player) || state==1 || ticks<=0 || output.isEmpty() || !canMerge(getStack(outputSlot),output)) return false;
-        if (Arrays.stream(inputSlots).distinct().count()!=inputSlots.length) return false;
+        if (inputSlots.length==0 || Arrays.stream(inputSlots).distinct().count()!=inputSlots.length) return false;
         for(int slot:inputSlots) if(slot<0 || slot>=outputSlot || !acceptsInput(slot,getStack(slot)) || getStack(slot).isEmpty()) return false;
         reserved.replaceAll(stack -> ItemStack.EMPTY);
         for(int slot:inputSlots) reserved.set(slot,getStack(slot).copyWithCount(1));
@@ -73,7 +73,7 @@ public abstract class TimedMachineBlockEntity extends BlockEntity implements Imp
     public final int getRemainingTicks() { return remainingTicks; }
     public final boolean hasPendingJob() { return state==1; }
     public static boolean canMerge(ItemStack current, ItemStack added) {
-        return !added.isEmpty() && added.getCount()<=added.getMaxCount() && (current.isEmpty() || (ItemStack.areItemsAndComponentsEqual(current,added) && current.getCount()+added.getCount()<=current.getMaxCount()));
+        return !added.isEmpty() && added.getCount()<=added.getMaxCount() && (current.isEmpty() || (ItemStack.areItemsAndComponentsEqual(current,added) && (long)current.getCount()+added.getCount()<=current.getMaxCount()));
     }
     protected static ItemStack derived(Item item, ItemStack source, String operation) {
         ItemStack result=new ItemStack(item); NbtCompound data=StackData.read(source);
@@ -103,6 +103,8 @@ public abstract class TimedMachineBlockEntity extends BlockEntity implements Imp
         state=job.getInt("State"); remainingTicks=Math.max(0,Math.min(72000,job.getInt("Remaining")));
         Inventories.readNbt(job,reserved,lookup);
         pendingOutput=job.contains("Output")?ItemStack.fromNbt(lookup,job.getCompound("Output")).orElse(ItemStack.EMPTY):ItemStack.EMPTY;
-        if(state<0 || state>3 || (state==1 && pendingOutput.isEmpty())) { clearJob();state=0; }
+        boolean validReservation=jobOwner!=null && reserved.stream().anyMatch(stack->!stack.isEmpty());
+        for(int i=0;i<reserved.size();i++)if(!reserved.get(i).isEmpty() && (i>=outputSlot || !acceptsInput(i,reserved.get(i))))validReservation=false;
+        if(state<0 || state>3 || (state==1 && (pendingOutput.isEmpty() || !validReservation))) { clearJob();state=0; }
     }
 }

@@ -1,7 +1,7 @@
 package com.morerealisticgeneediting.genome;
 import com.morerealisticgeneediting.data.*;
 import com.morerealisticgeneediting.genome.sequencing.SequencingSimulator.SequencingRead;
-import net.minecraft.nbt.NbtCompound;
+import net.minecraft.nbt.*;
 import org.junit.jupiter.api.Test;
 import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -52,6 +52,26 @@ class GenomeDataTest {
     private NbtCompound withOwner(NbtCompound n,UUID owner){n.putUuid("owner",owner);return n;}
     @Test void malformedSavedLengthCannotCreatePaddingBases(){
         NbtCompound n=sample().writeNbt();n.putInt("baseLength",100);assertThrows(IllegalArgumentException.class,()->Genome.fromNbt(n));
+    }
+    @Test void malformedSavedEditsCannotSilentlyBecomePositionZeroOrAdenine(){
+        Genome g=sample();GenomePatch patch=new GenomePatch(g.getUUID());patch.addPointMutation(3,(byte)2);
+        NbtCompound saved=patch.writeNbt();saved.getList("points",NbtElement.COMPOUND_TYPE).getCompound(0).remove("position");
+        assertThrows(IllegalArgumentException.class,()->GenomePatch.fromNbt(saved));
+        NbtCompound missingBase=patch.writeNbt();missingBase.getList("points",NbtElement.COMPOUND_TYPE).getCompound(0).remove("base");
+        assertThrows(IllegalArgumentException.class,()->GenomePatch.fromNbt(missingBase));
+        NbtCompound wrongList=patch.writeNbt();NbtList strings=new NbtList();strings.add(NbtString.of("broken"));wrongList.put("points",strings);
+        assertThrows(IllegalArgumentException.class,()->GenomePatch.fromNbt(wrongList));
+        NbtCompound missingReference=g.writeNbt();missingReference.remove("packedBases");
+        assertThrows(IllegalArgumentException.class,()->Genome.fromNbt(missingReference));
+        assertThrows(IllegalArgumentException.class,()->GenomeRepository.fromNbt(new NbtCompound(),null));
+    }
+    @Test void deliveryHistoryRetainsRevisionAndRejectsStaleSnapshots(){
+        Genome initial=sample(),edited=initial.performInsertion(2,"TT");GenomeRepository repository=new GenomeRepository();repository.put(initial);repository.put(edited);
+        assertThrows(IllegalArgumentException.class,()->repository.recordDelivery(UUID.randomUUID(),initial));
+        UUID entity=UUID.randomUUID();repository.recordDelivery(entity,edited);
+        GenomeRepository loaded=GenomeRepository.fromNbt(repository.writeNbt(new NbtCompound(),null),null);
+        NbtCompound record=loaded.writeNbt(new NbtCompound(),null).getList("deliveries",NbtElement.COMPOUND_TYPE).getCompound(0);
+        assertEquals(entity,record.getUuid("entity"));assertEquals(edited.getUUID(),record.getUuid("sample"));assertEquals(edited.getRevision(),record.getLong("revision"));
     }
     @Test void editedCoordinatesCannotPretendInsertedBasesHaveAReferencePosition(){
         Genome g=sample().performInsertion(2,"TT");assertEquals(2,g.editedToReference(4));

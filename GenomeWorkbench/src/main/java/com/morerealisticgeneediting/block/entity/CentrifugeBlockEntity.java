@@ -90,7 +90,7 @@ public class CentrifugeBlockEntity extends LabEquipmentBlockEntity {
         rpm=0;
     }
     private boolean isValidInput(ItemStack stack) {
-        return stack.isOf(ModItems.GENOME_SAMPLE) && StackData.has(stack);
+        return stack.isOf(ModItems.GENOME_SAMPLE) && StackData.has(stack) && !StackData.read(stack).contains("Fraction");
     }
     private boolean hasSpaceForOutputs() {
         return getStack(PELLET_SLOT).isEmpty() && getStack(SUPERNATANT_SLOT).isEmpty();

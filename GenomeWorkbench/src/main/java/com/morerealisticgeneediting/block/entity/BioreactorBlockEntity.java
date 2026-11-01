@@ -514,9 +514,9 @@ public class BioreactorBlockEntity extends LabEquipmentBlockEntity {
         maxCellDensity = nbt.getFloat("MaxCellDensity");
         cultureAge = nbt.getInt("CultureAge");
         cultureType = nbt.getString("CultureType");
-        doublingTime = nbt.getFloat("DoublingTime");
+        doublingTime = Math.max(1,nbt.getFloat("DoublingTime"));
         viability = nbt.getFloat("Viability");
-        historyIndex = nbt.getInt("HistoryIndex");
+        historyIndex = Math.floorMod(nbt.getInt("HistoryIndex"),densityHistory.length);
 
         int[] historyInt = nbt.getIntArray("DensityHistory");
         for (int i = 0; i < Math.min(historyInt.length, densityHistory.length); i++) {
