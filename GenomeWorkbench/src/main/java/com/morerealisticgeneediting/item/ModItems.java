@@ -97,6 +97,14 @@ public class ModItems {
     public static final Item DNA_LADDER = registerItem("dna_ladder",
             new Item(new Item.Settings().maxCount(64)));
 
+    public static final Item SAMPLE_ITEM = GENOME_SAMPLE;
+    public static final Item READ_SET_ITEM = registerItem("read_set", new Item(new Item.Settings().maxCount(1)));
+    public static final Item PURIFIED_PLASMID = registerItem("purified_plasmid", new Item(new Item.Settings().maxCount(1)));
+    public static final Item OPTICAL_CUVETTE = registerItem("optical_cuvette", new Item(new Item.Settings().maxCount(8)));
+    public static final Item SEQUENCING_FLOW_CELL = registerItem("sequencing_flow_cell", new Item(new Item.Settings().maxCount(8)));
+    public static final Item SEQUENCING_REAGENT = registerItem("sequencing_reagent", new Item(new Item.Settings().maxCount(16)));
+    public static final Item SEQUENCING_LIBRARY = registerItem("sequencing_library", new Item(new Item.Settings().maxCount(1)));
+
     // ========== Custom Item Group ==========
     
     public static final RegistryKey<ItemGroup> MRGE_GROUP_KEY = RegistryKey.of(
@@ -159,6 +167,13 @@ public class ModItems {
             content.add(SEQUENCING_CHIP);
             content.add(AGAROSE_GEL);
             content.add(DNA_LADDER);
+            content.add(READ_SET_ITEM);
+            content.add(PURIFIED_PLASMID);
+            content.add(OPTICAL_CUVETTE);
+            content.add(SEQUENCING_FLOW_CELL);
+            content.add(SEQUENCING_REAGENT);
+            content.add(SEQUENCING_LIBRARY);
+
         });
         
         // Also add some items to vanilla Ingredients group for discoverability

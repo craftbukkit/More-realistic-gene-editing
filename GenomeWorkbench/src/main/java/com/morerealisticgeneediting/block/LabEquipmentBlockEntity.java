@@ -97,12 +97,14 @@ public abstract class LabEquipmentBlockEntity extends BlockEntity
     
     @Override
     public ItemStack removeStack(int slot, int amount) {
-        return Inventories.splitStack(inventory, slot, amount);
+        if(!canExtractForPlayer(slot))return ItemStack.EMPTY;
+        ItemStack result=Inventories.splitStack(inventory, slot, amount);markDirty();return result;
     }
     
     @Override
     public ItemStack removeStack(int slot) {
-        return Inventories.removeStack(inventory, slot);
+        if(!canExtractForPlayer(slot))return ItemStack.EMPTY;
+        ItemStack result=Inventories.removeStack(inventory, slot);markDirty();return result;
     }
     
     @Override
@@ -116,7 +118,7 @@ public abstract class LabEquipmentBlockEntity extends BlockEntity
     
     @Override
     public boolean canPlayerUse(PlayerEntity player) {
-        return world != null && 
+        return world != null && player.getWorld()==world && 
                world.getBlockEntity(pos) == this && 
                player.squaredDistanceTo(pos.getX() + 0.5, pos.getY() + 0.5, pos.getZ() + 0.5) <= 64.0;
     }
@@ -139,7 +141,7 @@ public abstract class LabEquipmentBlockEntity extends BlockEntity
     
     @Override
     public boolean canInsert(int slot, ItemStack stack, @Nullable Direction dir) {
-        return isInputSlot(slot);
+        return isInputSlot(slot) && !isProcessing && isValid(slot,stack);
     }
     
     @Override
@@ -157,6 +159,10 @@ public abstract class LabEquipmentBlockEntity extends BlockEntity
      */
     protected abstract boolean isOutputSlot(int slot);
     
+    public boolean canExtractForPlayer(int slot) { return isOutputSlot(slot) || !isProcessing; }
+    public boolean isOutputForPlayer(int slot) { return isOutputSlot(slot); }
+    @Override public boolean isValid(int slot,ItemStack stack) { return slot>=0 && slot<size() && isInputSlot(slot) && !isProcessing; }
+
     // ========== NBT Serialization ==========
     
     @Override
@@ -172,9 +178,10 @@ public abstract class LabEquipmentBlockEntity extends BlockEntity
     @Override
     protected void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
         super.readNbt(nbt, registryLookup);
+        inventory.replaceAll(stack->ItemStack.EMPTY);
         Inventories.readNbt(nbt, inventory, registryLookup);
         progress = nbt.getInt("Progress");
-        maxProgress = nbt.getInt("MaxProgress");
+        maxProgress = Math.max(1,Math.min(72000,nbt.getInt("MaxProgress")));
         int tierLevel = nbt.getInt("Tier");
         tier = switch (tierLevel) {
             case 2 -> EquipmentTier.ADVANCED;
@@ -202,36 +209,8 @@ public abstract class LabEquipmentBlockEntity extends BlockEntity
     /**
      * Tick method for processing logic
      */
-    public static <T extends LabEquipmentBlockEntity> void tick(World world, BlockPos pos, BlockState state, T entity) {
-        if (world.isClient) return;
-        
-        if (entity.canProcess()) {
-            entity.isProcessing = true;
-            entity.progress++;
-            
-            // Update block state
-            if (state.getBlock() instanceof LabEquipmentBlock) {
-                LabEquipmentBlock.setActive(world, pos, state, true);
-            }
-            
-            if (entity.progress >= entity.maxProgress) {
-                entity.completeProcess();
-                entity.progress = 0;
-            }
-            
-            entity.markDirty();
-        } else {
-            if (entity.progress > 0) {
-                entity.progress = Math.max(0, entity.progress - 2); // Decay progress
-            }
-            entity.isProcessing = false;
-            
-            if (state.getBlock() instanceof LabEquipmentBlock && LabEquipmentBlock.isActive(state)) {
-                LabEquipmentBlock.setActive(world, pos, state, false);
-            }
-        }
-    }
-    
+    public static <T extends LabEquipmentBlockEntity> void tick(World world,BlockPos pos,BlockState state,T entity) { entity.tick(); }
+
     /**
      * Check if processing can continue
      */
@@ -268,7 +247,7 @@ public abstract class LabEquipmentBlockEntity extends BlockEntity
     
     public void setTier(EquipmentTier tier) {
         this.tier = tier;
-        this.maxProgress = getAdjustedMaxProgress();
+        // Subclasses update their own run configuration; do not compound duration on repeated assignment.
     }
     
     public int getProgress() {
@@ -308,7 +287,7 @@ public abstract class LabEquipmentBlockEntity extends BlockEntity
      * Instance tick method - override this in subclasses for custom logic
      */
     public void tick() {
-        if (world == null || world.isClient) return;
+        if (world == null || world.isClient || isRemoved() || world.getBlockEntity(pos)!=this) return;
         
         if (canProcess()) {
             isProcessing = true;

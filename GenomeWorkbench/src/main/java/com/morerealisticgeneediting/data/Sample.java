@@ -30,7 +30,7 @@ public class Sample {
         this.sourceEntityName = sourceEntityName;
     }
 
-    // Getters...
+    public UUID getSampleId(){return sampleId;} public UUID getGenomeRefId(){return genomeRefId;} public UUID getGenomePatchId(){return genomePatchId;} public String getSourceEntityName(){return sourceEntityName;}
 
     public NbtCompound writeNbt() {
         NbtCompound nbt = new NbtCompound();

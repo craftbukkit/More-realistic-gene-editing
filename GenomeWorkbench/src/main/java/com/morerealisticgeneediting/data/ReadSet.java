@@ -28,7 +28,7 @@ public class ReadSet {
         this.averageReadLength = averageReadLength;
     }
 
-    // Getters...
+    public UUID getReadSetId(){return readSetId;} public UUID getSourceSampleId(){return sourceSampleId;} public long getReadCount(){return readCount;} public int getAverageReadLength(){return averageReadLength;}
 
     public NbtCompound writeNbt() {
         NbtCompound nbt = new NbtCompound();

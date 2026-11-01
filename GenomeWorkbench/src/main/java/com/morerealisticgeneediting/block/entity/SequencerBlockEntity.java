@@ -1,171 +1,48 @@
 package com.morerealisticgeneediting.block.entity;
-
-import com.morerealisticgeneediting.data.ReadSet;
-import com.morerealisticgeneediting.data.Sample;
-import com.morerealisticgeneediting.inventory.ImplementedInventory;
 import com.morerealisticgeneediting.item.ModItems;
+import com.morerealisticgeneediting.item.GenomeSampleItem;
+import com.morerealisticgeneediting.genome.GenomeRepository;
+import com.morerealisticgeneediting.genome.sequencing.SequencingSimulator;
 import com.morerealisticgeneediting.screen.SequencerScreenHandler;
-import com.morerealisticgeneediting.security.RateLimiters;
-import com.morerealisticgeneediting.util.AsyncJobs;
+import com.morerealisticgeneediting.util.StackData;
 import net.minecraft.block.BlockState;
-import net.minecraft.block.entity.BlockEntity;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventories;
+import net.minecraft.entity.player.*;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NbtCompound;
-import net.minecraft.screen.NamedScreenHandlerFactory;
-import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.screen.ScreenHandler;
-import net.minecraft.server.world.ServerWorld;
 import net.minecraft.text.Text;
-import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
-import org.jetbrains.annotations.Nullable;
-
-import java.util.concurrent.ThreadLocalRandom;
-
-public class SequencerBlockEntity extends BlockEntity implements ImplementedInventory, NamedScreenHandlerFactory {
-
-    private enum State {
-        IDLE,       // Waiting for input and a start signal
-        PROCESSING, // Heavy computation is in progress
-        DONE,       // Processing is complete, output is available
-        ERROR       // An error occurred during processing
-    }
-
-    private final DefaultedList<ItemStack> inventory = DefaultedList.ofSize(2, ItemStack.EMPTY);
-    private State currentState = State.IDLE;
-    private static final RateLimiters startSequencingLimiter = new RateLimiters(2000L); // 2-second cooldown
-
-    private final PropertyDelegate propertyDelegate = new PropertyDelegate() {
-        @Override
-        public int get(int index) {
-            return currentState.ordinal();
-        }
-
-        @Override
-        public void set(int index, int value) {
-            // This is a server-authoritative value. The client should not be able to change it.
-        }
-
-        @Override
-        public int size() {
-            return 1; // We only need to sync one integer: the state's ordinal.
-        }
-    };
-
-    public SequencerBlockEntity(BlockPos pos, BlockState state) {
-        super(ModBlockEntities.SEQUENCER_BLOCK_ENTITY, pos, state);
-    }
-
-    @Override
-    public void writeNbt(NbtCompound nbt) {
-        super.writeNbt(nbt);
-        Inventories.writeNbt(nbt, inventory);
-        nbt.putString("sequencer.state", this.currentState.name());
-    }
-
-    @Override
-    public void readNbt(NbtCompound nbt) {
-        super.readNbt(nbt);
-        Inventories.readNbt(nbt, inventory);
-        try {
-            this.currentState = State.valueOf(nbt.getString("sequencer.state"));
-        } catch (IllegalArgumentException e) {
-            this.currentState = State.IDLE; // Safely default to IDLE if the saved state is invalid
-        }
-    }
-
-    public static void tick(World world, BlockPos pos, BlockState state, SequencerBlockEntity entity) {
-        if (world.isClient()) return;
-
-        switch (entity.currentState) {
-            case DONE:
-                // If the output is taken, reset to IDLE
-                if (entity.getStack(1).isEmpty()) {
-                    entity.setState(State.IDLE);
-                }
-                break;
-            case ERROR:
-                // After a few seconds in the ERROR state, reset to IDLE
-                // (This could be a timer)
-                entity.setState(State.IDLE);
-                break;
-            case IDLE:
-            case PROCESSING:
-            default:
-                // Do nothing
-                break;
-        }
-        markDirty(world, pos, state);
-    }
-
+public class SequencerBlockEntity extends TimedMachineBlockEntity {
+    public SequencerBlockEntity(BlockPos pos,BlockState state) { super(ModBlockEntities.SEQUENCER_BLOCK_ENTITY,pos,state,2,1); }
+    @Override protected boolean acceptsInput(int slot,ItemStack stack) { return slot==0 && stack.isOf(ModItems.GENOME_SAMPLE) && GenomeSampleItem.getGenomeId(stack)!=null; }
     public void startSequencing(PlayerEntity player) {
-        if (!startSequencingLimiter.tryAcquire(player.getUuid())) return;
-        if (this.currentState != State.IDLE || !canStartSequencing()) return;
-
-        setState(State.PROCESSING);
-        ItemStack inputStack = getStack(0);
-        NbtCompound sampleNbt = inputStack.getNbt().getCompound("sample_data");
-        inputStack.decrement(1);
-
-        AsyncJobs.submit(
-            (ServerWorld) world,
-            () -> {
-                try {
-                    Thread.sleep(5000);
-                    Sample sample = Sample.fromNbt(sampleNbt);
-                    long readCount = ThreadLocalRandom.current().nextLong(1_000_000, 5_000_000);
-                    int avgLength = ThreadLocalRandom.current().nextInt(150, 300);
-                    return new ReadSet(sample.getSampleId(), readCount, avgLength);
-                } catch (InterruptedException | IllegalArgumentException e) {
-                    return null;
-                }
-            },
-            (readSet) -> {
-                if (readSet != null) {
-                    ItemStack outputStack = new ItemStack(ModItems.READ_SET_ITEM);
-                    outputStack.setNbt(readSet.writeNbt());
-                    setStack(1, outputStack);
-                    setState(State.DONE);
-                } else {
-                    setState(State.ERROR);
-                }
-            }
-        );
+        if(world==null || world.isClient || !canPlayerUse(player) || hasPendingJob()) return;
+        var id=GenomeSampleItem.getGenomeId(getStack(0)); if(id==null)return;
+        GenomeRepository.get(world.getServer()).findOwned(id,player.getUuid()).ifPresent(genome -> {
+            long length=genome.getTotalLength(); if(length<1 || length>10000)return;
+            var result=new SequencingSimulator(id.getMostSignificantBits()^genome.getRevision()).runSequencing(genome,SequencingSimulator.Technology.PACBIO_HIFI,10,0,length);
+            ItemStack output=derived(ModItems.READ_SET_ITEM,getStack(0),"simulated_sequencing");
+            NbtCompound data=StackData.read(output);
+            data.putLong("GenomeRevision",genome.getRevision()); data.putInt("ReadCount",result.stats().totalReads());
+            data.putLong("TotalBases",result.stats().totalBases()); data.putLong("RegionStart",0);data.putLong("RegionLength",length);
+            data.putDouble("MeanQuality",result.stats().meanQuality()); data.putDouble("Coverage",result.stats().coverageDepth());
+            var verification=com.morerealisticgeneediting.genome.SequenceVerification.verify(genome,result.reads(),10,3);
+            data.putBoolean("ConcordancePassed",verification.passed());data.putInt("ConcordanceCoveredBases",verification.coveredBases());
+            data.putInt("ConcordanceMismatches",verification.mismatches());data.putString("VerificationScope","current_virtual_sample_sequence_only");
+            data.putBoolean("VariantsAssessed",false);StackData.write(output,data);
+            startJob(player,output,100,0);
+        });
     }
-
-    private boolean canStartSequencing() {
-        ItemStack input = getStack(0);
-        return !input.isEmpty() &&
-               input.getItem() == ModItems.SAMPLE_ITEM &&
-               input.hasNbt() &&
-               input.getNbt().contains("sample_data") &&
-               getStack(1).isEmpty();
+    @Override protected void onJobCommitted(java.util.UUID owner,ItemStack output) {
+        if(owner==null || world==null || world.getServer()==null)return;
+        var player=world.getServer().getPlayerManager().getPlayer(owner);
+        var id=GenomeSampleItem.getGenomeId(output); NbtCompound data=StackData.read(output);
+        if(player!=null && id!=null && data.getBoolean("ConcordancePassed") && data.getInt("ConcordanceCoveredBases")==data.getLong("RegionLength"))
+            GenomeRepository.get(world.getServer()).findOwned(id,owner).filter(g->g.getRevision()==data.getLong("GenomeRevision")).ifPresent(g->
+                com.morerealisticgeneediting.project.ServerProjectManager.recordVerified(player,id,g.getRevision()));
     }
-
-    private void setState(State newState) {
-        if (this.currentState != newState) {
-            this.currentState = newState;
-            markDirty();
-        }
-    }
-
-    @Override
-    public DefaultedList<ItemStack> getItems() {
-        return inventory;
-    }
-
-    @Override
-    public Text getDisplayName() {
-        return Text.translatable("container.sequencer");
-    }
-
-    @Nullable
-    @Override
-    public ScreenHandler createMenu(int syncId, PlayerInventory inv, PlayerEntity player) {
-        return new SequencerScreenHandler(syncId, inv, this, this.propertyDelegate);
-    }
+    public static void tick(World world,BlockPos pos,BlockState state,SequencerBlockEntity entity) { entity.tickJob(); }
+    @Override public Text getDisplayName() { return Text.translatable("block.morerealisticgeneediting.sequencer"); }
+    @Override public ScreenHandler createMenu(int syncId,PlayerInventory inv,PlayerEntity player) { return new SequencerScreenHandler(syncId,inv,this,propertyDelegate); }
 }

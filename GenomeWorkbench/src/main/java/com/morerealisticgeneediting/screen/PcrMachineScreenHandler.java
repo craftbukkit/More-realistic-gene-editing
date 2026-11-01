@@ -11,6 +11,7 @@ import net.minecraft.screen.ArrayPropertyDelegate;
 import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
+import com.morerealisticgeneediting.screen.slot.MachineSlot;
 import org.jetbrains.annotations.Nullable;
 
 public class PcrMachineScreenHandler extends ScreenHandler {
@@ -34,8 +35,8 @@ public class PcrMachineScreenHandler extends ScreenHandler {
 
         this.blockEntity = (inventory instanceof PcrMachineBlockEntity) ? (PcrMachineBlockEntity) inventory : null;
 
-        this.addSlot(new Slot(inventory, 0, 56, 35)); // Input Slot
-        this.addSlot(new Slot(inventory, 1, 116, 35)); // Output Slot
+        this.addSlot(new MachineSlot(inventory, 0, 56, 35, false)); // Input Slot
+        this.addSlot(new MachineSlot(inventory, 1, 116, 35, true)); // Output Slot
 
         addPlayerInventory(playerInventory);
         addPlayerHotbar(playerInventory);
@@ -48,14 +49,14 @@ public class PcrMachineScreenHandler extends ScreenHandler {
 
     @Override
     public boolean onButtonClick(PlayerEntity player, int id) {
-        if (blockEntity == null) return false;
+        if (blockEntity == null || !canUse(player)) return false;
         if (!NetGuards.isPlayerClose(player, blockEntity.getWorld(), blockEntity.getPos())) return false;
 
         if (id == 0) { // Assuming 0 is the 'start' button ID
             blockEntity.startPcr(player);
             return true;
         }
-        return super.onButtonClick(player, id);
+        return false;
     }
 
     @Override
@@ -64,9 +65,11 @@ public class PcrMachineScreenHandler extends ScreenHandler {
     }
 
     @Override
-    public ItemStack transferSlot(PlayerEntity player, int invSlot) {
+    public ItemStack quickMove(PlayerEntity player, int invSlot) {
         ItemStack newStack = ItemStack.EMPTY;
+        if(invSlot<0 || invSlot>=this.slots.size() || !canUse(player)) return ItemStack.EMPTY;
         Slot slot = this.slots.get(invSlot);
+        if(!slot.canTakeItems(player)) return ItemStack.EMPTY;
         if (slot != null && slot.hasStack()) {
             ItemStack originalStack = slot.getStack();
             newStack = originalStack.copy();
@@ -74,7 +77,7 @@ public class PcrMachineScreenHandler extends ScreenHandler {
                 if (!this.insertItem(originalStack, this.inventory.size(), this.slots.size(), true)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (!this.insertItem(originalStack, 0, this.inventory.size(), false)) {
+            } else if (!this.insertItem(originalStack, 0, 1, false)) {
                 return ItemStack.EMPTY;
             }
 

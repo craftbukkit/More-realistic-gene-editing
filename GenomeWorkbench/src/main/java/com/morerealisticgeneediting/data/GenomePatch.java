@@ -1,111 +1,67 @@
 package com.morerealisticgeneediting.data;
-
-import com.morerealisticgeneediting.util.SafeNBT;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
-
-import java.util.Arrays;
-import java.util.UUID;
-
-/**
- * Represents a set of modifications (a patch) to a reference genome.
- * This implementation is optimized for performance, low memory usage, and NBT safety.
- * It uses sorted primitive arrays instead of maps to store mutations, which is highly compact.
- */
-public class GenomePatch {
-
-    private static final int MAX_MUTATIONS = 8192; // Hard limit on the number of edits in a single patch.
-    private static final int MAX_INSERTION_LENGTH = 1024; // Hard limit on the length of a single insertion string.
-
+import com.morerealisticgeneediting.genome.TwoBitEncoding;
+import net.minecraft.nbt.*;
+import java.util.*;
+/** Edits in zero-based, half-open original-reference coordinates. Insertions occur before a base/boundary. */
+public final class GenomePatch {
+    public static final int MAX_MUTATIONS=8192;
+    public static final int MAX_INSERTION_LENGTH=1024;
     private final UUID patchId;
     private final UUID baseGenomeId;
-
-    // Point Mutations (sorted by position)
-    private long[] pointMutationPositions = new long[0];
-    private byte[] pointMutationBases = new byte[0];
-    private int pointMutationCount = 0;
-
-    // Insertions (sorted by position)
-    private long[] insertionPositions = new long[0];
-    private String[] insertionSequences = new String[0];
-    private int insertionCount = 0;
-
-    // Deletions (sorted by position)
-    private long[] deletionPositions = new long[0];
-    private int[] deletionLengths = new int[0];
-    private int deletionCount = 0;
-
-    public GenomePatch(UUID baseGenomeId) {
-        this.patchId = UUID.randomUUID();
-        this.baseGenomeId = baseGenomeId;
+    private final NavigableMap<Long,Byte> points=new TreeMap<>();
+    private final NavigableMap<Long,String> insertions=new TreeMap<>();
+    private final NavigableMap<Long,Integer> deletions=new TreeMap<>();
+    public GenomePatch(UUID baseGenomeId) { this(UUID.randomUUID(),baseGenomeId); }
+    private GenomePatch(UUID patchId, UUID baseGenomeId) { this.patchId=Objects.requireNonNull(patchId);this.baseGenomeId=Objects.requireNonNull(baseGenomeId); }
+    public UUID getPatchId(){return patchId;}
+    public UUID getBaseGenomeId(){return baseGenomeId;}
+    public NavigableMap<Long,Byte> getPointMutations(){return Collections.unmodifiableNavigableMap(points);}
+    public NavigableMap<Long,String> getInsertions(){return Collections.unmodifiableNavigableMap(insertions);}
+    public NavigableMap<Long,Integer> getDeletions(){return Collections.unmodifiableNavigableMap(deletions);}
+    private void capacity(long position){if(position<0)throw new IllegalArgumentException("Negative reference coordinate");if(size()>=MAX_MUTATIONS)throw new IllegalArgumentException("Too many edits");}
+    public int size(){return points.size()+insertions.size()+deletions.size();}
+    public boolean isEmpty(){return size()==0;}
+    private boolean deleted(long p){var e=deletions.floorEntry(p);return e!=null && p<e.getKey()+e.getValue();}
+    public void addPointMutation(long position,byte base){
+        capacity(position);TwoBitEncoding.decodeBase(base);
+        if(points.containsKey(position)||deleted(position))throw new IllegalArgumentException("Conflicting point edit");
+        points.put(position,base);
     }
-
-    private GenomePatch(UUID patchId, UUID baseGenomeId) {
-        this.patchId = patchId;
-        this.baseGenomeId = baseGenomeId;
+    public void addInsertion(long position,String sequence){
+        capacity(position);Objects.requireNonNull(sequence);
+        if(sequence.isEmpty()||sequence.length()>MAX_INSERTION_LENGTH)throw new IllegalArgumentException("Invalid insertion length");
+        sequence=sequence.toUpperCase(Locale.ROOT);TwoBitEncoding.pack(sequence);
+        if(insertions.containsKey(position))throw new IllegalArgumentException("Duplicate insertion boundary");
+        var e=deletions.floorEntry(position);
+        if(e!=null && position>e.getKey() && position<e.getKey()+e.getValue())throw new IllegalArgumentException("Insertion inside deletion");
+        insertions.put(position,sequence);
     }
-
-    public UUID getPatchId() {
-        return patchId;
+    public void addDeletion(long position,int length){
+        capacity(position);if(length<=0 || position>Long.MAX_VALUE-length)throw new IllegalArgumentException("Invalid deletion length");
+        long end=position+length;var prev=deletions.floorEntry(position);var next=deletions.ceilingEntry(position);
+        if((prev!=null && prev.getKey()+prev.getValue()>position)||(next!=null && next.getKey()<end))throw new IllegalArgumentException("Overlapping deletions");
+        if(!points.subMap(position,true,end,false).isEmpty()||!insertions.subMap(position,false,end,false).isEmpty())throw new IllegalArgumentException("Deletion overlaps another edit");
+        deletions.put(position,length);
     }
-
-    public UUID getBaseGenomeId() {
-        return baseGenomeId;
+    public long getFirstModificationPosition(){return java.util.stream.Stream.of(points,insertions,deletions).filter(m->!m.isEmpty()).mapToLong(m->m.firstKey()).min().orElse(0);}
+    public int getTotalModificationSize(){long n=points.size();for(String s:insertions.values())n+=s.length();for(int x:deletions.values())n+=x;return Math.toIntExact(n);}
+    public GenomePatch copy(){GenomePatch copy=new GenomePatch(patchId,baseGenomeId);copy.points.putAll(points);copy.insertions.putAll(insertions);copy.deletions.putAll(deletions);return copy;}
+    public NbtCompound writeNbt(){
+        NbtCompound n=new NbtCompound();n.putUuid("patchId",patchId);n.putUuid("baseGenomeId",baseGenomeId);
+        NbtList p=new NbtList(),i=new NbtList(),d=new NbtList();
+        points.forEach((pos,base)->{NbtCompound x=new NbtCompound();x.putLong("position",pos);x.putByte("base",base);p.add(x);});
+        insertions.forEach((pos,seq)->{NbtCompound x=new NbtCompound();x.putLong("position",pos);x.putString("sequence",seq);i.add(x);});
+        deletions.forEach((pos,len)->{NbtCompound x=new NbtCompound();x.putLong("position",pos);x.putInt("length",len);d.add(x);});
+        n.put("points",p);n.put("insertions",i);n.put("deletions",d);return n;
     }
-
-    // Implement add/get methods using binary search on the sorted arrays...
-    // For brevity, we will omit the full implementation of dynamic array resizing and binary search here.
-    // A real implementation would be more robust.
-
-    /**
-     * Writes the patch to an NBT compound in a safe, compact format.
-     */
-    public NbtCompound writeNbt() {
-        NbtCompound nbt = new NbtCompound();
-        nbt.putUuid("patchId", patchId);
-        nbt.putUuid("baseGenomeId", baseGenomeId);
-
-        // Write point mutations
-        NbtList points = new NbtList();
-        // Implementation would iterate through arrays and create compounds for each entry
-        SafeNBT.putList(nbt, "points", points, MAX_MUTATIONS);
-
-        // Write insertions
-        NbtList insertions = new NbtList();
-        // Implementation would iterate through arrays and create compounds for each entry
-        SafeNBT.putList(nbt, "insertions", insertions, MAX_MUTATIONS);
-
-        // Write deletions
-        NbtList deletions = new NbtList();
-        // Implementation would iterate through arrays and create compounds for each entry
-        SafeNBT.putList(nbt, "deletions", deletions, MAX_MUTATIONS);
-
-        return nbt;
-    }
-
-    /**
-     * Creates a GenomePatch from an NBT compound, enforcing size limits.
-     */
-    public static GenomePatch fromNbt(NbtCompound nbt) {
-        UUID patchId = nbt.getUuid("patchId");
-        UUID baseGenomeId = nbt.getUuid("baseGenomeId");
-        GenomePatch patch = new GenomePatch(patchId, baseGenomeId);
-
-        // Read point mutations with size validation
-        NbtList points = nbt.getList("points", 10); // 10 = Compound type
-        if (points.size() > MAX_MUTATIONS) throw new IllegalArgumentException("Too many point mutations in NBT");
-        // ... implementation to read into arrays ...
-
-        // Read insertions with size validation
-        NbtList insertions = nbt.getList("insertions", 10);
-        if (insertions.size() > MAX_MUTATIONS) throw new IllegalArgumentException("Too many insertions in NBT");
-        // ... implementation to read into arrays, validating string length ...
-
-        // Read deletions with size validation
-        NbtList deletions = nbt.getList("deletions", 10);
-        if (deletions.size() > MAX_MUTATIONS) throw new IllegalArgumentException("Too many deletions in NBT");
-        // ... implementation to read into arrays ...
-
-        return patch;
+    public static GenomePatch fromNbt(NbtCompound n){
+        if(!n.containsUuid("patchId")||!n.containsUuid("baseGenomeId"))throw new IllegalArgumentException("Missing patch identity");
+        GenomePatch p=new GenomePatch(n.getUuid("patchId"),n.getUuid("baseGenomeId"));
+        NbtList points=n.getList("points",NbtElement.COMPOUND_TYPE),ins=n.getList("insertions",NbtElement.COMPOUND_TYPE),del=n.getList("deletions",NbtElement.COMPOUND_TYPE);
+        if((long)points.size()+ins.size()+del.size()>MAX_MUTATIONS)throw new IllegalArgumentException("Too many edits in saved patch");
+        for(int j=0;j<points.size();j++){var x=points.getCompound(j);p.addPointMutation(x.getLong("position"),x.getByte("base"));}
+        for(int j=0;j<ins.size();j++){var x=ins.getCompound(j);p.addInsertion(x.getLong("position"),x.getString("sequence"));}
+        for(int j=0;j<del.size();j++){var x=del.getCompound(j);p.addDeletion(x.getLong("position"),x.getInt("length"));}
+        return p;
     }
 }

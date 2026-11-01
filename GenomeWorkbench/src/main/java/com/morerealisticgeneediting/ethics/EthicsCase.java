@@ -1,83 +1,31 @@
 package com.morerealisticgeneediting.ethics;
-
 import net.minecraft.network.PacketByteBuf;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
-
-/**
- * Represents a single ethical case or dilemma presented to the player.
- * This is an immutable data class with network serialization capabilities.
- *
- * @param id          A unique identifier for this case (e.g., "case_crispr_off_target").
- * @param title       A short, display-friendly title for the case.
- * @param description A detailed description of the ethical scenario.
- * @param options     A list of choices the player can make in response to the dilemma.
- */
-public record EthicsCase(
-    String id,
-    String title,
-    String description,
-    List<EthicsOption> options
-) {
-
-    /**
-     * Writes the entire case to a network buffer for client-server communication.
-     * @param buf The buffer to write to.
-     */
-    public void write(PacketByteBuf buf) {
-        buf.writeString(id);
-        buf.writeString(title);
-        buf.writeString(description);
-        buf.writeCollection(options, (b, option) -> option.write(b));
+/** Bounded discussion content. Choices report reasoning, not medical outcomes. */
+public record EthicsCase(String id,String title,String description,List<EthicsOption> options) {
+    public EthicsCase {
+        if(id==null || !id.matches("[a-z0-9_]{1,80}") || title==null || title.length()>256
+            || description==null || description.length()>8192 || options==null || options.isEmpty() || options.size()>16)
+            throw new IllegalArgumentException("Invalid ethics case");
+        options=List.copyOf(options);
     }
-
-    /**
-     * Reads a case from a network buffer.
-     * @param buf The buffer to read from.
-     * @return A new EthicsCase instance.
-     */
-    public static EthicsCase from(PacketByteBuf buf) {
-        String id = buf.readString();
-        String title = buf.readString();
-        String description = buf.readString();
-        List<EthicsOption> options = buf.readList(EthicsOption::from);
-        return new EthicsCase(id, title, description, options);
+    public void write(PacketByteBuf buf){
+        buf.writeString(id,80);buf.writeString(title,256);buf.writeString(description,8192);
+        buf.writeVarInt(options.size());options.forEach(o->o.write(buf));
     }
-
-    /**
-     * Represents a single choice a player can make within an EthicsCase.
-     * This is an immutable data class with network serialization capabilities.
-     *
-     * @param id          A unique identifier for this option (e.g., "option_proceed_cautiously").
-     * @param text        The text displayed to the player for this choice.
-     * @param consequence A description of the outcome or feedback for choosing this option.
-     */
-    public record EthicsOption(
-        String id,
-        String text,
-        String consequence
-    ) {
-        /**
-         * Writes the option to a network buffer.
-         * @param buf The buffer to write to.
-         */
-        public void write(PacketByteBuf buf) {
-            buf.writeString(id);
-            buf.writeString(text);
-            buf.writeString(consequence);
+    public static EthicsCase from(PacketByteBuf buf){
+        String id=buf.readString(80),title=buf.readString(256),description=buf.readString(8192);
+        int count=buf.readVarInt();if(count<1 || count>16)throw new IllegalArgumentException("Invalid option count");
+        List<EthicsOption> options=new ArrayList<>(count);for(int i=0;i<count;i++)options.add(EthicsOption.from(buf));
+        return new EthicsCase(id,title,description,options);
+    }
+    public record EthicsOption(String id,String text,String consequence){
+        public EthicsOption {
+            if(id==null || !id.matches("[a-z0-9_]{1,80}") || text==null || text.length()>2048 || consequence==null || consequence.length()>8192)
+                throw new IllegalArgumentException("Invalid ethics option");
         }
-
-        /**
-         * Reads an option from a network buffer.
-         * @param buf The buffer to read from.
-         * @return A new EthicsOption instance.
-         */
-        public static EthicsOption from(PacketByteBuf buf) {
-            String id = buf.readString();
-            String text = buf.readString();
-            String consequence = buf.readString();
-            return new EthicsOption(id, text, consequence);
-        }
+        public void write(PacketByteBuf buf){buf.writeString(id,80);buf.writeString(text,2048);buf.writeString(consequence,8192);}
+        public static EthicsOption from(PacketByteBuf buf){return new EthicsOption(buf.readString(80),buf.readString(2048),buf.readString(8192));}
     }
 }

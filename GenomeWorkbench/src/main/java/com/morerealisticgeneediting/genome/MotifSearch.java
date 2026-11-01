@@ -1,50 +1,16 @@
 package com.morerealisticgeneediting.genome;
-
-import java.util.ArrayList;
-import java.util.List;
-
-public class MotifSearch {
-
-    /**
-     * Searches for a motif within a GenomeSlice.
-     *
-     * @param slice The GenomeSlice to search in.
-     * @param motif The motif to search for, as a string of A, C, G, T.
-     * @return A list of starting positions of the motif within the slice.
-     */
-    public static List<Integer> search(GenomeSlice slice, String motif) {
-        List<Integer> foundPositions = new ArrayList<>();
-        if (motif == null || motif.isEmpty() || slice.getLength() < motif.length()) {
-            return foundPositions;
+import java.util.*;
+public final class MotifSearch {
+    public static final int MAX_RESULTS=4096;
+    private MotifSearch() { }
+    public static List<Integer> search(GenomeSlice slice,String motif){
+        Objects.requireNonNull(slice);Objects.requireNonNull(motif);
+        motif=motif.toUpperCase(Locale.ROOT);
+        if(motif.isEmpty()||motif.length()>256||!motif.matches("[ACGT]+"))throw new IllegalArgumentException("Motif must contain 1-256 A/C/G/T bases");
+        List<Integer> found=new ArrayList<>();String sequence=slice.getSequence();
+        for(int p=sequence.indexOf(motif);p>=0;p=sequence.indexOf(motif,p+1)){
+            if(found.size()==MAX_RESULTS)throw new IllegalArgumentException("Too many motif matches; narrow the window");found.add(p);
         }
-
-        byte[] motifBytes = new byte[motif.length()];
-        for (int i = 0; i < motif.length(); i++) {
-            motifBytes[i] = baseToByte(motif.charAt(i));
-        }
-
-        for (int i = 0; i <= slice.getLength() - motif.length(); i++) {
-            boolean match = true;
-            for (int j = 0; j < motif.length(); j++) {
-                if (slice.getBaseAt(i + j) != motifBytes[j]) {
-                    match = false;
-                    break;
-                }
-            }
-            if (match) {
-                foundPositions.add(i);
-            }
-        }
-        return foundPositions;
-    }
-
-    private static byte baseToByte(char base) {
-        switch (Character.toUpperCase(base)) {
-            case 'A': return 0;
-            case 'C': return 1;
-            case 'G': return 2;
-            case 'T': return 3;
-            default: throw new IllegalArgumentException("Invalid base: " + base);
-        }
+        return List.copyOf(found);
     }
 }

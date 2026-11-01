@@ -1,4 +1,6 @@
 package com.morerealisticgeneediting.block.entity;
+import com.morerealisticgeneediting.util.StackData;
+import com.morerealisticgeneediting.screen.LabEquipmentScreenHandler;
 
 import com.morerealisticgeneediting.block.LabEquipmentBlockEntity;
 import com.morerealisticgeneediting.equipment.EquipmentSpecs;
@@ -319,6 +321,6 @@ public class BscBlockEntity extends LabEquipmentBlockEntity {
     @Nullable
     @Override
     public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
-        return null;
+        return new LabEquipmentScreenHandler(syncId, playerInventory, this);
     }
 }

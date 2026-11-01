@@ -11,6 +11,7 @@ import net.minecraft.screen.ArrayPropertyDelegate;
 import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
+import com.morerealisticgeneediting.screen.slot.MachineSlot;
 import org.jetbrains.annotations.Nullable;
 
 public class IncubatorScreenHandler extends ScreenHandler {
@@ -35,10 +36,10 @@ public class IncubatorScreenHandler extends ScreenHandler {
 
         this.blockEntity = (inventory instanceof IncubatorBlockEntity) ? (IncubatorBlockEntity) inventory : null;
 
-        this.addSlot(new Slot(inventory, 0, 44, 35)); // Amplified Gene Fragment
-        this.addSlot(new Slot(inventory, 1, 62, 35)); // Plasmid Vector
-        this.addSlot(new Slot(inventory, 2, 80, 35)); // DNA Ligase
-        this.addSlot(new Slot(inventory, 3, 134, 35)); // Output
+        this.addSlot(new MachineSlot(inventory, 0, 44, 35, false)); // Amplified Gene Fragment
+        this.addSlot(new MachineSlot(inventory, 1, 62, 35, false)); // Plasmid Vector
+        this.addSlot(new MachineSlot(inventory, 2, 80, 35, false)); // DNA Ligase
+        this.addSlot(new MachineSlot(inventory, 3, 134, 35, true)); // Output
 
         addPlayerInventory(playerInventory);
         addPlayerHotbar(playerInventory);
@@ -51,14 +52,14 @@ public class IncubatorScreenHandler extends ScreenHandler {
 
     @Override
     public boolean onButtonClick(PlayerEntity player, int id) {
-        if (blockEntity == null) return false;
+        if (blockEntity == null || !canUse(player)) return false;
         if (!NetGuards.isPlayerClose(player, blockEntity.getWorld(), blockEntity.getPos())) return false;
 
         if (id == 0) { // Assuming 0 is the 'start' button ID
             blockEntity.startIncubation(player);
             return true;
         }
-        return super.onButtonClick(player, id);
+        return false;
     }
 
     @Override
@@ -67,9 +68,11 @@ public class IncubatorScreenHandler extends ScreenHandler {
     }
 
     @Override
-    public ItemStack transferSlot(PlayerEntity player, int invSlot) {
+    public ItemStack quickMove(PlayerEntity player, int invSlot) {
         ItemStack newStack = ItemStack.EMPTY;
+        if(invSlot<0 || invSlot>=this.slots.size() || !canUse(player)) return ItemStack.EMPTY;
         Slot slot = this.slots.get(invSlot);
+        if(!slot.canTakeItems(player)) return ItemStack.EMPTY;
         if (slot != null && slot.hasStack()) {
             ItemStack originalStack = slot.getStack();
             newStack = originalStack.copy();
@@ -77,7 +80,7 @@ public class IncubatorScreenHandler extends ScreenHandler {
                 if (!this.insertItem(originalStack, this.inventory.size(), this.slots.size(), true)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (!this.insertItem(originalStack, 0, this.inventory.size(), false)) {
+            } else if (!this.insertItem(originalStack, 0, 3, false)) {
                 return ItemStack.EMPTY;
             }
 

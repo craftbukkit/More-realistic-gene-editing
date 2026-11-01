@@ -1,72 +1,34 @@
 package com.morerealisticgeneediting.project;
-
 import com.google.gson.Gson;
-import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 import com.morerealisticgeneediting.MoreRealisticGeneEditing;
-import net.fabricmc.fabric.api.resource.ResourceManagerHelper;
-import net.fabricmc.fabric.api.resource.SimpleSynchronousResourceReloadListener;
-import net.minecraft.resource.ResourceManager;
-import net.minecraft.resource.ResourceType;
+import net.fabricmc.fabric.api.resource.*;
+import net.minecraft.resource.*;
 import net.minecraft.util.Identifier;
-
-import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.function.Function;
-import java.util.stream.Collectors;
-
-public class ProjectRegistry {
-
-    private static final Identifier PROJECTS_FILE = new Identifier(MoreRealisticGeneEditing.MOD_ID, "projects.json");
-    private static final Gson GSON = new Gson();
-    private static Map<String, ResearchProject> projects = Collections.emptyMap();
-
+import java.nio.charset.StandardCharsets;
+import java.util.*;
+public final class ProjectRegistry {
+    private static final Identifier FILE=Identifier.of(MoreRealisticGeneEditing.MOD_ID,"projects.json");
+    private static Map<String,ResearchProject> projects=Map.of();
     public static void initialize() {
         ResourceManagerHelper.get(ResourceType.SERVER_DATA).registerReloadListener(new SimpleSynchronousResourceReloadListener() {
-            @Override
-            public Identifier getFabricId() {
-                return new Identifier(MoreRealisticGeneEditing.MOD_ID, "projects");
-            }
-
-            @Override
-            public void reload(ResourceManager manager) {
-                // We only expect one file, but the API returns a map. We'll just take the first.
-                manager.findResources("projects", path -> path.equals(PROJECTS_FILE)).forEach((id, resource) -> {
-                     try (InputStream stream = resource.getInputStream();
-                         InputStreamReader reader = new InputStreamReader(stream)) {
-
-                        Type listType = new TypeToken<List<ResearchProject>>() {}.getType();
-                        List<ResearchProject> projectList = GSON.fromJson(reader, listType);
-
-                        if (projectList != null) {
-                            projects = projectList.stream().collect(Collectors.toMap(ResearchProject::id, Function.identity()));
-                            MoreRealisticGeneEditing.LOGGER.info("Successfully loaded {} research projects.", projects.size());
-                        } else {
-                            MoreRealisticGeneEditing.LOGGER.warn("projects.json is empty or malformed. No projects loaded.");
-                            projects = Collections.emptyMap();
-                        }
-
-                    } catch (JsonSyntaxException e) {
-                        MoreRealisticGeneEditing.LOGGER.error("Failed to parse projects.json. Please check for syntax errors.", e);
-                        projects = Collections.emptyMap();
-                    } catch (Exception e) {
-                        MoreRealisticGeneEditing.LOGGER.error("An unexpected error occurred while loading research projects.", e);
-                        projects = Collections.emptyMap();
+            public Identifier getFabricId(){return Identifier.of(MoreRealisticGeneEditing.MOD_ID,"projects");}
+            public void reload(ResourceManager manager){
+                Map<String,ResearchProject> next=new LinkedHashMap<>();
+                try {
+                    var resource=manager.getResource(FILE);
+                    if(resource.isPresent())try(var reader=new InputStreamReader(resource.get().getInputStream(),StandardCharsets.UTF_8)) {
+                        List<ResearchProject> parsed=new Gson().fromJson(reader,new TypeToken<List<ResearchProject>>(){}.getType());
+                        if(parsed==null)throw new IllegalArgumentException("Empty projects");
+                        for(ResearchProject p:parsed)if(next.putIfAbsent(p.id(),p)!=null)throw new IllegalArgumentException("Duplicate project: "+p.id());
+                        for(ResearchProject p:parsed)for(String prerequisite:p.prerequisites())if(!next.containsKey(prerequisite))throw new IllegalArgumentException("Missing prerequisite: "+prerequisite);
                     }
-                });
+                    projects=Collections.unmodifiableMap(next);
+                } catch(Exception e) {projects=Map.of();MoreRealisticGeneEditing.LOGGER.error("Cannot load research projects",e);}
             }
         });
     }
-
-    public static ResearchProject getProject(String id) {
-        return projects.get(id);
-    }
-
-    public static List<ResearchProject> getAllProjects() {
-        return List.copyOf(projects.values());
-    }
+    public static ResearchProject getProject(String id){return projects.get(id);}
+    public static List<ResearchProject> getAllProjects(){return List.copyOf(projects.values());}
 }

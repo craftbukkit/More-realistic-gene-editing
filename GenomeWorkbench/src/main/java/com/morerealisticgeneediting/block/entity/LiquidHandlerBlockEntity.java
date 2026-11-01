@@ -1,4 +1,6 @@
 package com.morerealisticgeneediting.block.entity;
+import com.morerealisticgeneediting.util.StackData;
+import com.morerealisticgeneediting.screen.LabEquipmentScreenHandler;
 
 import com.morerealisticgeneediting.block.LabEquipmentBlockEntity;
 import com.morerealisticgeneediting.equipment.EquipmentTier;
@@ -69,7 +71,7 @@ public class LiquidHandlerBlockEntity extends LabEquipmentBlockEntity {
     }
 
     // State
-    private Protocol currentProtocol = null;
+    private Protocol currentProtocol = Protocol.PLATE_REPLICATE;
     private boolean isRunning = false;
     private int protocolProgress = 0;
     private int protocolMaxProgress = 0;
@@ -123,6 +125,7 @@ public class LiquidHandlerBlockEntity extends LabEquipmentBlockEntity {
     }
 
     public void setProtocol(Protocol protocol) {
+        if(isRunning || protocol==null)return;
         this.currentProtocol = protocol;
         this.protocolMaxProgress = protocol.duration;
         
@@ -148,6 +151,7 @@ public class LiquidHandlerBlockEntity extends LabEquipmentBlockEntity {
     public void startProtocol() {
         if (!canProcess() || isRunning) return;
         
+        totalSteps=calculateSteps(currentProtocol);protocolMaxProgress=currentProtocol.duration;
         isRunning = true;
         protocolProgress = 0;
         currentStep = 0;
@@ -170,9 +174,10 @@ public class LiquidHandlerBlockEntity extends LabEquipmentBlockEntity {
 
     @Override
     public void tick() {
-        if (world == null || world.isClient) return;
+        if (world == null || world.isClient || isRemoved() || world.getBlockEntity(pos)!=this) return;
         
         if (!isRunning) return;
+        if(!canProcess()){stopProtocol();return;}
 
         protocolProgress++;
         
@@ -274,17 +279,13 @@ public class LiquidHandlerBlockEntity extends LabEquipmentBlockEntity {
     }
 
     private void executeNormalization(int step) {
-        int well = step / 2;
-        boolean isMeasure = step % 2 == 0;
-        
-        if (isMeasure) {
-            // Simulated concentration measurement
-            Random random = new Random();
-            float conc = 10 + random.nextFloat() * 90;  // ng/μL
-            logProtocol(String.format("Well %d: Measured %.1f ng/μL", well + 1, conc));
-        } else {
-            logProtocol(String.format("Well %d: Normalized to %.1f ng/μL", well + 1, targetConcentration));
+        int well=step/2;
+        NbtCompound source=StackData.read(getStack(DECK_POSITION_1));
+        if(!source.contains("MeasuredConcentration")) {
+            logProtocol("Well "+(well+1)+": concentration unavailable; normalization not performed");return;
         }
+        float concentration=source.getFloat("MeasuredConcentration");
+        logProtocol(String.format("Well %d: recorded source concentration %.1f ng/μL; normalization is a planning simulation",well+1,concentration));
     }
 
     private void executeCustom(int step) {
@@ -332,11 +333,12 @@ public class LiquidHandlerBlockEntity extends LabEquipmentBlockEntity {
         // Mark destination plate as processed
         ItemStack destPlate = getStack(DECK_POSITION_2);
         if (!destPlate.isEmpty()) {
-            NbtCompound nbt = destPlate.getOrCreateNbt();
+            NbtCompound nbt = StackData.read(destPlate);
             nbt.putString("ProcessedBy", "LiquidHandler");
             nbt.putString("Protocol", currentProtocol.name);
             nbt.putInt("TransfersCompleted", transfersCompleted);
             nbt.putFloat("TotalVolume", totalVolumeTransferred);
+            nbt.putBoolean("Simulation",true);StackData.write(destPlate,nbt);
         }
     }
 
@@ -468,7 +470,7 @@ public class LiquidHandlerBlockEntity extends LabEquipmentBlockEntity {
     @Nullable
     @Override
     public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
-        return null;  // TODO: LiquidHandlerScreenHandler
+        return new LabEquipmentScreenHandler(syncId,playerInventory,this);
     }
 
     // Protocol enum with duration

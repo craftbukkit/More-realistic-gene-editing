@@ -1,39 +1,12 @@
 package com.morerealisticgeneediting.network.c2s;
-
-import com.morerealisticgeneediting.MoreRealisticGeneEditing;
-import com.morerealisticgeneediting.project.ServerProjectManager;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.fabricmc.fabric.api.networking.v1.PacketSender;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.server.MinecraftServer;
-import net.minecraft.server.network.ServerPlayNetworkHandler;
-import net.minecraft.server.network.ServerPlayerEntity;
+import com.morerealisticgeneediting.network.PayloadCodecs;
+import net.minecraft.network.RegistryByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
-
-public class C2SStartProjectPacket {
-
-    public static final Identifier ID = new Identifier(MoreRealisticGeneEditing.MOD_ID, "start_project");
-
-    /**
-     * Called on the client to send a request to the server to start a project.
-     * @param projectId The ID of the project to start.
-     */
-    public static void send(String projectId) {
-        PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeString(projectId);
-        ClientPlayNetworking.send(ID, buf);
-    }
-
-    /**
-     * Called on the server when a start_project packet is received.
-     */
-    public static void receive(MinecraftServer server, ServerPlayerEntity player, ServerPlayNetworkHandler handler, PacketByteBuf buf, PacketSender responseSender) {
-        String projectId = buf.readString();
-
-        // The server will execute this on the main server thread.
-        server.execute(() -> {
-            ServerProjectManager.startProject(player, projectId);
-        });
-    }
+import java.util.UUID;
+public record C2SStartProjectPacket(String projectId) implements CustomPayload {
+    public static final Id<C2SStartProjectPacket> ID = new Id<>(Identifier.of("morerealisticgeneediting","start_project"));
+    public static final PacketCodec<RegistryByteBuf,C2SStartProjectPacket> CODEC = PayloadCodecs.of(b -> new C2SStartProjectPacket(b.readString(128)), (b,p) -> { b.writeString(p.projectId(),128); });
+    @Override public Id<C2SStartProjectPacket> getId() { return ID; }
 }

@@ -1,113 +1,53 @@
 package com.morerealisticgeneediting.recipe;
-
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import net.minecraft.inventory.SimpleInventory;
+import com.mojang.serialization.MapCodec;
+import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.item.ItemStack;
-import net.minecraft.network.PacketByteBuf;
-import net.minecraft.recipe.Ingredient;
-import net.minecraft.recipe.Recipe;
-import net.minecraft.recipe.RecipeSerializer;
-import net.minecraft.recipe.RecipeType;
-import net.minecraft.recipe.ShapedRecipe;
-import net.minecraft.util.Identifier;
-import net.minecraft.util.JsonHelper;
+import net.minecraft.network.RegistryByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.recipe.*;
+import net.minecraft.recipe.input.RecipeInput;
+import net.minecraft.registry.RegistryWrapper;
 import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.world.World;
+import java.util.List;
 
-public class CellProcessorRecipe implements Recipe<SimpleInventory> {
-    private final Identifier id;
+public final class CellProcessorRecipe implements Recipe<CellProcessorRecipe.Input> {
+    private final List<Ingredient> ingredients;
     private final ItemStack output;
-    private final DefaultedList<Ingredient> recipeItems;
-
-    public CellProcessorRecipe(Identifier id, ItemStack output, DefaultedList<Ingredient> recipeItems) {
-        this.id = id;
-        this.output = output;
-        this.recipeItems = recipeItems;
+    public CellProcessorRecipe(List<Ingredient> ingredients,ItemStack output) {
+        if(ingredients.size()!=2 || output.isEmpty()) throw new IllegalArgumentException("Cell processor needs two inputs and an output");
+        this.ingredients=List.copyOf(ingredients);this.output=output.copy();
     }
-
-    @Override
-    public boolean matches(SimpleInventory inventory, World world) {
-        if (world.isClient()) {
-            return false;
-        }
-
-        return recipeItems.get(0).test(inventory.getStack(0)) && recipeItems.get(1).test(inventory.getStack(1));
+    public record Input(ItemStack sample,ItemStack reagent) implements RecipeInput {
+        @Override public ItemStack getStackInSlot(int index) { return switch(index) { case 0->sample;case 1->reagent;default->throw new IndexOutOfBoundsException(index); }; }
+        @Override public int getSize() { return 2; }
     }
-
-    @Override
-    public ItemStack craft(SimpleInventory inventory) {
-        return output;
+    @Override public boolean matches(Input input,World world) { return ingredients.get(0).test(input.sample()) && ingredients.get(1).test(input.reagent()); }
+    @Override public ItemStack craft(Input input,RegistryWrapper.WrapperLookup lookup) { return output.copy(); }
+    @Override public boolean fits(int width,int height) { return width*height>=2; }
+    @Override public ItemStack getResult(RegistryWrapper.WrapperLookup lookup) { return output.copy(); }
+    public ItemStack getOutput() { return output.copy(); }
+    @Override public DefaultedList<Ingredient> getIngredients() { DefaultedList<Ingredient> list=DefaultedList.of();list.addAll(ingredients);return list; }
+    @Override public RecipeSerializer<?> getSerializer() { return Serializer.INSTANCE; }
+    @Override public RecipeType<?> getType() { return Type.INSTANCE; }
+    public static final class Type implements RecipeType<CellProcessorRecipe> {
+        public static final Type INSTANCE=new Type(); public static final String ID="cell_processing";
     }
-
-    @Override
-    public boolean fits(int width, int height) {
-        return true;
-    }
-
-    @Override
-    public ItemStack getOutput() {
-        return output.copy();
-    }
-
-    @Override
-    public Identifier getId() {
-        return id;
-    }
-
-    @Override
-    public RecipeSerializer<?> getSerializer() {
-        return Serializer.INSTANCE;
-    }
-
-    @Override
-    public RecipeType<?> getType() {
-        return Type.INSTANCE;
-    }
-
-    public static class Type implements RecipeType<CellProcessorRecipe> {
-        private Type() { }
-        public static final Type INSTANCE = new Type();
-        public static final String ID = "cell_processing";
-    }
-
-    public static class Serializer implements RecipeSerializer<CellProcessorRecipe> {
-        public static final Serializer INSTANCE = new Serializer();
-        public static final String ID = "cell_processing";
-
-        @Override
-        public CellProcessorRecipe read(Identifier id, JsonObject json) {
-            ItemStack output = ShapedRecipe.outputFromJson(JsonHelper.getObject(json, "output"));
-
-            JsonArray ingredients = JsonHelper.getArray(json, "ingredients");
-            DefaultedList<Ingredient> inputs = DefaultedList.ofSize(2, Ingredient.EMPTY);
-
-            for (int i = 0; i < inputs.size(); i++) {
-                inputs.set(i, Ingredient.fromJson(ingredients.get(i)));
+    public static final class Serializer implements RecipeSerializer<CellProcessorRecipe> {
+        public static final Serializer INSTANCE=new Serializer();public static final String ID="cell_processing";
+        private static final MapCodec<CellProcessorRecipe> CODEC=RecordCodecBuilder.mapCodec(instance->instance.group(
+            Ingredient.DISALLOW_EMPTY_CODEC.listOf().fieldOf("ingredients").forGetter(recipe->recipe.ingredients),
+            ItemStack.CODEC.fieldOf("output").forGetter(recipe->recipe.output)
+        ).apply(instance,CellProcessorRecipe::new));
+        private static final PacketCodec<RegistryByteBuf,CellProcessorRecipe> PACKET_CODEC=new PacketCodec<>() {
+            public CellProcessorRecipe decode(RegistryByteBuf buf) {
+                return new CellProcessorRecipe(List.of(Ingredient.PACKET_CODEC.decode(buf),Ingredient.PACKET_CODEC.decode(buf)),ItemStack.PACKET_CODEC.decode(buf));
             }
-
-            return new CellProcessorRecipe(id, output, inputs);
-        }
-
-        @Override
-        public CellProcessorRecipe read(Identifier id, PacketByteBuf buf) {
-            DefaultedList<Ingredient> inputs = DefaultedList.ofSize(buf.readInt(), Ingredient.EMPTY);
-
-            for (int i = 0; i < inputs.size(); i++) {
-                inputs.set(i, Ingredient.fromPacket(buf));
+            public void encode(RegistryByteBuf buf,CellProcessorRecipe value) {
+                Ingredient.PACKET_CODEC.encode(buf,value.ingredients.get(0));Ingredient.PACKET_CODEC.encode(buf,value.ingredients.get(1));ItemStack.PACKET_CODEC.encode(buf,value.output);
             }
-
-            ItemStack output = buf.readItemStack();
-            return new CellProcessorRecipe(id, output, inputs);
-        }
-
-        @Override
-        public void write(PacketByteBuf buf, CellProcessorRecipe recipe) {
-            buf.writeInt(recipe.getIngredients().size());
-            for (Ingredient ing : recipe.getIngredients()) {
-                ing.write(buf);
-            }
-            buf.writeItemStack(recipe.getOutput());
-        }
+        };
+        @Override public MapCodec<CellProcessorRecipe> codec() { return CODEC; }
+        @Override public PacketCodec<RegistryByteBuf,CellProcessorRecipe> packetCodec() { return PACKET_CODEC; }
     }
 }

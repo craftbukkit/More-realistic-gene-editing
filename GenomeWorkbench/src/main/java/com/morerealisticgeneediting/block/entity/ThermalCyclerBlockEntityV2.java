@@ -1,4 +1,6 @@
 package com.morerealisticgeneediting.block.entity;
+import com.morerealisticgeneediting.util.StackData;
+import com.morerealisticgeneediting.screen.LabEquipmentScreenHandler;
 
 import com.morerealisticgeneediting.block.LabEquipmentBlockEntity;
 import com.morerealisticgeneediting.equipment.EquipmentSpecs;
@@ -107,7 +109,7 @@ public class ThermalCyclerBlockEntityV2 extends LabEquipmentBlockEntity {
 
     @Override
     protected boolean isInputSlot(int slot) {
-        return slot >= TEMPLATE_SLOT && slot <= TUBE_SLOT;
+        return slot >= TEMPLATE_SLOT && slot <= TUBE_SLOT && slot!=OUTPUT_SLOT;
     }
 
     @Override
@@ -136,13 +138,13 @@ public class ThermalCyclerBlockEntityV2 extends LabEquipmentBlockEntity {
         if (!isValidTube(tube)) return false;
 
         // Check output space
-        return getStack(OUTPUT_SLOT).isEmpty() || 
-               (getStack(OUTPUT_SLOT).getCount() < getStack(OUTPUT_SLOT).getMaxCount());
+        return getStack(OUTPUT_SLOT).isEmpty();
     }
 
     @Override
     public void tick() {
-        if (world == null || world.isClient) return;
+        if (world == null || world.isClient || isRemoved() || world.getBlockEntity(pos)!=this) return;
+        if(currentPhase==PcrPhase.COMPLETE && getStack(OUTPUT_SLOT).isEmpty())currentPhase=PcrPhase.IDLE;
 
         if (currentPhase == PcrPhase.IDLE && canProcess()) {
             startPcr();
@@ -255,6 +257,7 @@ public class ThermalCyclerBlockEntityV2 extends LabEquipmentBlockEntity {
 
     @Override
     protected void completeProcess() {
+        if(!getStack(OUTPUT_SLOT).isEmpty())return;
         Random random = new Random();
         
         // Calculate success based on parameters
@@ -265,7 +268,8 @@ public class ThermalCyclerBlockEntityV2 extends LabEquipmentBlockEntity {
             ItemStack product = new ItemStack(ModItems.AMPLIFIED_GENE_FRAGMENT);
             
             // Add metadata
-            NbtCompound nbt = product.getOrCreateNbt();
+            NbtCompound nbt = StackData.read(getStack(TEMPLATE_SLOT));
+            nbt.putBoolean("Simulation",true);nbt.putString("Operation","abstract_pcr");
             nbt.putInt("Cycles", totalCycles);
             nbt.putFloat("AnnealingTemp", annealingTemp);
             nbt.putString("Polymerase", getPolymeraseType());
@@ -281,10 +285,9 @@ public class ThermalCyclerBlockEntityV2 extends LabEquipmentBlockEntity {
             // Add to output
             ItemStack output = getStack(OUTPUT_SLOT);
             if (output.isEmpty()) {
+                StackData.write(product,nbt);
                 setStack(OUTPUT_SLOT, product);
-            } else {
-                output.increment(1);
-            }
+            } else { return; }
         }
 
         // Consume reagents

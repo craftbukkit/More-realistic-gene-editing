@@ -12,6 +12,7 @@ import net.minecraft.screen.ArrayPropertyDelegate;
 import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
+import com.morerealisticgeneediting.screen.slot.MachineSlot;
 import org.jetbrains.annotations.Nullable;
 
 public class ElectrophoresisTankScreenHandler extends ScreenHandler {
@@ -36,7 +37,7 @@ public class ElectrophoresisTankScreenHandler extends ScreenHandler {
 
         this.blockEntity = (inventory instanceof ElectrophoresisTankBlockEntity) ? (ElectrophoresisTankBlockEntity) inventory : null;
 
-        this.addSlot(new Slot(inventory, 0, 80, 17));
+        this.addSlot(new MachineSlot(inventory, 0, 80, 17, false));
         this.addSlot(new ModResultSlot(inventory, 1, 80, 53));
 
         addPlayerInventory(playerInventory);
@@ -50,20 +51,22 @@ public class ElectrophoresisTankScreenHandler extends ScreenHandler {
 
     @Override
     public boolean onButtonClick(PlayerEntity player, int id) {
-        if (blockEntity == null) return false;
+        if (blockEntity == null || !canUse(player)) return false;
         if (!NetGuards.isPlayerClose(player, blockEntity.getWorld(), blockEntity.getPos())) return false;
 
         if (id == 0) { // Assuming 0 is the 'start' button
             blockEntity.startElectrophoresis(player);
             return true;
         }
-        return super.onButtonClick(player, id);
+        return false;
     }
 
     @Override
-    public ItemStack transferSlot(PlayerEntity player, int invSlot) {
+    public ItemStack quickMove(PlayerEntity player, int invSlot) {
         ItemStack newStack = ItemStack.EMPTY;
+        if(invSlot<0 || invSlot>=this.slots.size() || !canUse(player)) return ItemStack.EMPTY;
         Slot slot = this.slots.get(invSlot);
+        if(!slot.canTakeItems(player)) return ItemStack.EMPTY;
         if (slot != null && slot.hasStack()) {
             ItemStack originalStack = slot.getStack();
             newStack = originalStack.copy();
@@ -71,7 +74,7 @@ public class ElectrophoresisTankScreenHandler extends ScreenHandler {
                 if (!this.insertItem(originalStack, this.inventory.size(), this.slots.size(), true)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (!this.insertItem(originalStack, 0, this.inventory.size(), false)) {
+            } else if (!this.insertItem(originalStack, 0, 1, false)) {
                 return ItemStack.EMPTY;
             }
 

@@ -1,39 +1,18 @@
 package com.morerealisticgeneediting.genome.provider;
-
-import com.morerealisticgeneediting.MoreRealisticGeneEditing;
-import com.morerealisticgeneediting.genome.Genome;
-import com.morerealisticgeneediting.genome.GenomeSlice;
-
-import java.util.UUID;
+import com.morerealisticgeneediting.genome.*;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
-
-public class LocalGenomeProvider implements GenomeProvider {
-
-    @Override
-    public boolean canProvide(String identifier) {
-        try {
-            UUID.fromString(identifier);
-            return true;
-        } catch (IllegalArgumentException e) {
-            return false;
-        }
-    }
-
-    @Override
-    public CompletableFuture<GenomeSlice> getSlice(String identifier, long start, int length) {
-        try {
-            UUID genomeId = UUID.fromString(identifier);
-            Genome genome = MoreRealisticGeneEditing.genomeCache.get(genomeId);
-            if (genome != null) {
-                String sequence = genome.getSequence(start, length);
-                GenomeSlice slice = new GenomeSlice(genome, sequence, start);
-                return CompletableFuture.completedFuture(slice);
-            } else {
-                return CompletableFuture.completedFuture(null);
-            }
-        } catch (Exception e) {
-            // Catch broader exceptions to be safe
-            return CompletableFuture.failedFuture(e);
-        }
+/** Local requests require an explicit per-world repository and requesting owner. */
+public final class LocalGenomeProvider implements GenomeProvider {
+    private final GenomeRepository repository;
+    private final UUID owner;
+    public LocalGenomeProvider(GenomeRepository repository,UUID owner){this.repository=Objects.requireNonNull(repository);this.owner=Objects.requireNonNull(owner);}
+    @Override public boolean canProvide(String identifier){try{UUID.fromString(identifier);return true;}catch(IllegalArgumentException|NullPointerException e){return false;}}
+    @Override public CompletableFuture<GenomeSlice> getSlice(String identifier,long start,int length){
+        try{
+            if(length<0||length>100_000)throw new IllegalArgumentException("Window exceeds 100,000 bases");
+            Genome genome=repository.findOwned(UUID.fromString(identifier),owner).orElseThrow(()->new IllegalArgumentException("Owned sample not found"));
+            return CompletableFuture.completedFuture(new GenomeSlice(genome,genome.getSequence(start,length),start));
+        }catch(RuntimeException failure){return CompletableFuture.failedFuture(failure);}
     }
 }

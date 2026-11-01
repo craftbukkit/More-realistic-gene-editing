@@ -2,139 +2,161 @@
   {
     "id": "welcome_to_the_lab",
     "title": "欢迎来到实验室！",
-    "description": "这个科研项目系统将引导您探索基因工程的世界。完成项目以解锁新技术并面对新挑战。",
+    "description": "认识虚拟样本、编辑记录与独立验证的区别。项目只授予游戏内完成记录。",
     "objectives": [
-      "查看项目列表。",
-      "学习如何开始一个新项目。"
+      "使用 /research list 阅读项目与证据说明。",
+      "使用 /research start welcome_to_the_lab，再使用 /research complete welcome_to_the_lab。"
     ],
     "rewards": [
-      "解锁“血液病疗法：Casgevy 原型”项目。"
-    ]
+      "解锁虚拟样本编辑与验证练习。"
+    ],
+    "completionMode": "introduction",
+    "prerequisites": [],
+    "sources": []
+  },
+  {
+    "id": "simulated_sample_edit",
+    "title": "虚拟样本：编辑与独立验证",
+    "description": "在服务器保存的虚拟生物样本上完成采样、序列编辑和测序验证。只有同一样本的编辑版本被测序一致性验证，项目才能完成。该教学记录不代表真实基因或临床效果。",
+    "prerequisites": [
+      "welcome_to_the_lab"
+    ],
+    "completionMode": "sample_edit_verify",
+    "objectives": [
+      "采集一个带有稳定标识的虚拟样本。",
+      "在基因组终端提交有效编辑并保存新版本。",
+      "在测序仪完成同一样本当前编辑版本的测序一致性验证；生成读段不等于通过验证。",
+      "使用 /research complete simulated_sample_edit 查看服务器证据是否满足。"
+    ],
+    "rewards": [
+      "获得虚拟样本编辑练习完成记录。"
+    ],
+    "sources": []
   },
   {
     "id": "blood_disease_casgevy",
-    "title": "血液病疗法 I：Casgevy (Exa-cel) 原型",
-    "description": "模拟 Vertex/CRISPR Therapeutics 的 Casgevy (Exa-cel) 疗法。通过在造血干细胞 (HSC) 中，使用 CRISPR-Cas9 在 BCL11A 基因的红系增强子区域制造靶向性 Indel，以破坏 GATA1 转录因子结合位点，从而下调 BCL11A 表达，安全地重新激活胎儿血红蛋白 (HbF) 的表达，用于治疗 β-地中海贫血和镰状细胞病。",
-    "prerequisites": ["welcome_to_the_lab"],
-    "objectives": [
-      "样本提取：从患者样本中分离并培养造血干细胞。",
-      "终端分析：在基因组终端中定位 BCL11A 的红系特异性增强子区域。",
-      "策略选择：设计 gRNA 以在 BCL11A 增强子的 GATA1 关键结合位点高效创建非同源末端连接 (NHEJ) 介导的 Indel。",
-      "体外验证：通过模拟 PCR 和凝胶电泳，确认 gRNA 的切割效率。",
-      "递送实施：使用电穿孔法将 Cas9-RNP 复合物递送至 HSC。",
-      "测序分析：对编辑后的细胞池进行靶向测序，分析编辑效率与 Indel 谱。",
-      "表型验证：在分化后的红系祖细胞中，通过模拟高效液相色谱法 (HPLC) 或流式细胞术，检测 γ-珠蛋白的表达与 HbF 水平，确认功能恢复。",
-      "生成报告：撰写包含编辑数据、脱靶分析和表型结果的临床前研究报告。"
+    "title": "参考案例：Casgevy / exa-cel",
+    "description": "Casgevy 对自体造血干/祖细胞的 BCL11A 红系特异性增强子进行 CRISPR-Cas9 编辑，通过降低红系 BCL11A 调控作用，提高胎儿血红蛋白 HbF。不能把编辑检测、HbF 表达和临床获益等同，也不能据此宣称没有风险。该案例是机制阅读，当前游戏不模拟患者治疗。",
+    "prerequisites": [
+      "welcome_to_the_lab"
     ],
-    "rewards": [
-      "解锁“碱基编辑”技术模块。",
-      "解锁“血液病疗法 II：BEAM-101 原型”项目。",
-      "伦理案例：BCL11A 脱靶风险评估。"
+    "objectives": [
+      "区分增强子编辑、基因编码区破坏和致病突变直接修复。",
+      "说明普通 PCR 扩增或条带本身不能给出切割效率；需要适当的定量检测。",
+      "分别评估靶位点编辑、非预期结果、红系 HbF 表达与临床结局。"
+    ],
+    "rewards": [],
+    "completionMode": "reference_only",
+    "sources": [
+      "https://dailymed.nlm.nih.gov/dailymed/drugInfo.cfm?setid=7c3e12ad-e2fe-4d3f-a630-ea7364d9e846"
     ]
   },
   {
     "id": "blood_disease_beam101",
-    "title": "血液病疗法 II：BEAM-101 原型 (碱基编辑)",
-    "description": "模拟 Beam Therapeutics 的 BEAM-101 项目，使用更精确的腺嘌呤碱基编辑器 (ABE)，将导致镰状细胞病的 β-珠蛋白基因 (HBB) 中的致病性“A”点突变修正回正常的“G” (对应 DNA 链的 T->C 修正)。本项目代表了基因编辑从“基因破坏”到“单碱基修复”的重大进步。",
-    "prerequisites": ["blood_disease_casgevy"],
-    "objectives": [
-      "样本提取：获取镰状细胞病患者的 HSC 样本。",
-      "终端分析：定位 HBB 基因，并精确识别导致 HbS 表型的致病性单核苷酸多态性 (SNP) 位点 (rs334)。",
-      "策略选择：设计引导 RNA (gRNA) 将碱基编辑器精确定位到目标 A，并选择合适的 ABE 变体。",
-      "递送实施：通过优化的慢病毒载体 (Lentivirus) 将编辑器递送至 HSC。",
-      "测序分析：使用二代测序 (NGS) 验证靶点修复效率、保真度及潜在的 Bystander/脱靶编辑。",
-      "表型验证：评估编辑后红细胞在低氧条件下的形态和功能是否恢复正常。",
-      "生成报告：提交一份包含精确编辑数据、安全性评估和功能恢复证据的完整报告。"
+    "title": "参考案例：BEAM-101 碱基编辑与 HbF",
+    "description": "BEAM-101 通过对 HBG1/HBG2 启动子进行碱基编辑，模拟遗传性胎儿血红蛋白持续表达相关的调控变化，提高 HbF。它不是直接把 HBB 的 rs334 镰状细胞变异改回正常序列。HbS 常见变异为 HBB c.20A>T；不能把该变化表述成 A→G 碱基编辑直接修复。",
+    "prerequisites": [
+      "blood_disease_casgevy"
     ],
-    "rewards": [
-      "解锁“引导编辑”技术模块。",
-      "解锁“CGD 疗法：引导编辑修复 NCF1”项目。"
+    "objectives": [
+      "区分 HBG1/HBG2 启动子调控与 HBB 编码区修复。",
+      "区分目标编辑、旁观者编辑和脱靶变化。",
+      "解释提高 HbF 与直接恢复正常 β-珠蛋白不是同一种机制。"
+    ],
+    "rewards": [],
+    "completionMode": "reference_only",
+    "sources": [
+      "https://beamtx.com/pipeline_candidates/beam-101/",
+      "https://www.ncbi.nlm.nih.gov/clinvar/RCV000224000/"
     ]
   },
   {
     "id": "cgd_therapy_pm359",
-    "title": "CGD 疗法：引导编辑修复 NCF1",
-    "description": "基于前沿研究，使用引导编辑 (Prime Editing) 技术，在造血干细胞中精确修复导致慢性肉芽肿病 (CGD) 的 NCF1 基因中常见的 GT 缺失 (ΔGT) 突变。此技术代表了无双链断裂的“搜索-替换”式基因修正，是实现基因功能恢复的强大工具。",
-    "prerequisites": ["blood_disease_beam101"],
-    "objectives": [
-      "样本准备：从 CGD 患者获取造血干细胞 (HSC) 样本。",
-      "终端比对：在终端中分析 NCF1 基因及其高度同源的假基因序列 (NCF1B, NCF1C)，设计特异性 pegRNA 与引物，以确保编辑和后续分析的精准性。",
-      "策略选择：设计包含正确 GT 序列作为逆转录模板 (RTT) 和引物结合位点 (PBS) 的 pegRNA，并选择高效的引导编辑器 (PE2)。",
-      "编辑实施：将引导编辑器系统 (PE & pegRNA) 以优化的方式递送至目标细胞。",
-      "功能测试：通过模拟的二氢罗丹明 (DHR) 试验，使用流式细胞术检测分化后的中性粒细胞的活性氧 (ROS) 生成能力（氧化爆发）是否恢复正常。",
-      "报告与伦理：提交包含编辑效率、副产物分析和 DHR 功能验证数据的报告。"
+    "title": "参考案例：NCF1 缺失与先导编辑",
+    "description": "NCF1 的常见 ΔGT 缺失可导致 p47phox 缺陷型慢性肉芽肿病。先导编辑研究探索恢复相关序列和氧化爆发功能。机制包含逆转录模板介导的信息写入，不应简化成剪下任意序列。编辑策略通常避免有意制造双链断裂，但不能据此推导没有副产物或风险。",
+    "prerequisites": [
+      "blood_disease_beam101"
     ],
-    "rewards": [
-      "解锁“心血管疾病疗法”项目。",
-      "解锁“罕见病与 PERT 疗法”项目。"
+    "objectives": [
+      "辨别 NCF1 与高度同源假基因给定位和检测带来的困难。",
+      "区分序列纠正、蛋白表达与 DHR 功能读出。",
+      "比较无编辑对照、编辑证据与功能证据的含义。"
+    ],
+    "rewards": [],
+    "completionMode": "reference_only",
+    "sources": [
+      "https://www.nejm.org/doi/10.1056/NEJMoa2509807",
+      "https://www.nature.com/articles/s41586-019-1711-4"
     ]
   },
   {
     "id": "cardio_therapy_lnp",
-    "title": "心血管疾病疗法：LNP 敲除 (体内核酸递送)",
-    "description": "模拟前沿的体内基因编辑疗法，设计并使用脂质纳米颗粒 (LNP) 将基因编辑系统递送至肝脏，以敲除 PCSK9、ANGPTL3 或 Lp(a) 等关键基因，旨在长效降低致病性脂蛋白水平。",
-    "prerequisites": ["cgd_therapy_pm359"],
-    "objectives": [
-      "靶点选择：在终端数据库中研究 PCSK9、ANGPTL3、Lp(a) 的生物学功能，选择一个作为目标。",
-      "LNP 配方设计：在终端中模拟调整 LNP 的脂质组分，以优化肝脏靶向性和递送效率。",
-      "剂量探索：在动物模型（模拟）中进行剂量爬坡实验，监测 LDL-C、甘油三酯或 Lp(a) 水平的模拟数据变化。",
-      "风险平衡：分析高剂量下的肝酶（ALT/AST）模拟数据，评估潜在的肝毒性与脱靶风险。",
-      "数据解读：解读模拟的临床试验数据，确定最佳治疗窗口。",
-      "生成报告：撰写一份关于该体内基因编辑疗法的收益-风险评估报告。"
+    "title": "参考案例：肝脏靶点与核酸递送",
+    "description": "PCSK9、ANGPTL3 和 LPA 是不同的基因靶点；Lp(a) 是脂蛋白颗粒名称，不是基因符号。LPA 编码载脂蛋白(a)。核酸递送、细胞存活、目标编辑和血脂变化需要分别验证，不能由递送成功直接推断疗效。",
+    "prerequisites": [
+      "cgd_therapy_pm359"
     ],
-    "rewards": [
-      "获得“体内基因编辑”专家成就。"
+    "objectives": [
+      "区分 LPA 基因、载脂蛋白(a) 与 Lp(a) 颗粒。",
+      "比较 LDL-C、甘油三酯和 Lp(a) 等不同读出。",
+      "解释递送、编辑、功能和安全性证据各自能支持什么结论。"
+    ],
+    "rewards": [],
+    "completionMode": "reference_only",
+    "sources": [
+      "https://www.ncbi.nlm.nih.gov/gene/4018"
     ]
   },
   {
     "id": "rare_disease_pert",
-    "title": "罕见病疗法：工程化 tRNA (引导编辑)",
-    "description": "探索利用引导编辑安装抑制性 tRNA (suppressor tRNA) 的前沿策略 (PERT)，用于治疗由无义突变导致的各类罕见病。这种方法旨在恢复截短蛋白的全长功能，具有广泛的应用潜力。",
-    "prerequisites": ["cgd_therapy_pm359"],
-    "objectives": [
-      "模型识别：在罕见病数据库中筛选出由 PTC (提前终止密码子) 导致的疾病模型。",
-      "tRNA 设计：设计一个能识别终止密码子（如 UAG）但携带酪氨酸的工程化 tRNA 基因。",
-      "引导编辑策略：使用引导编辑，将设计的 tRNA 基因安全地插入基因组的安全港湾位点。",
-      "功能验证：通过模拟的蛋白质印迹法 (Western Blot) 验证目标蛋白的全长表达是否恢复。",
-      "多模型测试：将该策略应用到多种不同的无义突变疾病模型中，评估其通用性。",
-      "提交报告：提交一份关于 PERT 技术的概念验证 (PoC) 报告。"
+    "title": "参考案例：PERT 与内源抑制性 tRNA",
+    "description": "PERT 研究使用先导编辑改造冗余的内源 tRNA 基因，使其成为抑制性 tRNA，以促进特定提前终止密码子的读穿。它不是将外源 tRNA 基因插入所谓安全港。恢复全长蛋白不自动意味着功能或安全性恢复；正常终止读穿、背景依赖和表达剂量均需独立评估。",
+    "prerequisites": [
+      "cgd_therapy_pm359"
     ],
-    "rewards": [
-      "解锁“免疫疗法：CAR-T 构建”项目。"
+    "objectives": [
+      "区分编辑内源 tRNA 与插入外源 tRNA。",
+      "解释提前终止密码子读穿与修复原致病 DNA 变异的区别。",
+      "区分全长蛋白、蛋白功能与非预期读穿的检测证据。"
+    ],
+    "rewards": [],
+    "completionMode": "reference_only",
+    "sources": [
+      "https://www.nature.com/articles/s41586-025-09732-2"
     ]
   },
   {
     "id": "immunotherapy_cart",
-    "title": "免疫疗法：构建同种异体 CAR-T (多重编辑)",
-    "description": "引导玩家构建可“现货供应”的同种异体 (allogeneic) CAR-T 细胞。这需要通过多重 CRISPR 编辑，敲除内源性 T 细胞受体 (TCR) 以防止移植物抗宿主病 (GvHD)，并可选择性敲除 PD-1 以增强抗肿瘤活性。",
-    "prerequisites": ["rare_disease_pert"],
-    "objectives": [
-      "CAR 构建：在分子克隆工作台中，将靶向 CD19 的嵌合抗原受体 (CAR) 序列组装进慢病毒载体。",
-      "多重编辑设计：同时设计用于敲除 TRAC 基因 (TCR 的一部分) 和 PDCD1 基因 (PD-1) 的 gRNA。",
-      "细胞工程：将 CAR 载体转导健康捐赠者的 T 细胞，并使用 CRISPR 系统进行多重敲除。",
-      "纯度分选：通过模拟流式细胞术，分选出 TCR 阴性且 CAR 阳性的细胞群体。",
-      "体外功能评估：在共培养系统中，评估工程化 CAR-T 细胞对肿瘤细胞的杀伤活性。",
-      "安全性评估：确认改造后的 T 细胞不会攻击异体细胞（无 GvHD 反应）。",
-      "报告与展望：提交项目报告，并讨论同种异体 CAR-T 的工业化生产挑战。"
+    "title": "参考案例：同种异体 CAR-T 的多维风险",
+    "description": "降低内源 TCR 活性可降低同种异体 CAR-T 的移植物抗宿主反应风险，但不能保证消除 GvHD，也不解决宿主对移植物的全部排斥。PDCD1/PD-1 编辑的收益和风险依赖具体情境，不能作为通用增强按钮。多重编辑还需要独立评估非预期结构变化。",
+    "prerequisites": [
+      "rare_disease_pert"
     ],
-    "rewards": [
-      "获得“细胞工程师”成就。"
+    "objectives": [
+      "分别说明移植物攻击宿主与宿主排斥移植物。",
+      "区分 CAR 表达、细胞身份、编辑结果、功能与安全性。",
+      "比较 PD-1 编辑的背景依赖及多重编辑的风险权衡。"
+    ],
+    "rewards": [],
+    "completionMode": "reference_only",
+    "sources": [
+      "https://doi.org/10.1038/s41467-026-71904-z"
     ]
   },
   {
     "id": "ethics_case_germline_editing",
     "title": "伦理案例研究：生殖系基因编辑",
-    "description": "本模块不涉及实际操作，旨在回顾和探讨 2018 年发生的“基因编辑婴儿”事件。请在阅读完背景材料后，从科研伦理、社会影响和法规监管等角度做出您的判断。这是一个严肃的议题，旨在培养负责任的科学精神。",
-    "prerequisites": ["blood_disease_casgevy"],
-    "objectives": [
-      "阅读案例背景：了解事件的经过、技术手段 (CRISPR-Cas9 编辑 CCR5) 与主要争议点。",
-      "分析伦理违规：识别其中违反的科研伦理基本准则（如知情同意、风险-收益失衡、缺乏同行评议和社会监督）。",
-      "提交立场：在终端中完成一份关于此事件的立场声明，并提交给虚拟伦理委员会。",
-      "查看后果：了解该事件对全球基因编辑领域法规和公众信任造成的长远影响。"
+    "description": "围绕人类生殖系编辑讨论知情同意、后代权益、风险不确定性、独立审查与公共治理。该模块为参考阅读，不将选择某一答案等同于获得医学或伦理资质。",
+    "prerequisites": [
+      "blood_disease_casgevy"
     ],
-    "rewards": [
-      "获得高额伦理评分。",
-      "解锁关于“人类生殖系基因编辑”的深度阅读材料。"
-    ]
+    "objectives": [
+      "区分当事人同意与后代无法直接同意的问题。",
+      "讨论不可逆或可遗传变化所需的证据与治理。",
+      "使用 /ethics list 阅读讨论案例并查看各选项反馈。"
+    ],
+    "rewards": [],
+    "completionMode": "reference_only",
+    "sources": []
   }
 ]

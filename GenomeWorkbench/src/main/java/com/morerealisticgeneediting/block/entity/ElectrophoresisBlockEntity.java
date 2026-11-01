@@ -1,4 +1,6 @@
 package com.morerealisticgeneediting.block.entity;
+import com.morerealisticgeneediting.util.StackData;
+import com.morerealisticgeneediting.screen.LabEquipmentScreenHandler;
 
 import com.morerealisticgeneediting.block.LabEquipmentBlockEntity;
 import com.morerealisticgeneediting.equipment.EquipmentSpecs;
@@ -292,7 +294,7 @@ public class ElectrophoresisBlockEntity extends LabEquipmentBlockEntity {
 
     private int[] estimateFragmentSizes(ItemStack sample, Random random) {
         // Check NBT for actual sizes
-        NbtCompound nbt = sample.getNbt();
+        NbtCompound nbt = StackData.read(sample);
         if (nbt != null && nbt.contains("FragmentSizes")) {
             return nbt.getIntArray("FragmentSizes");
         }

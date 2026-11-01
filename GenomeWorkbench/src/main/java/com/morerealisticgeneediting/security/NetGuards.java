@@ -42,7 +42,8 @@ public final class NetGuards {
         }
 
         // 3. BlockEntity Type Check: Ensure the BE at the position is of the expected type.
-        T blockEntity = world.getBlockEntity(pos, expectedBlockEntityType).orElse(null);
+        Object candidate = world.getBlockEntity(pos);
+        T blockEntity = expectedBlockEntityType.isInstance(candidate) ? expectedBlockEntityType.cast(candidate) : null;
         if (blockEntity == null) {
             return false;
         }

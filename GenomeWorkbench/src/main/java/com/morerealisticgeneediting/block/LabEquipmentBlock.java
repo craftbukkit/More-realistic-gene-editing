@@ -1,6 +1,9 @@
 package com.morerealisticgeneediting.block;
 
-import com.morerealisticgeneediting.equipment.EquipmentTier;
+import com.mojang.serialization.MapCodec;
+import com.morerealisticgeneediting.block.entity.ModBlockEntities;
+import net.minecraft.block.entity.BlockEntityType;
+import net.minecraft.block.entity.BlockEntityTicker;
 import net.minecraft.block.*;
 import net.minecraft.block.entity.BlockEntity;
 import net.minecraft.entity.player.PlayerEntity;
@@ -33,6 +36,8 @@ import org.jetbrains.annotations.Nullable;
  * - Customizable collision shape
  */
 public class LabEquipmentBlock extends BlockWithEntity {
+ public static final MapCodec<LabEquipmentBlock> CODEC=createCodec(LabEquipmentBlock::new);
+ @Override protected MapCodec<LabEquipmentBlock> getCodec(){return CODEC;}
     
     public static final DirectionProperty FACING = Properties.HORIZONTAL_FACING;
     public static final BooleanProperty ACTIVE = BooleanProperty.of("active");
@@ -80,7 +85,7 @@ public class LabEquipmentBlock extends BlockWithEntity {
     
     @Override
     public ActionResult onUse(BlockState state, World world, BlockPos pos, PlayerEntity player, 
-                              Hand hand, BlockHitResult hit) {
+                              BlockHitResult hit) {
         if (!world.isClient) {
             NamedScreenHandlerFactory screenHandlerFactory = state.createScreenHandlerFactory(world, pos);
             if (screenHandlerFactory != null) {
@@ -93,10 +98,15 @@ public class LabEquipmentBlock extends BlockWithEntity {
     @Nullable
     @Override
     public BlockEntity createBlockEntity(BlockPos pos, BlockState state) {
-        // Override in subclasses to provide specific block entities
-        return null;
+        LabEquipmentBlockEntity entity=ModBlockEntities.createLabEntity(pos,state);
+        entity.setTier(LabEquipmentBlocks.getTier(state.getBlock()));
+        return entity;
     }
     
+    @Override public <T extends BlockEntity> BlockEntityTicker<T> getTicker(World world,BlockState state,BlockEntityType<T> type) {
+        if(world.isClient || type!=ModBlockEntities.getLabType(state.getBlock()))return null;
+        return (w,p,s,e)->{if(e instanceof LabEquipmentBlockEntity lab)lab.tick();};
+    }
     @Override
     public void onStateReplaced(BlockState state, World world, BlockPos pos, BlockState newState, boolean moved) {
         if (state.getBlock() != newState.getBlock()) {

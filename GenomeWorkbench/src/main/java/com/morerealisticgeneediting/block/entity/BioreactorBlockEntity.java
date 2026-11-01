@@ -1,4 +1,6 @@
 package com.morerealisticgeneediting.block.entity;
+import com.morerealisticgeneediting.util.StackData;
+import com.morerealisticgeneediting.screen.LabEquipmentScreenHandler;
 
 import com.morerealisticgeneediting.block.LabEquipmentBlockEntity;
 import com.morerealisticgeneediting.equipment.EquipmentSpecs;
@@ -120,13 +122,14 @@ public class BioreactorBlockEntity extends LabEquipmentBlockEntity {
         ItemStack medium = getStack(MEDIUM_SLOT);
         ItemStack vessel = getStack(VESSEL_SLOT);
 
-        return !culture.isEmpty() && !medium.isEmpty() && !vessel.isEmpty() &&
+        return getStack(OUTPUT_SLOT).isEmpty() && !culture.isEmpty() && !medium.isEmpty() && !vessel.isEmpty() &&
                isValidCulture(culture) && isValidMedium(medium) && isValidVessel(vessel);
     }
 
     @Override
     public void tick() {
-        if (world == null || world.isClient) return;
+        if (world == null || world.isClient || isRemoved() || world.getBlockEntity(pos)!=this) return;
+        if(phase==GrowthPhase.COMPLETE && !isProcessing && getStack(OUTPUT_SLOT).isEmpty())resetCulture();
 
         // Update temperature
         updateTemperature();
@@ -172,8 +175,8 @@ public class BioreactorBlockEntity extends LabEquipmentBlockEntity {
         ItemStack culture = getStack(CULTURE_SLOT);
         
         // Get culture info
-        NbtCompound nbt = culture.getNbt();
-        if (nbt != null) {
+        NbtCompound nbt = StackData.read(culture);
+        if (!nbt.isEmpty()) {
             if (nbt.contains("CellType")) {
                 cultureType = nbt.getString("CellType");
             }
@@ -241,10 +244,8 @@ public class BioreactorBlockEntity extends LabEquipmentBlockEntity {
 
     private String guessCultureType(ItemStack culture) {
         // Try to determine culture type from item
-        if (culture.isOf(ModItems.GENOME_SAMPLE)) {
-            return "bacteria";  // Default assumption
-        }
-        return "unknown";
+        String type=StackData.read(culture).getString("CellType");
+        return type.isEmpty()?"unknown":type;
     }
 
     private void tickCulture() {
@@ -358,18 +359,20 @@ public class BioreactorBlockEntity extends LabEquipmentBlockEntity {
     }
 
     private void completeCulture() {
+        if(!getStack(OUTPUT_SLOT).isEmpty())return;
         // Create output based on final culture state
         if (cellDensity > 1e6f && viability > 0.5f) {
             ItemStack output = new ItemStack(ModItems.GENOME_SAMPLE);
             
-            NbtCompound nbt = output.getOrCreateNbt();
+            NbtCompound nbt = StackData.read(getStack(CULTURE_SLOT));
             nbt.putString("Type", "cell_culture");
             nbt.putString("CellType", cultureType);
             nbt.putFloat("CellDensity", cellDensity);
             nbt.putFloat("Viability", viability);
             nbt.putInt("CultureAge", cultureAge);
-            nbt.putFloat("FinalOD600", calculateOD600());
+            if(Float.isFinite(calculateOD600()))nbt.putFloat("IllustrativeOD600", calculateOD600());
 
+            nbt.putBoolean("Simulation",true);StackData.write(output,nbt);
             ItemStack existing = getStack(OUTPUT_SLOT);
             if (existing.isEmpty()) {
                 setStack(OUTPUT_SLOT, output);
@@ -384,13 +387,13 @@ public class BioreactorBlockEntity extends LabEquipmentBlockEntity {
     }
 
     private float calculateOD600() {
-        // OD600 approximation: log relationship to cell density
-        // OD600 of 1 ≈ 8×10^8 cells/mL for E. coli
-        return (float) (cellDensity / 8e8);
+        // An illustrative E. coli calibration only; OD-to-cell conversion is strain/instrument dependent.
+        return cultureType.equals("ecoli") ? (float)(cellDensity/8e8) : Float.NaN;
     }
 
     public void harvestCulture() {
         if (phase == GrowthPhase.LOG || phase == GrowthPhase.STATIONARY) {
+            if(!getStack(OUTPUT_SLOT).isEmpty())return;
             phase = GrowthPhase.COMPLETE;
             completeCulture();
         }
@@ -408,7 +411,7 @@ public class BioreactorBlockEntity extends LabEquipmentBlockEntity {
     // ========== Validation ==========
 
     private boolean isValidCulture(ItemStack stack) {
-        return stack.isOf(ModItems.GENOME_SAMPLE);  // Cell cultures stored as genome samples
+        return stack.isOf(ModItems.GENOME_SAMPLE) && StackData.read(stack).contains("CellType");
     }
 
     private boolean isValidMedium(ItemStack stack) {
@@ -541,6 +544,6 @@ public class BioreactorBlockEntity extends LabEquipmentBlockEntity {
     @Nullable
     @Override
     public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
-        return null;  // TODO: BioreactorScreenHandler
+        return new LabEquipmentScreenHandler(syncId,playerInventory,this);
     }
 }

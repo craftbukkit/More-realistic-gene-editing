@@ -1,61 +1,47 @@
 package com.morerealisticgeneediting.genome;
-
-/**
- * A utility class for handling 2-bit encoding of DNA bases.
- * This allows for storing 4 bases in a single byte.
- * A = 00, C = 01, G = 10, T = 11
- */
+import java.util.Objects;
+/** Packs unambiguous A/C/G/T only; the caller must retain the logical base count. */
 public final class TwoBitEncoding {
-
-    private TwoBitEncoding() {}
-
-    /**
-     * Packs an array of bases into a 2-bit encoded byte array.
-     *
-     * @param bases The array of bases (0-3).
-     * @return A byte array containing the packed bases.
-     */
+    private TwoBitEncoding() { }
+    public static byte encodeBase(char base) {
+        return switch (Character.toUpperCase(base)) {
+            case 'A' -> 0; case 'C' -> 1; case 'G' -> 2; case 'T' -> 3;
+            default -> throw new IllegalArgumentException("Unsupported DNA base: " + base);
+        };
+    }
+    public static char decodeBase(byte base) {
+        if (base < 0 || base > 3) throw new IllegalArgumentException("Base must be in [0,3]");
+        return "ACGT".charAt(base);
+    }
+    public static byte[] pack(String sequence) {
+        Objects.requireNonNull(sequence, "sequence");
+        byte[] bases = new byte[sequence.length()];
+        for (int i=0;i<bases.length;i++) bases[i]=encodeBase(sequence.charAt(i));
+        return pack(bases);
+    }
     public static byte[] pack(byte[] bases) {
-        int packedLength = (bases.length + 3) / 4;
-        byte[] packed = new byte[packedLength];
-        for (int i = 0; i < bases.length; i++) {
-            int packedIndex = i / 4;
-            int shift = (i % 4) * 2;
-            packed[packedIndex] |= (bases[i] & 0b11) << shift;
+        Objects.requireNonNull(bases, "bases");
+        byte[] packed = new byte[(int)((bases.length + 3L) / 4)];
+        for (int i=0;i<bases.length;i++) {
+            if (bases[i]<0 || bases[i]>3) throw new IllegalArgumentException("Base must be in [0,3]");
+            packed[i/4] |= (byte)(bases[i] << ((i%4)*2));
         }
         return packed;
     }
-
-    /**
-     * Unpacks a 2-bit encoded byte array into an array of bases.
-     *
-     * @param packed The packed byte array.
-     * @param originalLength The original number of bases.
-     * @return An array of bases (0-3).
-     */
     public static byte[] unpack(byte[] packed, int originalLength) {
-        byte[] bases = new byte[originalLength];
-        for (int i = 0; i < originalLength; i++) {
-            int packedIndex = i / 4;
-            int shift = (i % 4) * 2;
-            bases[i] = (byte) ((packed[packedIndex] >> shift) & 0b11);
-        }
-        return bases;
+        Objects.requireNonNull(packed, "packed");
+        if (originalLength<0 || originalLength > (long)packed.length*4) throw new IllegalArgumentException("Invalid logical length");
+        byte[] result=new byte[originalLength];
+        for (int i=0;i<originalLength;i++) result[i]=getBase(packed,i);
+        return result;
     }
-
-    /**
-     * Gets a single base from a packed array.
-     *
-     * @param packed The packed byte array.
-     * @param index The index of the base to retrieve.
-     * @return The base at the specified index.
-     */
-    public static byte getBase(byte[] packed, int index) {
-        int packedIndex = index / 4;
-        if (packedIndex < 0 || packedIndex >= packed.length) {
-            throw new IndexOutOfBoundsException("Index " + index + " is out of bounds for packed array of length " + packed.length * 4);
-        }
-        int shift = (index % 4) * 2;
-        return (byte) ((packed[packedIndex] >> shift) & 0b11);
+    public static byte getBase(byte[] packed,int index) {
+        Objects.requireNonNull(packed, "packed");
+        if (index<0 || (long)index >= (long)packed.length*4) throw new IndexOutOfBoundsException("Invalid base index: "+index);
+        return (byte)((packed[index/4] >>> ((index%4)*2)) & 3);
+    }
+    public static char getBaseAt(byte[] packed,long index) {
+        if(index<0 || index>Integer.MAX_VALUE) throw new IndexOutOfBoundsException("Invalid base index: "+index);
+        return decodeBase(getBase(packed,(int)index));
     }
 }

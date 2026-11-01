@@ -85,7 +85,7 @@ public final class RateLimiters {
      * @param playerUuid The UUID of the player making the request
      * @return true if the request is allowed, false if rate-limited
      */
-    public boolean tryAcquire(UUID playerUuid) {
+    public synchronized boolean tryAcquire(UUID playerUuid) {
         if (playerUuid == null) return false;
         
         maybeCleanup();

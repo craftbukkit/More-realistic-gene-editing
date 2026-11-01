@@ -44,7 +44,7 @@ public interface ImplementedInventory extends Inventory {
 
     @Override
     default ItemStack removeStack(int slot) {
-        return Inventories.removeStack(getItems(), slot);
+        ItemStack removed=Inventories.removeStack(getItems(), slot); if(!removed.isEmpty())markDirty(); return removed;
     }
 
     @Override
@@ -53,6 +53,7 @@ public interface ImplementedInventory extends Inventory {
         if (stack.getCount() > getMaxCountPerStack()) {
             stack.setCount(getMaxCountPerStack());
         }
+        markDirty();
     }
 
     @Override
@@ -67,6 +68,9 @@ public interface ImplementedInventory extends Inventory {
 
     @Override
     default boolean canPlayerUse(net.minecraft.entity.player.PlayerEntity player) {
-        return true;
+        if(this instanceof net.minecraft.block.entity.BlockEntity be) {
+            return be.getWorld()!=null && player.getWorld()==be.getWorld() && be.getWorld().getBlockEntity(be.getPos())==be && player.squaredDistanceTo(be.getPos().toCenterPos())<=64;
+        }
+        return false;
     }
 }

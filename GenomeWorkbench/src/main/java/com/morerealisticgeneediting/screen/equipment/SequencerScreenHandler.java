@@ -1,156 +1,53 @@
 package com.morerealisticgeneediting.screen.equipment;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.SimpleInventory;
+import com.morerealisticgeneediting.block.entity.BenchtopSequencerBlockEntity;
+import com.morerealisticgeneediting.screen.slot.MachineSlot;
+import net.minecraft.entity.player.*;
+import net.minecraft.inventory.*;
 import net.minecraft.item.ItemStack;
-import net.minecraft.screen.ArrayPropertyDelegate;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.screen.ScreenHandler;
+import net.minecraft.screen.*;
 import net.minecraft.screen.slot.Slot;
 
-/**
- * Screen Handler for Sequencer equipment
- * 
- * Slot Layout:
- * - Slot 0: DNA Sample to sequence
- * - Slot 1: Sequencing reagent/chip
- * - Slot 2: Output (Sequence data item)
- */
 public class SequencerScreenHandler extends ScreenHandler {
-    
+    private static final int SLOTS=7,INPUTS=5;
     private final Inventory inventory;
-    private final PropertyDelegate propertyDelegate;
-    
-    // Property indices
-    public static final int PROGRESS_INDEX = 0;
-    public static final int MAX_PROGRESS_INDEX = 1;
-    public static final int READS_GENERATED_INDEX = 2;
-    public static final int QUALITY_SCORE_INDEX = 3;
-    public static final int TIER_INDEX = 4;
-    public static final int IS_RUNNING_INDEX = 5;
-    
-    public SequencerScreenHandler(int syncId, PlayerInventory playerInventory) {
-        this(syncId, playerInventory, new SimpleInventory(3), new ArrayPropertyDelegate(6));
+    private final PropertyDelegate properties;
+    public SequencerScreenHandler(int id,PlayerInventory playerInventory){this(id,playerInventory,new SimpleInventory(SLOTS),new ArrayPropertyDelegate(6));}
+    public SequencerScreenHandler(int id,PlayerInventory playerInventory,Inventory inventory,PropertyDelegate properties){
+        super(ModEquipmentScreenHandlers.SEQUENCER_SCREEN_HANDLER,id);checkSize(inventory,SLOTS);checkDataCount(properties,6);
+        this.inventory=inventory;this.properties=properties;inventory.onOpen(playerInventory.player);
+        addSlot(new MachineSlot(inventory,0,26,17,false));
+        addSlot(new MachineSlot(inventory,1,26,53,false));
+        addSlot(new MachineSlot(inventory,2,62,17,false));
+        addSlot(new MachineSlot(inventory,3,62,53,false));
+        addSlot(new MachineSlot(inventory,4,80,35,false));
+        addSlot(new MachineSlot(inventory,5,134,17,true));
+        addSlot(new MachineSlot(inventory,6,134,53,true));
+        addPlayerSlots(playerInventory);addProperties(properties);
     }
-    
-    public SequencerScreenHandler(int syncId, PlayerInventory playerInventory,
-                                  Inventory inventory, PropertyDelegate delegate) {
-        super(ModEquipmentScreenHandlers.SEQUENCER_SCREEN_HANDLER, syncId);
-        
-        checkSize(inventory, 3);
-        this.inventory = inventory;
-        this.propertyDelegate = delegate;
-        
-        inventory.onOpen(playerInventory.player);
-        
-        // DNA Sample slot
-        this.addSlot(new Slot(inventory, 0, 44, 35) {
-            @Override
-            public boolean canInsert(ItemStack stack) {
-                return isValidSample(stack);
-            }
-        });
-        
-        // Sequencing chip/reagent slot
-        this.addSlot(new Slot(inventory, 1, 62, 35) {
-            @Override
-            public boolean canInsert(ItemStack stack) {
-                return isValidChip(stack);
-            }
-        });
-        
-        // Output slot
-        this.addSlot(new OutputSlot(inventory, 2, 116, 35));
-        
-        addPlayerInventory(playerInventory);
-        addPlayerHotbar(playerInventory);
-        addProperties(delegate);
+    @Override public boolean onButtonClick(PlayerEntity player,int id){
+        if(!canUse(player)||!(inventory instanceof BenchtopSequencerBlockEntity machine)||player.getWorld().isClient)return false;
+        switch(id){case 0->machine.startSequencing(true,player);case 1->machine.startSequencing(false,player);case 2->machine.resetFlowCell(true);case 3->machine.resetFlowCell(false);default->{return false;}}
+        return true;
     }
-    
-    private boolean isValidSample(ItemStack stack) {
-        String itemId = stack.getItem().toString();
-        return itemId.contains("dna") || itemId.contains("sample") || itemId.contains("fragment");
+    @Override public boolean canUse(PlayerEntity player){return inventory.canPlayerUse(player);}
+    @Override public void onClosed(PlayerEntity player){super.onClosed(player);inventory.onClose(player);}
+    @Override public ItemStack quickMove(PlayerEntity player,int index){
+        if(index<0||index>=slots.size()||!canUse(player))return ItemStack.EMPTY;
+        Slot slot=slots.get(index);if(!slot.hasStack()||!slot.canTakeItems(player))return ItemStack.EMPTY;
+        ItemStack source=slot.getStack(),before=source.copy();
+        if(index<SLOTS){if(!insertItem(source,SLOTS,slots.size(),true))return ItemStack.EMPTY;}
+        else if(!insertItem(source,0,INPUTS,false))return ItemStack.EMPTY;
+        if(source.isEmpty())slot.setStack(ItemStack.EMPTY);else slot.markDirty();
+        slot.onTakeItem(player,source);return before;
     }
-    
-    private boolean isValidChip(ItemStack stack) {
-        String itemId = stack.getItem().toString();
-        return itemId.contains("chip") || itemId.contains("sequencing") || itemId.contains("flowcell");
+    private void addPlayerSlots(PlayerInventory inventory){
+        for(int row=0;row<3;row++)for(int column=0;column<9;column++)
+            addSlot(new Slot(inventory,9+row*9+column,8+column*18,84+row*18));
+        for(int column=0;column<9;column++)addSlot(new Slot(inventory,column,8+column*18,142));
     }
-    
-    @Override
-    public ItemStack quickMove(PlayerEntity player, int invSlot) {
-        ItemStack newStack = ItemStack.EMPTY;
-        Slot slot = this.slots.get(invSlot);
-        
-        if (slot != null && slot.hasStack()) {
-            ItemStack originalStack = slot.getStack();
-            newStack = originalStack.copy();
-            
-            if (invSlot < 3) {
-                if (!this.insertItem(originalStack, 3, 39, true)) {
-                    return ItemStack.EMPTY;
-                }
-            } else {
-                if (isValidSample(originalStack)) {
-                    if (!this.insertItem(originalStack, 0, 1, false)) {
-                        return ItemStack.EMPTY;
-                    }
-                } else if (isValidChip(originalStack)) {
-                    if (!this.insertItem(originalStack, 1, 2, false)) {
-                        return ItemStack.EMPTY;
-                    }
-                } else {
-                    return ItemStack.EMPTY;
-                }
-            }
-            
-            if (originalStack.isEmpty()) {
-                slot.setStack(ItemStack.EMPTY);
-            } else {
-                slot.markDirty();
-            }
-        }
-        return newStack;
-    }
-    
-    @Override
-    public boolean canUse(PlayerEntity player) {
-        return this.inventory.canPlayerUse(player);
-    }
-    
-    private void addPlayerInventory(PlayerInventory playerInventory) {
-        for (int i = 0; i < 3; ++i) {
-            for (int l = 0; l < 9; ++l) {
-                this.addSlot(new Slot(playerInventory, l + i * 9 + 9, 8 + l * 18, 84 + i * 18));
-            }
-        }
-    }
-    
-    private void addPlayerHotbar(PlayerInventory playerInventory) {
-        for (int i = 0; i < 9; ++i) {
-            this.addSlot(new Slot(playerInventory, i, 8 + i * 18, 142));
-        }
-    }
-    
-    // Property getters
-    public int getProgress() { return propertyDelegate.get(PROGRESS_INDEX); }
-    public int getMaxProgress() { return propertyDelegate.get(MAX_PROGRESS_INDEX); }
-    public float getProgressPercent() {
-        int max = getMaxProgress();
-        return max > 0 ? (float) getProgress() / max : 0;
-    }
-    public int getReadsGenerated() { return propertyDelegate.get(READS_GENERATED_INDEX); }
-    public int getQualityScore() { return propertyDelegate.get(QUALITY_SCORE_INDEX); }
-    public int getTier() { return propertyDelegate.get(TIER_INDEX); }
-    public boolean isRunning() { return propertyDelegate.get(IS_RUNNING_INDEX) != 0; }
-    
-    private static class OutputSlot extends Slot {
-        public OutputSlot(Inventory inventory, int index, int x, int y) {
-            super(inventory, index, x, y);
-        }
-        @Override
-        public boolean canInsert(ItemStack stack) { return false; }
-    }
+    public static final int PROGRESS_INDEX=0,MAX_PROGRESS_INDEX=1,READS_GENERATED_INDEX=2,QUALITY_SCORE_INDEX=3,TIER_INDEX=4,IS_RUNNING_INDEX=5;
+    public int getProgress(){return properties.get(0);}public int getMaxProgress(){return properties.get(1);}public int getReadsGenerated(){return properties.get(2);}
+    public int getQualityScore(){return properties.get(3);}public int getTier(){return properties.get(4);}public boolean isRunning(){return properties.get(5)!=0;}
+    public float getProgressPercent(){return getMaxProgress()>0?(float)getProgress()/getMaxProgress():0;}
 }

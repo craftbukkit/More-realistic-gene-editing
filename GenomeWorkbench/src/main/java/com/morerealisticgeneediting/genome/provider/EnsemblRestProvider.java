@@ -1,58 +1,41 @@
 package com.morerealisticgeneediting.genome.provider;
-
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.morerealisticgeneediting.genome.Genome;
+import com.google.gson.*;
 import com.morerealisticgeneediting.genome.GenomeSlice;
-
+import java.io.*;
 import java.net.URI;
-import java.net.http.HttpClient;
-import java.net.http.HttpRequest;
-import java.net.http.HttpResponse;
-import java.util.UUID;
+import java.net.http.*;
+import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
-
-public class EnsemblRestProvider implements GenomeProvider {
-
-    // ... (fields and canProvide remain the same) ...
-    private static final String ENSEMBL_API_HOST = "https://rest.ensembl.org";
-    private static final HttpClient httpClient = HttpClient.newHttpClient();
-    private static final Gson gson = new Gson();
-
-    @Override
-    public boolean canProvide(String identifier) {
-        return identifier != null && identifier.startsWith("ensembl:");
-    }
-
-    @Override
-    public CompletableFuture<GenomeSlice> getSlice(String identifier, long start, int length) {
-        // ... (parsing and request building is the same) ...
-        String[] parts = identifier.split(":");
-        if (parts.length != 4) { return CompletableFuture.failedFuture(new IllegalArgumentException("Invalid Ensembl identifier format.")); }
-        String species = parts[1];
-        String chromosome = parts[3];
-        long ensemblStart = start + 1;
-        long ensemblEnd = start + length;
-        String path = String.format("/sequence/region/%s/%s:%d-%d?content-type=application/json", species, chromosome, ensemblStart, ensemblEnd);
-        HttpRequest request = HttpRequest.newBuilder()
-                .uri(URI.create(ENSEMBL_API_HOST + path))
-                .header("Content-Type", "application/json")
-                .build();
-        
-        return httpClient.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                .thenApply(response -> parseAndCreateSlice(response.body(), start, identifier));
-    }
-
-    private GenomeSlice parseAndCreateSlice(String jsonBody, long sliceStartInGenome, String identifier) {
-        JsonObject jsonObject = gson.fromJson(jsonBody, JsonObject.class);
-        String sequence = jsonObject.get("seq").getAsString();
-        
-        // Placeholder for total length
-        long conceptualTotalLength = sliceStartInGenome + sequence.length() + 10000; 
-
-        Genome virtualGenome = Genome.createVirtualGenome(UUID.randomUUID(), sequence, sliceStartInGenome, conceptualTotalLength);
-
-        // Use the updated constructor
-        return new GenomeSlice(virtualGenome, sequence, sliceStartInGenome);
+/** Bounded public reference lookup. Does not guess chromosome size or silently change assembly. */
+public final class EnsemblRestProvider implements GenomeProvider {
+    private static final HttpClient CLIENT=HttpClient.newBuilder().connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NEVER).build();
+    private static final int MAX_RESPONSE_BYTES=250_000;
+    @Override public boolean canProvide(String identifier){return identifier!=null&&identifier.startsWith("ensembl:");}
+    @Override public CompletableFuture<GenomeSlice> getSlice(String identifier,long start,int length){
+        try{
+            String[] parts=identifier.split(":",-1);
+            if(parts.length!=4||!parts[0].equals("ensembl")||!parts[1].matches("[a-z_]{1,64}")||!parts[2].matches("[A-Za-z0-9_.-]{1,64}")||!parts[3].matches("[A-Za-z0-9_.-]{1,64}")||start<0||length<1||length>100_000||start>Long.MAX_VALUE-length)
+                throw new IllegalArgumentException("Invalid Ensembl reference or window");
+            String path="https://rest.ensembl.org/sequence/region/"+parts[1]+"/"+parts[3]+":"+(start+1)+"-"+(start+length)+":1?coord_system_version="+parts[2];
+            HttpRequest request=HttpRequest.newBuilder(URI.create(path)).timeout(Duration.ofSeconds(15)).header("Accept","application/json").GET().build();
+            java.util.concurrent.atomic.AtomicReference<InputStream> activeBody=new java.util.concurrent.atomic.AtomicReference<>();
+            return CLIENT.sendAsync(request,HttpResponse.BodyHandlers.ofInputStream()).thenApplyAsync(response->{
+                activeBody.set(response.body());
+                try(InputStream input=response.body()){
+                    if(response.statusCode()!=200)throw new IOException("Ensembl returned HTTP "+response.statusCode());
+                    byte[] bytes=input.readNBytes(MAX_RESPONSE_BYTES+1);
+                    if(bytes.length>MAX_RESPONSE_BYTES)throw new IOException("Ensembl response exceeds limit");
+                    JsonObject json=JsonParser.parseString(new String(bytes,StandardCharsets.UTF_8)).getAsJsonObject();
+                    if(!json.has("seq"))throw new IOException("Missing Ensembl sequence");
+                    String sequence=json.get("seq").getAsString();
+                    if(sequence.length()!=length)throw new IOException("Ensembl returned an unexpected window length");
+                    // The sequence endpoint does not supply the whole chromosome length.
+                    return new GenomeSlice(sequence,start,-1,identifier);
+                }catch(IOException|RuntimeException failure){throw new java.util.concurrent.CompletionException(failure);}
+            }).orTimeout(20,java.util.concurrent.TimeUnit.SECONDS).whenComplete((result,failure)->{
+                if(failure!=null){InputStream body=activeBody.get();if(body!=null)try{body.close();}catch(IOException ignored){}}
+            });
+        }catch(RuntimeException failure){return CompletableFuture.failedFuture(failure);}
     }
 }

@@ -33,6 +33,7 @@ public class LabEquipmentBlocks {
 
     // Store all registered blocks for easy iteration
     public static final Map<String, Block> BLOCKS = new LinkedHashMap<>();
+    private static final Map<Block, EquipmentTier> TIERS = new java.util.IdentityHashMap<>();
 
     // ========== 离心与提取系统 (Centrifugation & Extraction) ==========
     
@@ -143,18 +144,16 @@ public class LabEquipmentBlocks {
     // ========== 超低温存储系统 (Ultra-low Temperature Storage) ==========
     
     public static final Block DRY_ICE_CONTAINER = registerLabBlock("dry_ice_container",
-            LabEquipmentBlock::new, EquipmentTier.BASIC,
+            Block::new, EquipmentTier.BASIC,
             "Dry Ice Storage Container - Generic");
 
     // ========== 其他实验设备 (Additional Equipment) ==========
     
     public static final Block GENOME_TERMINAL = registerLabBlock("genome_terminal",
-            LabEquipmentBlock::new, EquipmentTier.ADVANCED,
+            GenomeTerminalBlock::new, EquipmentTier.ADVANCED,
             "Genome Analysis Terminal");
     
-    public static final Block CELL_PROCESSOR = registerLabBlock("cell_processor",
-            LabEquipmentBlock::new, EquipmentTier.ADVANCED,
-            "Cell Processing Unit");
+    public static final Block CELL_PROCESSOR = ModBlocks.CELL_PROCESSOR;
 
     // ========== Registration Methods ==========
 
@@ -181,6 +180,7 @@ public class LabEquipmentBlocks {
         Registry.register(Registries.ITEM, id, blockItem);
         
         BLOCKS.put(name, block);
+        TIERS.put(block,tier);
         
         MoreRealisticGeneEditing.LOGGER.debug("Registered lab equipment: {} (Tier {})", name, tier.getLevel());
         
@@ -199,12 +199,14 @@ public class LabEquipmentBlocks {
         });
     }
 
+    public static EquipmentTier getTier(Block block) {return TIERS.getOrDefault(block,EquipmentTier.BASIC);}
+
     /**
      * Get all blocks of a specific tier
      */
     public static Map<String, Block> getBlocksByTier(EquipmentTier tier) {
         Map<String, Block> result = new LinkedHashMap<>();
-        // This would need tier metadata stored - simplified version
+        BLOCKS.forEach((name,block)->{if(TIERS.get(block)==tier)result.put(name,block);});
         return result;
     }
 }

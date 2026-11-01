@@ -5,7 +5,8 @@ import com.morerealisticgeneediting.block.entity.ModBlockEntities;
 import com.morerealisticgeneediting.block.ModBlocks;
 import com.morerealisticgeneediting.command.EthicsCommand;
 import com.morerealisticgeneediting.ethics.EthicsCasebook;
-import com.morerealisticgeneediting.genome.Genome;
+import com.morerealisticgeneediting.command.ResearchCommand;
+import com.morerealisticgeneediting.screen.equipment.ModEquipmentScreenHandlers;
 import com.morerealisticgeneediting.genome.provider.GenomeProviderRegistry;
 import com.morerealisticgeneediting.item.LabEquipmentItems;
 import com.morerealisticgeneediting.item.ModItems;
@@ -20,21 +21,17 @@ import net.fabricmc.fabric.api.networking.v1.ServerPlayConnectionEvents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
 public class MoreRealisticGeneEditing implements ModInitializer {
 
     public static final String MOD_ID = "morerealisticgeneediting";
     public static final Logger LOGGER = LoggerFactory.getLogger(MOD_ID);
 
-    public static final Map<UUID, Genome> genomeCache = new HashMap<>();
 
     @Override
     public void onInitialize() {
         LOGGER.info("===========================================");
-        LOGGER.info("  More Realistic Gene Editing Mod v0.2.0");
+        LOGGER.info("  More Realistic Gene Editing");
         LOGGER.info("  Initializing...");
         LOGGER.info("===========================================");
         
@@ -56,6 +53,7 @@ public class MoreRealisticGeneEditing implements ModInitializer {
         
         LOGGER.info("[6/8] Registering screens and recipes...");
         ModScreenHandlers.registerAllScreenHandlers();
+        ModEquipmentScreenHandlers.registerScreenHandlers();
         ModRecipes.registerRecipes();
 
         // ========== Phase 2: Data Systems ==========
@@ -72,6 +70,7 @@ public class MoreRealisticGeneEditing implements ModInitializer {
         // Register commands using v2 API
         CommandRegistrationCallback.EVENT.register((dispatcher, registryAccess, environment) -> {
             EthicsCommand.register(dispatcher);
+            ResearchCommand.register(dispatcher);
         });
 
         // Register the available genome providers

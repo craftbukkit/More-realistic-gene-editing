@@ -1,48 +1,28 @@
 package com.morerealisticgeneediting.block;
-
 import com.morerealisticgeneediting.MoreRealisticGeneEditing;
-import com.morerealisticgeneediting.block.custom.ElectrophoresisTankBlock;
-import com.morerealisticgeneediting.block.custom.IncubatorBlock;
-import com.morerealisticgeneediting.block.custom.PcrMachineBlock;
-import com.morerealisticgeneediting.block.custom.SequencerBlock;
-import net.fabricmc.fabric.api.item.v1.FabricItemSettings;
-import net.fabricmc.fabric.api.object.builder.v1.block.FabricBlockSettings;
-import net.minecraft.block.Block;
-import net.minecraft.block.Material;
-import net.minecraft.item.BlockItem;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemGroup;
+import com.morerealisticgeneediting.block.custom.*;
+import com.morerealisticgeneediting.item.ModItems;
+import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
+import net.minecraft.block.*;
+import net.minecraft.item.*;
+import net.minecraft.registry.*;
 import net.minecraft.util.Identifier;
-import net.minecraft.util.registry.Registry;
-
-public class ModBlocks {
-
-    public static final Block CELL_PROCESSOR = registerBlock("cell_processor",
-            new CellProcessorBlock(FabricBlockSettings.of(Material.METAL).strength(4.0f).requiresTool()), ItemGroup.MISC);
-
-    public static final Block SEQUENCER = registerBlock("sequencer",
-            new SequencerBlock(FabricBlockSettings.of(Material.METAL).strength(4.0f).requiresTool()), ItemGroup.MISC);
-
-    public static final Block PCR_MACHINE = registerBlock("pcr_machine",
-            new PcrMachineBlock(FabricBlockSettings.of(Material.METAL).strength(4.0f).requiresTool()), ItemGroup.MISC);
-
-    public static final Block INCUBATOR = registerBlock("incubator",
-            new IncubatorBlock(FabricBlockSettings.of(Material.METAL).strength(4.0f).requiresTool()), ItemGroup.MISC);
-
-    public static final Block ELECTROPHORESIS_TANK = registerBlock("electrophoresis_tank",
-            new ElectrophoresisTankBlock(FabricBlockSettings.of(Material.METAL).strength(4.0f).requiresTool()), ItemGroup.MISC);
-
-    private static Block registerBlock(String name, Block block, ItemGroup group) {
-        registerBlockItem(name, block, group);
-        return Registry.register(Registry.BLOCK, new Identifier(MoreRealisticGeneEditing.MOD_ID, name), block);
-    }
-
-    private static Item registerBlockItem(String name, Block block, ItemGroup group) {
-        return Registry.register(Registry.ITEM, new Identifier(MoreRealisticGeneEditing.MOD_ID, name),
-                new BlockItem(block, new FabricItemSettings().group(group)));
-    }
-
-    public static void registerModBlocks() {
-        MoreRealisticGeneEditing.LOGGER.info("Registering ModBlocks for " + MoreRealisticGeneEditing.MOD_ID);
-    }
+import java.util.ArrayList;
+import java.util.List;
+public final class ModBlocks {
+ private static final List<Block> BLOCKS=new ArrayList<>();
+ public static final Block CELL_PROCESSOR=register("cell_processor",new CellProcessorBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(4.0f)));
+ public static final Block SEQUENCER=register("sequencer",new SequencerBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(4.0f)));
+ public static final Block PCR_MACHINE=register("pcr_machine",new PcrMachineBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(4.0f)));
+ public static final Block INCUBATOR=register("incubator",new IncubatorBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(4.0f)));
+ public static final Block ELECTROPHORESIS_TANK=register("electrophoresis_tank",new ElectrophoresisTankBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(4.0f)));
+ public static final Block ETHICS_CASE_BLOCK=register("ethics_case_block",new EthicsCaseBlock(AbstractBlock.Settings.copy(Blocks.IRON_BLOCK).strength(4.0f)));
+ public static final Block SEQUENCER_BLOCK=SEQUENCER;
+ private static Block register(String name,Block block){
+  Identifier id=Identifier.of(MoreRealisticGeneEditing.MOD_ID,name);
+  Registry.register(Registries.BLOCK,id,block);
+  Registry.register(Registries.ITEM,id,new BlockItem(block,new Item.Settings()));
+  BLOCKS.add(block);return block;
+ }
+ public static void registerModBlocks(){ItemGroupEvents.modifyEntriesEvent(ModItems.MRGE_GROUP_KEY).register(e->BLOCKS.forEach(e::add));}
 }

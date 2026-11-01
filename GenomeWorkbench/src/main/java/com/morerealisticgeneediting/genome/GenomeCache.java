@@ -57,7 +57,8 @@ public class GenomeCache {
      * Create a cache with custom TTL.
      */
     public GenomeCache(int capacity, long ttlMs) {
-        this.capacity = Math.max(1, capacity);
+        if(capacity<1 || ttlMs<1) throw new IllegalArgumentException("Cache capacity and TTL must be positive");
+        this.capacity = capacity;
         this.ttlMs = ttlMs;
         // Access-ordered LinkedHashMap for LRU behavior
         this.cache = new LinkedHashMap<>(capacity, 0.75f, true) {
@@ -81,7 +82,7 @@ public class GenomeCache {
     public Genome get(UUID genomeId) {
         if (genomeId == null) return null;
         
-        lock.readLock().lock();
+        lock.writeLock().lock();
         try {
             CacheEntry entry = cache.get(genomeId);
             if (entry == null) {
@@ -98,7 +99,7 @@ public class GenomeCache {
             hits++;
             return entry.genome();
         } finally {
-            lock.readLock().unlock();
+            lock.writeLock().unlock();
         }
     }
 
@@ -114,6 +115,7 @@ public class GenomeCache {
      */
     public void put(UUID genomeId, Genome genome) {
         if (genomeId == null || genome == null) return;
+        if(!genomeId.equals(genome.getUUID())) throw new IllegalArgumentException("Cache key differs from genome identity");
         
         lock.writeLock().lock();
         try {
@@ -161,12 +163,12 @@ public class GenomeCache {
     public boolean contains(UUID genomeId) {
         if (genomeId == null) return false;
         
-        lock.readLock().lock();
+        lock.writeLock().lock();
         try {
             CacheEntry entry = cache.get(genomeId);
             return entry != null && !entry.isExpired(ttlMs);
         } finally {
-            lock.readLock().unlock();
+            lock.writeLock().unlock();
         }
     }
 

@@ -14,11 +14,11 @@ import java.util.*;
  * 
  * Standard Gene Editing Workflow:
  * 1. Sample Collection → Genome Sample
- * 2. DNA Extraction (Centrifuge) → DNA Sample
+ * 2. Fractionation (Centrifuge) → pellet and supernatant; extraction requires separate chemistry
  * 3. PCR Amplification (Thermal Cycler) → Amplified Fragment
- * 4. Gel Electrophoresis (Electrophoresis Tank) → Verified Fragment
+ * 4. Gel Electrophoresis → fragment-size evidence, not sequence identity
  * 5. Cloning/Ligation → Recombinant Plasmid
- * 6. Transformation/Transfection (Electroporator/Incubator) → Modified Cells
+ * 6. Transformation/Transfection → delivered cargo; editing requires an independent assay
  * 7. Sequencing (Sequencer) → Sequence Data
  * 8. Analysis (Genome Terminal) → Edit Results
  */
@@ -27,13 +27,15 @@ public class LabWorkflowManager {
     // Workflow stage definitions
     public enum WorkflowStage {
         SAMPLE_COLLECTION("Sample Collection", "Collect biological samples from organisms"),
-        DNA_EXTRACTION("DNA Extraction", "Extract DNA from samples using centrifugation"),
+        DNA_EXTRACTION("DNA Extraction", "Lysis and purification are separate from centrifugation"),
+        FRACTIONATION("Fractionation", "Separate pellet and supernatant; DNA purity is not established"),
+        QUANTIFICATION("Quantification", "Measure supported wavelengths using an explicit blank and sample model"),
         PCR_AMPLIFICATION("PCR Amplification", "Amplify target gene regions"),
-        GEL_ANALYSIS("Gel Analysis", "Verify PCR products by size"),
+        GEL_ANALYSIS("Gel Analysis", "Estimate fragment sizes; sequence identity is not established"),
         CLONING("Cloning", "Insert genes into vectors"),
         TRANSFORMATION("Transformation", "Introduce DNA into cells"),
         SELECTION("Selection", "Select successfully transformed cells"),
-        SEQUENCING("Sequencing", "Verify edited sequences"),
+        SEQUENCING("Sequencing", "Generate reads; sequence concordance requires explicit coverage and quality evidence"),
         ANALYSIS("Analysis", "Analyze editing results");
         
         public final String name;
@@ -60,18 +62,14 @@ public class LabWorkflowManager {
         String description
     ) {
         public boolean matches(List<ItemStack> providedInputs) {
-            if (providedInputs.size() < inputs.size()) return false;
-            
-            for (ItemStack required : inputs) {
-                boolean found = false;
-                for (ItemStack provided : providedInputs) {
-                    if (ItemStack.areItemsEqual(required, provided) && 
-                        provided.getCount() >= required.getCount()) {
-                        found = true;
-                        break;
-                    }
+            int[] remaining=providedInputs.stream().mapToInt(ItemStack::getCount).toArray();
+            for(ItemStack required:inputs){
+                int needed=required.getCount();
+                for(int i=0;i<providedInputs.size() && needed>0;i++){
+                    if(!ItemStack.areItemsAndComponentsEqual(required,providedInputs.get(i)))continue;
+                    int used=Math.min(needed,remaining[i]);needed-=used;remaining[i]-=used;
                 }
-                if (!found) return false;
+                if(needed>0)return false;
             }
             return true;
         }
@@ -85,14 +83,14 @@ public class LabWorkflowManager {
      * Equipment capabilities - what each equipment type can process
      */
     public enum EquipmentType {
-        CENTRIFUGE(Set.of(WorkflowStage.DNA_EXTRACTION)),
+        CENTRIFUGE(Set.of(WorkflowStage.FRACTIONATION)),
         THERMAL_CYCLER(Set.of(WorkflowStage.PCR_AMPLIFICATION)),
         ELECTROPHORESIS(Set.of(WorkflowStage.GEL_ANALYSIS)),
         SEQUENCER(Set.of(WorkflowStage.SEQUENCING)),
         INCUBATOR(Set.of(WorkflowStage.TRANSFORMATION, WorkflowStage.SELECTION)),
         ELECTROPORATOR(Set.of(WorkflowStage.TRANSFORMATION)),
         BIOSAFETY_CABINET(Set.of(WorkflowStage.SAMPLE_COLLECTION, WorkflowStage.CLONING)),
-        SPECTROPHOTOMETER(Set.of(WorkflowStage.GEL_ANALYSIS)),
+        SPECTROPHOTOMETER(Set.of(WorkflowStage.QUANTIFICATION)),
         GENOME_TERMINAL(Set.of(WorkflowStage.ANALYSIS));
         
         public final Set<WorkflowStage> supportedStages;
@@ -110,7 +108,8 @@ public class LabWorkflowManager {
      * Register a lab recipe
      */
     public static void registerRecipe(LabRecipe recipe) {
-        RECIPES.put(recipe.id(), recipe);
+        LabRecipe previous=RECIPES.put(recipe.id(), recipe);
+        if(previous!=null)RECIPES_BY_STAGE.getOrDefault(previous.stage(),List.of()).remove(previous);
         RECIPES_BY_STAGE.computeIfAbsent(recipe.stage(), k -> new ArrayList<>()).add(recipe);
     }
     
@@ -118,7 +117,7 @@ public class LabWorkflowManager {
      * Get all recipes for a workflow stage
      */
     public static List<LabRecipe> getRecipesForStage(WorkflowStage stage) {
-        return RECIPES_BY_STAGE.getOrDefault(stage, Collections.emptyList());
+        return List.copyOf(RECIPES_BY_STAGE.getOrDefault(stage, Collections.emptyList()));
     }
     
     /**
@@ -151,8 +150,10 @@ public class LabWorkflowManager {
      */
     public static List<WorkflowStage> getNextStages(WorkflowStage current) {
         return switch (current) {
-            case SAMPLE_COLLECTION -> List.of(WorkflowStage.DNA_EXTRACTION);
-            case DNA_EXTRACTION -> List.of(WorkflowStage.PCR_AMPLIFICATION);
+            case SAMPLE_COLLECTION -> List.of(WorkflowStage.FRACTIONATION,WorkflowStage.DNA_EXTRACTION);
+            case FRACTIONATION -> List.of(WorkflowStage.DNA_EXTRACTION);
+            case QUANTIFICATION -> List.of(WorkflowStage.PCR_AMPLIFICATION,WorkflowStage.SEQUENCING);
+            case DNA_EXTRACTION -> List.of(WorkflowStage.QUANTIFICATION,WorkflowStage.PCR_AMPLIFICATION);
             case PCR_AMPLIFICATION -> List.of(WorkflowStage.GEL_ANALYSIS);
             case GEL_ANALYSIS -> List.of(WorkflowStage.CLONING, WorkflowStage.SEQUENCING);
             case CLONING -> List.of(WorkflowStage.TRANSFORMATION);
@@ -173,14 +174,14 @@ public class LabWorkflowManager {
         int tierDiff = equipmentTier.getLevel() - recipe.minTier().getLevel();
         float tierBonus = tierDiff > 0 ? tierDiff * 0.1f : 0;
         
-        return Math.min(1.0f, baseRate + tierBonus + equipmentTier.getSuccessRateBonus());
+        return Math.max(0.0f,Math.min(1.0f, baseRate + tierBonus + equipmentTier.getSuccessRateBonus()));
     }
     
     /**
      * Calculate processing time based on equipment tier
      */
     public static int calculateProcessingTime(LabRecipe recipe, EquipmentTier equipmentTier) {
-        return (int) (recipe.processingTime() * equipmentTier.getSpeedMultiplier());
+        return Math.max(1,(int) (recipe.processingTime() * equipmentTier.getSpeedMultiplier()));
     }
     
     /**

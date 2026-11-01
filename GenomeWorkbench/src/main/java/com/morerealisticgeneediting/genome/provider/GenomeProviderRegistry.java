@@ -1,38 +1,19 @@
 package com.morerealisticgeneediting.genome.provider;
-
-import com.morerealisticgeneediting.genome.GenomeSlice;
-
-import java.util.ArrayList;
-import java.util.List;
+import com.morerealisticgeneediting.genome.*;
+import net.minecraft.server.MinecraftServer;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
-
-/**
- * A registry for all available GenomeProviders.
- * It dispatches requests to the appropriate provider based on the genome identifier.
- */
-public class GenomeProviderRegistry {
-
-    private static final List<GenomeProvider> providers = new ArrayList<>();
-
-    public static void registerDefaults() {
-        providers.add(new LocalGenomeProvider());
-        providers.add(new EnsemblRestProvider());
-        // Future providers can be added here
+public final class GenomeProviderRegistry {
+    private static final GenomeProvider REMOTE=new EnsemblRestProvider();
+    private GenomeProviderRegistry() { }
+    public static void registerDefaults(){ /* Stateless remote provider; local repositories belong to saves. */ }
+    public static CompletableFuture<GenomeSlice> getSlice(MinecraftServer server,UUID owner,String identifier,long start,int length){
+        if(identifier!=null&&identifier.startsWith("ensembl:"))return getSlice(identifier,start,length);
+        return new LocalGenomeProvider(GenomeRepository.get(server),owner).getSlice(identifier,start,length);
     }
-
-    /**
-     * Asynchronously fetches a genome slice by delegating to the first capable provider.
-     * @param identifier The genome identifier (UUID, Ensembl string, etc.).
-     * @param start The starting position of the slice.
-     * @param length The length of the slice.
-     * @return A CompletableFuture that will resolve to the GenomeSlice, or null if no provider can handle it.
-     */
-    public static CompletableFuture<GenomeSlice> getSlice(String identifier, long start, int length) {
-        for (GenomeProvider provider : providers) {
-            if (provider.canProvide(identifier)) {
-                return provider.getSlice(identifier, start, length);
-            }
-        }
-        return CompletableFuture.completedFuture(null); // No provider found
+    /** Public references only. Local sample access must use the server/owner overload. */
+    public static CompletableFuture<GenomeSlice> getSlice(String identifier,long start,int length){
+        if(!REMOTE.canProvide(identifier))return CompletableFuture.failedFuture(new IllegalArgumentException("Local samples require an authenticated world context"));
+        return REMOTE.getSlice(identifier,start,length);
     }
 }
