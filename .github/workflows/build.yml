@@ -5,6 +5,9 @@ on:
   pull_request:
 permissions:
   contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -19,6 +22,12 @@ jobs:
       - name: Compile and test
         working-directory: GenomeWorkbench
         run: ./gradlew clean build --no-daemon
+      - name: Check dedicated-server mod initialization
+        working-directory: GenomeWorkbench
+        shell: bash
+        run: |
+          ./gradlew runServer --args=nogui --no-daemon | tee server-bootstrap.log
+          python3 -c "from pathlib import Path; assert 'Initialization Complete!' in Path('server-bootstrap.log').read_text(); assert 'eula=false' in Path('run/eula.txt').read_text()"
       - uses: actions/upload-artifact@v4
         if: always()
         with:
@@ -26,6 +35,7 @@ jobs:
           path: |
             GenomeWorkbench/build/reports/tests/
             GenomeWorkbench/build/test-results/
+            GenomeWorkbench/server-bootstrap.log
       - uses: actions/upload-artifact@v4
         with:
           name: mod-jar

@@ -20,3 +20,5 @@ The algorithms remain teaching simulations with fictional samples and illustrati
 The original PDFs include a more extensive cell-processing workflow that is still a design goal. This change does not relabel simple recipes as that complete system. Existing saves with unverified project-completion flags must earn valid evidence again; a full migration from every unfinished prototype save format is not promised.
 
 Compilation and automated tests are distinct from interactive client playtesting and full world save/reload testing. Build outputs and exact test reports are published by the repository's GitHub Actions workflow.
+
+The regression suite contains 68 tests across scientific algorithms, genome data, sample provenance, instrument models, request validation, inventory safety and research evidence. The server smoke check requires the mod's complete registration sequence to finish, then exits at Minecraft's EULA gate before creating a world; it is not a gameplay or world-reload test.
