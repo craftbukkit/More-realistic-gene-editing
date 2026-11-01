@@ -1,5 +1,5 @@
 plugins {
-    id 'fabric-loom' version '1.6-SNAPSHOT'
+    id 'fabric-loom' version '1.6.12'
 }
 
 version = project.mod_version
@@ -10,6 +10,7 @@ base {
 }
 
 repositories {
+    mavenCentral()
     exclusiveContent {
         forRepository {
             maven {
@@ -28,7 +29,7 @@ loom {
 	splitEnvironmentSourceSets()
 
 	mods {
-		"genomeworkbench" {
+		"morerealisticgeneediting" {
 			sourceSet sourceSets.main
 			sourceSet sourceSets.client
 		}
@@ -38,13 +39,13 @@ loom {
 
 dependencies {
 	minecraft "com.mojang:minecraft:${project.minecraft_version}"
-	mappings loom.officialMojangMappings()
+	mappings "net.fabricmc:yarn:${project.yarn_mappings}:v2"
 	modImplementation "net.fabricmc:fabric-loader:${project.loader_version}"
 
 	modImplementation "net.fabricmc.fabric-api:fabric-api:${project.fabric_version}"
 
-	testImplementation "org.junit.jupiter:junit-jupiter-api:5.8.1"
-	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.8.1"
+	testImplementation "org.junit.jupiter:junit-jupiter-api:5.10.2"
+	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.10.2"
 }
 
 processResources {
@@ -77,3 +78,5 @@ jar {
 tasks.withType(Test) {
     useJUnitPlatform()
 }
+
+java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }
