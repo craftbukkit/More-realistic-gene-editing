@@ -21,7 +21,7 @@ public class PortableSequencerItem extends Item {
         if(!(user instanceof ServerPlayerEntity player))return TypedActionResult.success(instrument,true);
         ItemStack sample=user.getStackInHand(hand==Hand.MAIN_HAND?Hand.OFF_HAND:Hand.MAIN_HAND);
         UUID id=GenomeSampleItem.getGenomeId(sample);Genome genome=id==null?null:GenomeRepository.get(player.getServer()).findOwned(id,player.getUuid()).orElse(null);
-        if(genome==null||genome.getTotalLength()<1||genome.getTotalLength()>100_000){player.sendMessage(Text.literal("Hold an owned virtual sample of 1–100,000 bases in your other hand."),true);return TypedActionResult.fail(instrument);}
+        if(genome==null||!GenomeSampleItem.matchesSnapshot(sample,genome)||genome.getTotalLength()<1||genome.getTotalLength()>100_000){player.sendMessage(Text.literal("Hold an owned virtual DNA sample matching the current revision (1–100,000 bases); stale aliquots cannot verify later edits."),true);return TypedActionResult.fail(instrument);}
         long seed=world.getRandom().nextLong();
         var result=new SequencingSimulator(seed).runSequencing(genome,SequencingSimulator.Technology.NANOPORE_R10,10,0,genome.getTotalLength());
         var check=SequenceVerification.verify(genome,result.reads(),10,3);

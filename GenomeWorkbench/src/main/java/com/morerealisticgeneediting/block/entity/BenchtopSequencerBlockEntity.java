@@ -5,6 +5,7 @@ import com.morerealisticgeneediting.equipment.*;
 import com.morerealisticgeneediting.genome.*;
 import com.morerealisticgeneediting.genome.sequencing.SequencingSimulator;
 import com.morerealisticgeneediting.item.ModItems;
+import com.morerealisticgeneediting.item.GenomeSampleItem;
 import com.morerealisticgeneediting.screen.equipment.SequencerScreenHandler;
 import com.morerealisticgeneediting.util.StackData;
 import com.morerealisticgeneediting.project.ServerProjectManager;
@@ -67,7 +68,7 @@ public class BenchtopSequencerBlockEntity extends LabEquipmentBlockEntity {
         NbtCompound source=StackData.read(getStack(channel));
         if(!source.containsUuid("GenomeId"))return;
         Genome genome=GenomeRepository.get(world.getServer()).findOwned(source.getUuid("GenomeId"),player.getUuid()).orElse(null);
-        if(genome==null||genome.getTotalLength()<1)return;
+        if(genome==null||genome.getTotalLength()<1||!GenomeSampleItem.matchesSnapshot(getStack(channel),genome))return;
         int regionLength=(int)Math.min(MAX_REGION_BASES,genome.getTotalLength());
         long seed=world.random.nextLong();
         SequencingSimulator.SequencingResult result=new SequencingSimulator(seed).runSequencing(genome,

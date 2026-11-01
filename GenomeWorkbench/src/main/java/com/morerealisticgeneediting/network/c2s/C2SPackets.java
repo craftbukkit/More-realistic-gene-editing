@@ -151,7 +151,7 @@ public final class C2SPackets {
             Genome updated=apply(genome,result.primaryOutcome());
             GenomeRepository.get(player.getServer()).put(updated);
             for (ItemStack held : List.of(player.getMainHandStack(), player.getOffHandStack())) {
-                if (id.equals(GenomeSampleItem.getGenomeId(held))) {
+                if (GenomeSampleItem.matchesSnapshot(held,genome)) {
                     var data = GenomeSampleItem.readData(held);
                     data.putLong("Revision", updated.getRevision());
                     data.putLong("GenomeLength", updated.getTotalLength());

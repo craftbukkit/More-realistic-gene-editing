@@ -40,6 +40,10 @@ public class GenomeSampleItem extends Item {
     }
     public static NbtCompound readData(ItemStack stack){return stack.getOrDefault(DataComponentTypes.CUSTOM_DATA,NbtComponent.DEFAULT).copyNbt();}
     public static void writeData(ItemStack stack,NbtCompound nbt){stack.set(DataComponentTypes.CUSTOM_DATA,NbtComponent.of(nbt));}
+    /** Reject stale physical copies even when their stable sample ID still exists in the repository. */
+    public static boolean matchesSnapshot(ItemStack stack,Genome genome){return matchesSnapshot(readData(stack),genome);}
+    /** Shared by all sample-derived DNA and library items; no missing-field defaults are accepted. */
+    public static boolean matchesSnapshot(NbtCompound data,Genome genome){return SampleProvenance.matchesSnapshot(data,genome);}
     public static UUID getGenomeId(ItemStack stack){
         NbtCompound n=readData(stack);if(n.containsUuid("GenomeId"))return n.getUuid("GenomeId");
         try{return UUID.fromString(n.getString("GenomeIdentifier"));}catch(IllegalArgumentException ex){return null;}

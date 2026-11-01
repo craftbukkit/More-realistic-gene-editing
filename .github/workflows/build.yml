@@ -8,6 +8,7 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-java@v4
@@ -22,7 +23,9 @@ jobs:
         if: always()
         with:
           name: test-results
-          path: GenomeWorkbench/build/reports/tests/
+          path: |
+            GenomeWorkbench/build/reports/tests/
+            GenomeWorkbench/build/test-results/
       - uses: actions/upload-artifact@v4
         with:
           name: mod-jar

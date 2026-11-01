@@ -26,7 +26,7 @@ public class GenomeTerminalBlock extends Block {
     }
     public static boolean open(ServerPlayerEntity player,ItemStack sample,BlockPos pos,boolean portable){
         UUID id=GenomeSampleItem.getGenomeId(sample);Genome genome=id==null?null:GenomeRepository.get(player.getServer()).findOwned(id,player.getUuid()).orElse(null);
-        if(genome==null){player.sendMessage(Text.literal("Hold an owned sample with saved genome data. Missing samples are not regenerated."),true);return false;}
+        if(genome==null||!GenomeSampleItem.matchesSnapshot(sample,genome)){player.sendMessage(Text.literal("Hold an owned sample matching the current saved revision. Missing or stale aliquots cannot open the terminal."),true);return false;}
         TerminalOpenData data=new TerminalOpenData(id,pos,genome.getTotalLength(),genome.getRevision(),portable);
         player.openHandledScreen(new ExtendedScreenHandlerFactory<TerminalOpenData>(){
             @Override public TerminalOpenData getScreenOpeningData(ServerPlayerEntity p){return data;}

@@ -46,6 +46,7 @@ dependencies {
 
 	testImplementation "org.junit.jupiter:junit-jupiter-api:5.10.2"
 	testRuntimeOnly "org.junit.jupiter:junit-jupiter-engine:5.10.2"
+	testImplementation "net.fabricmc:fabric-loader-junit:${project.loader_version}"
 }
 
 processResources {
@@ -77,6 +78,14 @@ jar {
 
 tasks.withType(Test) {
     useJUnitPlatform()
+    systemProperty 'fabric.side', 'server'
+}
+
+// Loom's split environment classpaths are not inherited by the plain JUnit source set.
+// Test the real named Minecraft classes and runtime libraries, without test doubles.
+sourceSets.test {
+    compileClasspath += sourceSets.main.compileClasspath
+    runtimeClasspath += sourceSets.main.runtimeClasspath
 }
 
 java { toolchain { languageVersion = JavaLanguageVersion.of(21) } }

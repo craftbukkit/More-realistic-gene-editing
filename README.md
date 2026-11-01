@@ -21,6 +21,8 @@ The playable workflow uses owned samples and server-side sequence data. Edits an
 
 Artwork remains in development. The audit's missing textures and models require a separate art pass. The `apps`, `services` and `infra` directories contain an independent web prototype and are not part of the Minecraft mod build.
 
+The [audit correction map](docs/audit-fixes-20261101.md) connects the science and code findings to implemented changes, regression coverage and remaining development limits.
+
 ## Verification
 
 Run `./gradlew test` from `GenomeWorkbench` for regression tests. Client and dedicated-server launch checks are separate from unit tests. A successful build does not by itself establish gameplay balance or validate clinical predictions.

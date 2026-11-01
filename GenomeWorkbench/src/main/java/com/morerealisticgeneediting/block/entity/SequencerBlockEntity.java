@@ -20,6 +20,7 @@ public class SequencerBlockEntity extends TimedMachineBlockEntity {
         if(world==null || world.isClient || !canPlayerUse(player) || hasPendingJob()) return;
         var id=GenomeSampleItem.getGenomeId(getStack(0)); if(id==null)return;
         GenomeRepository.get(world.getServer()).findOwned(id,player.getUuid()).ifPresent(genome -> {
+            if(!GenomeSampleItem.matchesSnapshot(getStack(0),genome))return;
             long length=genome.getTotalLength(); if(length<1 || length>10000)return;
             var result=new SequencingSimulator(id.getMostSignificantBits()^genome.getRevision()).runSequencing(genome,SequencingSimulator.Technology.PACBIO_HIFI,10,0,length);
             ItemStack output=derived(ModItems.READ_SET_ITEM,getStack(0),"simulated_sequencing");
