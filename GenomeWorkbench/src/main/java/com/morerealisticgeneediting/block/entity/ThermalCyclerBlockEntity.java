@@ -1,4 +1,6 @@
 package com.morerealisticgeneediting.block.entity;
+import com.morerealisticgeneediting.util.StackData;
+import com.morerealisticgeneediting.screen.LabEquipmentScreenHandler;
 
 import com.morerealisticgeneediting.block.LabEquipmentBlockEntity;
 import com.morerealisticgeneediting.equipment.EquipmentTier;
@@ -112,8 +114,7 @@ public class ThermalCyclerBlockEntity extends LabEquipmentBlockEntity {
         if (!isValidTube(tube)) return false;
         
         // Check output space
-        return output.isEmpty() || 
-               (output.isOf(ModItems.AMPLIFIED_GENE_FRAGMENT) && output.getCount() < output.getMaxCount());
+        return output.isEmpty();
     }
     
     @Override
@@ -129,21 +130,22 @@ public class ThermalCyclerBlockEntity extends LabEquipmentBlockEntity {
                 ItemStack product = new ItemStack(ModItems.AMPLIFIED_GENE_FRAGMENT, 1);
                 
                 // Store PCR result data in NBT
-                NbtCompound nbt = product.getOrCreateNbt();
+                NbtCompound nbt = StackData.read(getStack(TEMPLATE_SLOT));
+                nbt.putBoolean("Simulation",true);
+                nbt.putString("Operation","abstract_pcr");
                 nbt.putInt("Cycles", totalCycles);
                 nbt.putFloat("AnnealingTemp", annealingTemp);
                 nbt.putString("Tier", tier.getId());
                 
                 // Copy template information if available
                 ItemStack template = getStack(TEMPLATE_SLOT);
-                if (template.hasNbt()) {
-                    nbt.put("SourceData", template.getNbt().copy());
+                if (StackData.has(template)) {
+                    nbt.put("SourceData", StackData.read(template).copy());
                 }
                 
+                StackData.write(product,nbt);
                 setStack(OUTPUT_SLOT, product);
-            } else {
-                output.increment(1);
-            }
+            } else { return; }
             
             // Consume reagents
             getStack(TEMPLATE_SLOT).decrement(1);
@@ -161,11 +163,11 @@ public class ThermalCyclerBlockEntity extends LabEquipmentBlockEntity {
     /**
      * Custom tick for thermal cycling simulation
      */
+    @Override public void tick() { tickThermalCycling(); }
     public void tickThermalCycling() {
-        if (!canProcess()) {
-            currentStep = 0;
-            return;
-        }
+        if(world==null || world.isClient || isRemoved() || world.getBlockEntity(pos)!=this)return;
+        if (!canProcess()) { isProcessing=false; currentStep=0; currentCycle=0; progress=0; markDirty(); return; }
+        isProcessing=true; markDirty();
         
         // Update temperature towards target
         if (Math.abs(currentTemperature - targetTemperature) > 0.5f) {
@@ -296,9 +298,9 @@ public class ThermalCyclerBlockEntity extends LabEquipmentBlockEntity {
     @Override
     protected void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
         super.readNbt(nbt, registryLookup);
-        currentCycle = nbt.getInt("CurrentCycle");
-        totalCycles = nbt.getInt("TotalCycles");
-        currentStep = nbt.getInt("CurrentStep");
+        currentCycle = Math.max(0,Math.min(50,nbt.getInt("CurrentCycle")));
+        totalCycles = Math.max(1,Math.min(50,nbt.getInt("TotalCycles")));
+        currentStep = Math.max(0,Math.min(3,nbt.getInt("CurrentStep")));
         currentTemperature = nbt.getFloat("CurrentTemp");
         targetTemperature = nbt.getFloat("TargetTemp");
         annealingTemp = nbt.getFloat("AnnealingTemp");
@@ -315,6 +317,6 @@ public class ThermalCyclerBlockEntity extends LabEquipmentBlockEntity {
     @Override
     public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
         // TODO: Create ThermalCyclerScreenHandler
-        return null;
+        return new LabEquipmentScreenHandler(syncId, playerInventory, this);
     }
 }

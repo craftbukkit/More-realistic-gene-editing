@@ -1,29 +1,22 @@
 {
   "itemGroup.morerealisticgeneediting.mrge_items": "更真实的基因编辑",
   "itemGroup.morerealisticgeneediting.group": "更真实的基因编辑",
-
   "_comment_items": "========== 物品 ==========",
-
   "item.morerealisticgeneediting.petri_dish": "培养皿",
   "item.morerealisticgeneediting.pipette": "移液管",
   "item.morerealisticgeneediting.dna_sample": "DNA样本",
   "item.morerealisticgeneediting.genome_sample": "基因组样本",
   "item.morerealisticgeneediting.genome_workbench": "基因组工作台",
-
   "item.morerealisticgeneediting.genome_sample.tooltip_empty": "空样本",
   "item.morerealisticgeneediting.genome_sample.tooltip_filled": "样本来源: %s",
-
   "_comment_pcr": "========== PCR与分子生物学 ==========",
-
   "item.morerealisticgeneediting.primer": "引物",
   "item.morerealisticgeneediting.primer.tooltip": "用于PCR扩增的短寡核苷酸",
   "item.morerealisticgeneediting.pcr_tube": "PCR管",
   "item.morerealisticgeneediting.pcr_tube.tooltip": "0.2mL薄壁管，用于热循环",
   "item.morerealisticgeneediting.amplified_gene_fragment": "扩增基因片段",
   "item.morerealisticgeneediting.amplified_gene_fragment.tooltip": "PCR扩增的DNA片段",
-
   "_comment_cloning": "========== 克隆与载体 ==========",
-
   "item.morerealisticgeneediting.restriction_enzyme": "限制性内切酶",
   "item.morerealisticgeneediting.restriction_enzyme.tooltip": "切割DNA的分子剪刀",
   "item.morerealisticgeneediting.plasmid_vector": "质粒载体",
@@ -32,9 +25,7 @@
   "item.morerealisticgeneediting.dna_ligase.tooltip": "连接DNA片段的酶",
   "item.morerealisticgeneediting.recombinant_plasmid": "重组质粒",
   "item.morerealisticgeneediting.recombinant_plasmid.tooltip": "含有插入基因的质粒",
-
   "_comment_crispr": "========== 基因编辑 ==========",
-
   "item.morerealisticgeneediting.gene_syringe": "基因注射器",
   "item.morerealisticgeneediting.gene_syringe.tooltip": "将基因编辑组件递送至目标细胞",
   "item.morerealisticgeneediting.crispr_cas9": "CRISPR-Cas9",
@@ -43,32 +34,24 @@
   "item.morerealisticgeneediting.guide_rna.tooltip": "引导Cas9定位到目标DNA序列",
   "item.morerealisticgeneediting.cas9_grna_complex": "Cas9-gRNA复合物",
   "item.morerealisticgeneediting.cas9_grna_complex.tooltip": "活性CRISPR编辑复合物",
-
   "_comment_delivery": "========== 递送系统 ==========",
-
   "item.morerealisticgeneediting.lipid_nanoparticle": "脂质纳米颗粒 (LNP)",
   "item.morerealisticgeneediting.lipid_nanoparticle.tooltip": "基因治疗的递送载体",
   "item.morerealisticgeneediting.electroporation_cuvette": "电穿孔比色皿",
   "item.morerealisticgeneediting.electroporation_cuvette.tooltip": "通过电击将DNA导入细胞",
-
   "_comment_cell_culture": "========== 细胞培养 ==========",
-
   "item.morerealisticgeneediting.cell_culture_flask": "细胞培养瓶",
   "item.morerealisticgeneediting.cell_culture_flask.tooltip": "T-75培养瓶，用于细胞生长",
   "item.morerealisticgeneediting.growth_medium": "培养基",
   "item.morerealisticgeneediting.growth_medium.tooltip": "用于细胞生长的营养液",
-
   "_comment_analysis": "========== 分析与质控 ==========",
-
   "item.morerealisticgeneediting.sequencing_chip": "测序芯片",
   "item.morerealisticgeneediting.sequencing_chip.tooltip": "用于新一代DNA测序",
   "item.morerealisticgeneediting.agarose_gel": "琼脂糖凝胶",
   "item.morerealisticgeneediting.agarose_gel.tooltip": "用于凝胶电泳分析",
   "item.morerealisticgeneediting.dna_ladder": "DNA分子量标准",
   "item.morerealisticgeneediting.dna_ladder.tooltip": "凝胶电泳的大小标记",
-
   "_comment_blocks": "========== 方块 ==========",
-
   "block.morerealisticgeneediting.cell_processor": "细胞处理器",
   "block.morerealisticgeneediting.cell_processor.tooltip": "处理生物样本",
   "block.morerealisticgeneediting.electrophoresis_tank": "电泳槽",
@@ -81,9 +64,7 @@
   "block.morerealisticgeneediting.incubator.tooltip": "维持细胞生长的最佳条件",
   "block.morerealisticgeneediting.genome_terminal": "基因组终端",
   "block.morerealisticgeneediting.genome_terminal.tooltip": "查看和编辑基因组的界面",
-
   "_comment_gui": "========== GUI界面 ==========",
-
   "gui.morerealisticgeneediting.genome_terminal.title": "基因组终端",
   "gui.morerealisticgeneediting.genome_terminal.search": "搜索序列基序...",
   "gui.morerealisticgeneediting.genome_terminal.position": "位置: %d",
@@ -92,40 +73,88 @@
   "gui.morerealisticgeneediting.genome_terminal.find_pam": "查找PAM位点",
   "gui.morerealisticgeneediting.genome_terminal.edit": "编辑",
   "gui.morerealisticgeneediting.genome_terminal.no_sample": "请插入基因组样本以开始",
-
   "gui.morerealisticgeneediting.pcr_machine.title": "PCR仪",
   "gui.morerealisticgeneediting.pcr_machine.cycles": "循环数: %d",
   "gui.morerealisticgeneediting.pcr_machine.temperature": "温度: %d°C",
   "gui.morerealisticgeneediting.pcr_machine.status_idle": "空闲",
   "gui.morerealisticgeneediting.pcr_machine.status_running": "运行中...",
   "gui.morerealisticgeneediting.pcr_machine.status_complete": "完成",
-
   "gui.morerealisticgeneediting.electrophoresis.title": "凝胶电泳",
   "gui.morerealisticgeneediting.electrophoresis.voltage": "电压: %d V",
   "gui.morerealisticgeneediting.electrophoresis.time": "时间: %d 分钟",
   "gui.morerealisticgeneediting.electrophoresis.run": "运行电泳",
-
   "gui.morerealisticgeneediting.sequencer.title": "DNA测序仪",
   "gui.morerealisticgeneediting.sequencer.read_length": "读长: %d bp",
   "gui.morerealisticgeneediting.sequencer.coverage": "覆盖度: %dx",
   "gui.morerealisticgeneediting.sequencer.quality": "质量分数: Q%d",
-
   "_comment_messages": "========== 消息 ==========",
-
   "message.morerealisticgeneediting.sample_collected": "已从 %s 收集基因组样本",
   "message.morerealisticgeneediting.editing_success": "基因编辑成功！",
   "message.morerealisticgeneediting.editing_failed": "基因编辑失败: %s",
   "message.morerealisticgeneediting.pcr_complete": "PCR扩增完成",
   "message.morerealisticgeneediting.sequencing_complete": "测序完成",
-
   "_comment_ethics": "========== 伦理 ==========",
-
   "ethics.morerealisticgeneediting.title": "伦理案例研究",
   "ethics.morerealisticgeneediting.warning": "本模组仅供教育目的使用",
   "ethics.morerealisticgeneediting.compliance_score": "合规得分: %d%%",
-
   "_comment_commands": "========== 命令 ==========",
-
   "command.morerealisticgeneediting.ethics.usage": "用法: /ethics <case_id>",
-  "command.morerealisticgeneediting.ethics.case_loaded": "已加载伦理案例: %s"
+  "command.morerealisticgeneediting.ethics.case_loaded": "已加载伦理案例: %s",
+  "message.morerealisticgeneediting.project_unavailable": "项目不可开始：请检查前置项目；参考案例仅供阅读。",
+  "message.morerealisticgeneediting.project_evidence_missing": "项目尚未完成：缺少要求的服务器实验记录。",
+  "message.morerealisticgeneediting.project_completed": "项目完成：%s",
+  "message.morerealisticgeneediting.science_simulation": "教学模拟，未经验证的生物学预测模型。",
+  "message.morerealisticgeneediting.measurement_unavailable": "本仪器不支持该测量",
+  "message.morerealisticgeneediting.not_evaluated": "未评估",
+  "button.mrge.start": "开始",
+  "button.mrge.stop": "停止",
+  "button.mrge.cancel": "取消",
+  "button.mrge.genome": "序列",
+  "button.mrge.projects": "项目",
+  "button.mrge.search": "搜索",
+  "button.mrge.next_pam": "下个 NGG PAM",
+  "button.mrge.edit": "编辑所选位点",
+  "button.mrge.previous": "上一页",
+  "button.mrge.next": "下一页",
+  "button.mrge.complete": "完成",
+  "button.mrge.reference": "只读参考",
+  "button.mrge.template_edit": "模板修复",
+  "button.mrge.indel_edit": "插缺修复",
+  "button.mrge.blank": "调零",
+  "button.mrge.measure": "测量",
+  "button.mrge.pulse": "施加脉冲",
+  "button.mrge.start_a": "启动 A",
+  "button.mrge.start_b": "启动 B",
+  "button.mrge.reset_a": "重置 A",
+  "button.mrge.reset_b": "重置 B",
+  "button.mrge.next_protocol": "切换程序",
+  "button.mrge.harvest": "收集培养物",
+  "button.mrge.reset": "重置",
+  "button.mrge.airflow": "切换气流",
+  "button.mrge.uv": "紫外消毒",
+  "screen.mrge.edit_title": "虚拟样本编辑",
+  "screen.mrge.genome_title": "序列查看器",
+  "screen.mrge.motif": "DNA 模式（A/C/G/T）",
+  "screen.mrge.donor": "供体模板序列",
+  "screen.mrge.edit_materials": "教学模型：每次尝试消耗 Cas9 和向导 RNA。模板修复还需要携带序列一致的扩增片段。",
+  "screen.mrge.search_result": "匹配：%s；范围 [%s, %s)%s",
+  "screen.mrge.not_observed": "未测量",
+  "screen.mrge.results_on_report": "结果见输出报告",
+  "screen.mrge.teaching_model": "教学模型",
+  "screen.mrge.no_case": "没有可用的讨论案例",
+  "screen.mrge.idle": "空闲",
+  "screen.mrge.running": "运行中",
+  "screen.mrge.protocol_0": "系列稀释",
+  "screen.mrge.protocol_1": "PCR 配液",
+  "screen.mrge.protocol_2": "文库制备",
+  "screen.mrge.protocol_3": "选孔转移",
+  "screen.mrge.protocol_4": "板复制",
+  "screen.mrge.protocol_5": "DNA 浓度归一",
+  "screen.mrge.protocol_6": "自定义程序",
+  "screen.mrge.virtual_gel": "虚拟凝胶：归一化迁移位置",
+  "screen.mrge.waiting_bands": "完成实验后显示条带",
+  "message.mrge.missing_edit_materials": "编辑需要 Cas9 和向导 RNA；模板修复还需要携带与供体序列一致的扩增片段。",
+  "message.mrge.edit_result": "模拟修复结果：%s。请重新打开样本，并用测序独立验证。",
+  "message.mrge.edit_conflict": "该修复与已有编辑冲突，未消耗材料；请选择其他位点。",
+  "message.mrge.storage_full": "世界基因组存储已达到容量上限，未消耗材料。"
 }

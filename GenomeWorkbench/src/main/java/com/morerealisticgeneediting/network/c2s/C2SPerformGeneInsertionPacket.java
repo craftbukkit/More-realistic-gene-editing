@@ -1,41 +1,12 @@
 package com.morerealisticgeneediting.network.c2s;
-
-import com.morerealisticgeneediting.MoreRealisticGeneEditing;
-import com.morerealisticgeneediting.genome.Genome;
-import net.fabricmc.fabric.api.client.networking.v1.ClientPlayNetworking;
-import net.fabricmc.fabric.api.networking.v1.PacketByteBufs;
-import net.minecraft.network.PacketByteBuf;
+import com.morerealisticgeneediting.network.PayloadCodecs;
+import net.minecraft.network.RegistryByteBuf;
+import net.minecraft.network.codec.PacketCodec;
+import net.minecraft.network.packet.CustomPayload;
 import net.minecraft.util.Identifier;
-
 import java.util.UUID;
-
-public class C2SPerformGeneInsertionPacket {
-
-    public static final Identifier PACKET_ID = new Identifier(MoreRealisticGeneEditing.MOD_ID, "perform_gene_insertion");
-
-    public static void send(UUID genomeId, long knockoutPosition, String geneSequence) {
-        PacketByteBuf buf = PacketByteBufs.create();
-        buf.writeUuid(genomeId);
-        buf.writeLong(knockoutPosition);
-        buf.writeString(geneSequence);
-        ClientPlayNetworking.send(PACKET_ID, buf);
-    }
-
-    public static void handle(net.minecraft.server.MinecraftServer server, net.minecraft.server.network.ServerPlayerEntity player, net.minecraft.server.network.ServerPlayNetworkHandler handler, PacketByteBuf buf, net.fabricmc.fabric.api.networking.v1.PacketSender responseSender) {
-        UUID genomeId = buf.readUuid();
-        long knockoutPosition = buf.readLong();
-        String geneSequence = buf.readString();
-
-        server.execute(() -> {
-            Genome genome = MoreRealisticGeneEditing.genomeCache.get(genomeId);
-            if (genome != null) {
-                MoreRealisticGeneEditing.LOGGER.info("Performing gene insertion for genome {}.", genomeId);
-                Genome newGenome = genome.performInsertion(knockoutPosition, geneSequence);
-                MoreRealisticGeneEditing.genomeCache.put(genomeId, newGenome);
-                MoreRealisticGeneEditing.LOGGER.info("Gene insertion complete. Genome {} is now updated.", genomeId);
-            } else {
-                MoreRealisticGeneEditing.LOGGER.error("Could not find genome with ID {} to perform insertion.", genomeId);
-            }
-        });
-    }
+public record C2SPerformGeneInsertionPacket(UUID genomeId, int syncId, long revision, long pamPosition, String sequence) implements CustomPayload {
+    public static final Id<C2SPerformGeneInsertionPacket> ID = new Id<>(Identifier.of("morerealisticgeneediting","perform_gene_insertion"));
+    public static final PacketCodec<RegistryByteBuf,C2SPerformGeneInsertionPacket> CODEC = PayloadCodecs.of(b -> new C2SPerformGeneInsertionPacket(b.readUuid(),b.readVarInt(),b.readLong(),b.readLong(),b.readString(1024)), (b,p) -> { b.writeUuid(p.genomeId());b.writeVarInt(p.syncId());b.writeLong(p.revision());b.writeLong(p.pamPosition());b.writeString(p.sequence(),1024); });
+    @Override public Id<C2SPerformGeneInsertionPacket> getId() { return ID; }
 }

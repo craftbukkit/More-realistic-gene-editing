@@ -1,51 +1,33 @@
 package com.morerealisticgeneediting.util;
 
+import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.server.MinecraftServer;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.Map;
+import java.util.WeakHashMap;
+import java.util.concurrent.*;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
-/**
- * A utility for running tasks asynchronously off the main server thread
- * to avoid blocking and causing TPS drops.
- */
+/** Bounded per-server background work. Suppliers must operate on immutable snapshots. */
 public final class AsyncJobs {
-
-    // A single thread executor is often enough to handle sequential, heavy tasks.
-    // For parallel tasks, a cached or fixed thread pool might be better.
-    private static final ExecutorService executor = Executors.newSingleThreadExecutor();
-
-    /**
-     * Submits a task to be run on a background thread.
-     * The result of the task is then passed to a consumer on the main server thread.
-     *
-     * @param server The MinecraftServer instance, used to execute the callback on the main thread.
-     * @param backgroundTask The task to run asynchronously. It should not modify game state directly.
-     * @param mainThreadCallback The callback to run on the main thread with the result of the background task.
-     * @param <T> The type of the result.
-     */
-    public static <T> void submit(MinecraftServer server, Supplier<T> backgroundTask, Consumer<T> mainThreadCallback) {
-        executor.submit(() -> {
-            final T result = backgroundTask.get();
-            // Use the server's main execution loop to run the callback, ensuring thread safety.
-            server.execute(() -> mainThreadCallback.accept(result));
+    private static final Map<MinecraftServer,ExecutorService> EXECUTORS=new WeakHashMap<>();
+    static { ServerLifecycleEvents.SERVER_STOPPING.register(AsyncJobs::shutdown); }
+    private AsyncJobs(){}
+    private static synchronized ExecutorService executor(MinecraftServer server){
+        return EXECUTORS.computeIfAbsent(server,key->new ThreadPoolExecutor(1,1,0,TimeUnit.MILLISECONDS,
+            new ArrayBlockingQueue<>(32),task->{Thread t=new Thread(task,"mrge-background");t.setDaemon(true);return t;},new ThreadPoolExecutor.AbortPolicy()));
+    }
+    /** Rejection is explicit; no work is silently lost and no world state runs in the worker. */
+    public static <T> void submit(MinecraftServer server,Supplier<T> work,Consumer<T> callback){
+        if(!server.isRunning())throw new RejectedExecutionException("Server stopped");
+        ExecutorService executor=executor(server);
+        executor.execute(()->{
+            try {
+                T result=work.get();
+                if(!executor.isShutdown() && server.isRunning())server.execute(()->{if(!executor.isShutdown() && server.isRunning())callback.accept(result);});
+            }catch(RuntimeException error){org.slf4j.LoggerFactory.getLogger(AsyncJobs.class).error("Background laboratory job failed",error);}
         });
     }
-
-    /**
-     * Shuts down the executor service. Should be called when the server is stopping.
-     */
-    public static void shutdown() {
-        try {
-            executor.shutdown();
-            if (!executor.awaitTermination(5, TimeUnit.SECONDS)) {
-                executor.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            executor.shutdownNow();
-        }
-    }
+    public static synchronized void shutdown(MinecraftServer server){ExecutorService worker=EXECUTORS.remove(server);if(worker!=null)worker.shutdownNow();}
+    public static synchronized void shutdown(){for(ExecutorService worker:EXECUTORS.values())worker.shutdownNow();EXECUTORS.clear();}
 }

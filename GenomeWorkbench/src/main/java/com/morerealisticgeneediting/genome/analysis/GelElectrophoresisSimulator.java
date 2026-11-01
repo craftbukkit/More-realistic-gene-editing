@@ -11,8 +11,9 @@ import java.util.*;
  * - Band visualization and interpretation
  * - Molecular weight estimation using DNA ladder
  * 
- * Educational note: DNA migrates through gel at a rate inversely proportional
- * to the log10 of its molecular weight. Smaller fragments move faster.
+ * Educational model: migration is approximated as affine in log10(fragment length)
+ * over a limited range. Time and field drive displacement; no drive means no
+ * migration. Coefficients are gameplay settings, not instrument calibration.
  */
 public class GelElectrophoresisSimulator {
     
@@ -46,8 +47,18 @@ public class GelElectrophoresisSimulator {
     public record DnaSample(
         String name,
         List<DnaFragment> fragments,
-        double concentration  // ng/µL
+        double concentration, // illustrative abundance scale
+        boolean isLadder
     ) {
+        public DnaSample(String name, List<DnaFragment> fragments, double concentration) {
+            this(name, fragments, concentration, false);
+        }
+        public DnaSample {
+            Objects.requireNonNull(name); Objects.requireNonNull(fragments);
+            fragments = List.copyOf(fragments);
+            if (fragments.size() > 1000 || !Double.isFinite(concentration) || concentration < 0)
+                throw new IllegalArgumentException("Invalid sample");
+        }
         public static DnaSample single(String name, int size, double concentration) {
             return new DnaSample(name, List.of(new DnaFragment(size, 1.0)), concentration);
         }
@@ -57,7 +68,7 @@ public class GelElectrophoresisSimulator {
             for (int size : sizes) {
                 fragments.add(new DnaFragment(size, 1.0 / sizes.length));
             }
-            return new DnaSample(name, fragments, 100.0);
+            return new DnaSample(name, fragments, 100.0, true);
         }
     }
     
@@ -67,7 +78,12 @@ public class GelElectrophoresisSimulator {
     public record DnaFragment(
         int sizeInBp,
         double relativeAbundance  // 0-1, relative to other fragments
-    ) {}
+    ) {
+        public DnaFragment {
+            if (sizeInBp < 1 || !Double.isFinite(relativeAbundance) || relativeAbundance < 0 || relativeAbundance > 1)
+                throw new IllegalArgumentException("Invalid fragment");
+        }
+    }
     
     /**
      * Represents a band visible on the gel.
@@ -98,7 +114,7 @@ public class GelElectrophoresisSimulator {
     public record GelQualityMetrics(
         double resolution,        // How well-separated bands are
         double bandSharpness,     // Average band sharpness
-        boolean hasSmearing,      // Indicates degradation
+        boolean hasSmearing,      // Appearance flag; does not identify a cause
         boolean hasOverloading,   // Too much DNA
         double overallQuality     // 0-1 overall score
     ) {}
@@ -123,6 +139,10 @@ public class GelElectrophoresisSimulator {
     public GelResult runGel(List<DnaSample> samples, GelConcentration gelConcentration, 
                            double runTimeMinutes, int voltage) {
         
+        Objects.requireNonNull(samples); Objects.requireNonNull(gelConcentration);
+        if (samples.size() > 96 || !Double.isFinite(runTimeMinutes) || runTimeMinutes < 0 || runTimeMinutes > 10_000
+                || voltage < 0 || voltage > 10_000)
+            throw new IllegalArgumentException("Invalid or excessive gel parameters");
         List<List<GelBand>> allLanes = new ArrayList<>();
         List<String> interpretations = new ArrayList<>();
         
@@ -152,16 +172,16 @@ public class GelElectrophoresisSimulator {
                 boolean isSharp = isOptimal && sample.concentration() < 500;
                 
                 // Add some noise
-                migration += (random.nextDouble() - 0.5) * 0.02;
+                migration *= 0.99 + random.nextDouble() * 0.02;
                 intensity *= 0.9 + random.nextDouble() * 0.2;
                 
-                if (migration > 0 && migration < 1) {  // Within gel boundaries
+                if (migration >= 0 && migration < 1 && intensity > 0) {  // Within gel boundaries
                     laneBands.add(new GelBand(
                         migration,
-                        fragment.sizeInBp(),
+                        sample.isLadder() ? fragment.sizeInBp() : -1,
                         Math.min(1.0, intensity),
                         isSharp,
-                        laneIndex == 0 ? fragment.sizeInBp() + " bp" : null
+                        sample.isLadder() ? fragment.sizeInBp() + " bp" : null
                     ));
                 }
             }
@@ -171,14 +191,24 @@ public class GelElectrophoresisSimulator {
             allLanes.add(laneBands);
         }
         
-        // Generate interpretations
+        // Only an explicitly designated ladder calibrates unknown lanes.
+        List<GelBand> ladder = List.of();
+        for (int i = 0; i < samples.size(); i++) if (samples.get(i).isLadder()) { ladder = allLanes.get(i); break; }
+        for (int i = 0; i < samples.size(); i++) {
+            if (samples.get(i).isLadder()) continue;
+            List<GelBand> calibrated = new ArrayList<>();
+            for (GelBand band : allLanes.get(i)) calibrated.add(new GelBand(band.migrationDistance(),
+                    estimateSize(band.migrationDistance(), ladder), band.intensity(), band.isSharp(), null));
+            allLanes.set(i, List.copyOf(calibrated));
+        }
+        if (runTimeMinutes == 0 || voltage == 0) interpretations.add("No migration: sample remains at the loading origin.");
         interpretations.addAll(generateInterpretations(samples, allLanes, gelConcentration));
         
         // Calculate quality metrics
         GelQualityMetrics quality = assessQuality(samples, allLanes, gelConcentration);
         
         return new GelResult(
-            allLanes,
+            allLanes.stream().map(List::copyOf).toList(),
             gelLength,
             gelConcentration,
             runTimeMinutes,
@@ -195,7 +225,10 @@ public class GelElectrophoresisSimulator {
      * @return Estimated size in bp
      */
     public int estimateSize(double unknownMigration, List<GelBand> ladderBands) {
-        if (ladderBands.isEmpty()) return -1;
+        if (!Double.isFinite(unknownMigration) || unknownMigration < 0 || unknownMigration >= 1
+                || ladderBands.size() < 2 || ladderBands.stream().anyMatch(b -> b.estimatedSize() <= 0)
+                || ladderBands.stream().mapToDouble(GelBand::migrationDistance).max().orElse(0)
+                - ladderBands.stream().mapToDouble(GelBand::migrationDistance).min().orElse(0) < 1e-9) return -1;
         
         // Find flanking ladder bands
         GelBand upper = null, lower = null;
@@ -234,29 +267,15 @@ public class GelElectrophoresisSimulator {
     
     /**
      * Calculate migration distance based on fragment size.
-     * DNA migration is inversely proportional to log10 of size.
+     * This display approximation decreases affinely with log10 of size.
      */
-    private double calculateMigrationDistance(int sizeInBp, GelConcentration gel, double maxMigration) {
-        // Simplified model: distance ∝ 1/log10(size)
-        // Adjusted for gel concentration
-        double concentrationFactor = 1.0 / gel.concentration;
-        double sizeFactor = 1.0 / Math.log10(Math.max(10, sizeInBp));
-        
-        // Normalize to 0-maxMigration range
-        // Large fragments (10kb) migrate ~0.1, small fragments (100bp) migrate ~maxMigration
-        double rawMigration = sizeFactor * concentrationFactor;
-        
-        // Scale to visible range
-        return Math.min(maxMigration, rawMigration * 0.5);
+    private double calculateMigrationDistance(int sizeInBp, GelConcentration gel, double drive) {
+        // Log-linear display approximation, limited to the simulated size range.
+        double mobility = Math.max(0.02, 0.6 - 0.15 * (Math.log10(sizeInBp) - 2));
+        return mobility * drive / gel.concentration;
     }
-    
-    /**
-     * Calculate maximum migration based on run parameters.
-     */
     private double calculateMaxMigration(double timeMinutes, int voltage, GelConcentration gel) {
-        // More time and voltage = more migration
-        double base = 0.5 + (timeMinutes / 60.0) * 0.3 + (voltage / 150.0) * 0.2;
-        return Math.min(0.95, base / gel.concentration);
+        return (timeMinutes / 60.0) * (voltage / 100.0);
     }
     
     /**
@@ -288,7 +307,9 @@ public class GelElectrophoresisSimulator {
             sumX2 += x * x;
         }
         
-        double slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+        double denominator = n * sumX2 - sumX * sumX;
+        if (Math.abs(denominator) < 1e-12) return -1;
+        double slope = (n * sumXY - sumX * sumY) / denominator;
         double intercept = (sumY - slope * sumX) / n;
         
         double logSize = slope * migration + intercept;
@@ -298,61 +319,20 @@ public class GelElectrophoresisSimulator {
     /**
      * Generate interpretation text for the gel results.
      */
-    private List<String> generateInterpretations(List<DnaSample> samples, 
-                                                  List<List<GelBand>> lanes,
-                                                  GelConcentration gel) {
-        List<String> interpretations = new ArrayList<>();
-        
-        // Compare sample lanes to ladder
-        if (!lanes.isEmpty() && lanes.get(0).size() > 0) {
-            List<GelBand> ladder = lanes.get(0);
-            
-            for (int i = 1; i < lanes.size(); i++) {
-                List<GelBand> lane = lanes.get(i);
-                DnaSample sample = samples.get(i);
-                
-                if (lane.isEmpty()) {
-                    interpretations.add(String.format("Lane %d (%s): No visible bands - possible failed reaction or degradation",
-                        i + 1, sample.name()));
-                } else if (lane.size() == 1) {
-                    int size = estimateSize(lane.get(0).migrationDistance(), ladder);
-                    interpretations.add(String.format("Lane %d (%s): Single band at ~%d bp - clean amplification",
-                        i + 1, sample.name(), size));
-                } else {
-                    StringBuilder sizes = new StringBuilder();
-                    for (GelBand band : lane) {
-                        if (sizes.length() > 0) sizes.append(", ");
-                        sizes.append(estimateSize(band.migrationDistance(), ladder)).append(" bp");
-                    }
-                    interpretations.add(String.format("Lane %d (%s): Multiple bands at %s - possible non-specific amplification",
-                        i + 1, sample.name(), sizes));
-                }
-                
-                // Check for smearing
-                boolean hasSmear = lane.stream().anyMatch(b -> !b.isSharp());
-                if (hasSmear) {
-                    interpretations.add(String.format("Lane %d: Band smearing detected - possible DNA degradation or overloading",
-                        i + 1));
-                }
-            }
+    private List<String> generateInterpretations(List<DnaSample> samples, List<List<GelBand>> lanes,
+                                                 GelConcentration gel) {
+        List<String> text = new ArrayList<>();
+        boolean hasLadder = samples.stream().anyMatch(DnaSample::isLadder);
+        if (!hasLadder) text.add("No designated DNA ladder; unknown fragment sizes are not calibrated.");
+        for (int i = 0; i < lanes.size(); i++) {
+            if (samples.get(i).isLadder()) continue;
+            List<GelBand> bands = lanes.get(i);
+            String description = bands.isEmpty() ? "No visible band in the simulated gel."
+                    : bands.size() + " visible simulated band(s); a band alone does not establish editing success or purity.";
+            text.add("Lane " + (i + 1) + " (" + samples.get(i).name() + "): " + description);
+            if (bands.stream().anyMatch(b -> !b.isSharp())) text.add("Lane " + (i + 1) + ": Poor simulated resolution; cause is not identified by appearance alone.");
         }
-        
-        // Check gel concentration appropriateness
-        if (!samples.isEmpty()) {
-            for (int i = 1; i < samples.size(); i++) {
-                for (DnaFragment frag : samples.get(i).fragments()) {
-                    if (frag.sizeInBp() < gel.minOptimalSize) {
-                        interpretations.add(String.format("Warning: %d bp fragment may be poorly resolved in %.1f%% gel (recommend higher concentration)",
-                            frag.sizeInBp(), gel.concentration));
-                    } else if (frag.sizeInBp() > gel.maxOptimalSize) {
-                        interpretations.add(String.format("Warning: %d bp fragment may be poorly resolved in %.1f%% gel (recommend lower concentration)",
-                            frag.sizeInBp(), gel.concentration));
-                    }
-                }
-            }
-        }
-        
-        return interpretations;
+        return List.copyOf(text);
     }
     
     /**
@@ -362,7 +342,13 @@ public class GelElectrophoresisSimulator {
                                             List<List<GelBand>> lanes,
                                             GelConcentration gel) {
         // Calculate resolution
-        double resolution = 0.8;  // Base resolution
+        double resolution = 0;
+        int separations = 0;
+        for (List<GelBand> lane : lanes) for (int i = 1; i < lane.size(); i++) {
+            resolution += Math.min(1, Math.max(0, lane.get(i).migrationDistance() - lane.get(i - 1).migrationDistance()) / 0.05);
+            separations++;
+        }
+        resolution = separations == 0 ? 0 : resolution / separations;
         
         // Calculate average band sharpness
         double totalSharpness = 0;

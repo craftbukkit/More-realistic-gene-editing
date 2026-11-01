@@ -34,7 +34,7 @@ public class Construct {
         this.guideRNA = guideRNA;
     }
 
-    // Getters...
+    public UUID getConstructId(){return constructId;} public EditType getEditType(){return editType;} public String getGuideRNA(){return guideRNA;}
 
     public NbtCompound writeNbt() {
         NbtCompound nbt = new NbtCompound();

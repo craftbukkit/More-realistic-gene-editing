@@ -11,6 +11,7 @@ import net.minecraft.screen.ArrayPropertyDelegate;
 import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
+import com.morerealisticgeneediting.screen.slot.MachineSlot;
 import org.jetbrains.annotations.Nullable;
 
 public class CellProcessorScreenHandler extends ScreenHandler {
@@ -34,10 +35,10 @@ public class CellProcessorScreenHandler extends ScreenHandler {
 
         this.blockEntity = (inventory instanceof CellProcessorBlockEntity) ? (CellProcessorBlockEntity) inventory : null;
 
-        this.addSlot(new Slot(inventory, 0, 8, 53));   // Input Slot
-        this.addSlot(new Slot(inventory, 1, 34, 53));  // Reagent Slot
-        this.addSlot(new Slot(inventory, 2, 80, 53));  // Output Slot
-        this.addSlot(new Slot(inventory, 3, 106, 53)); // Waste/Byproduct Slot
+        this.addSlot(new MachineSlot(inventory, 0, 8, 53, false));   // Input Slot
+        this.addSlot(new MachineSlot(inventory, 1, 34, 53, false));  // Reagent Slot
+        this.addSlot(new MachineSlot(inventory, 2, 80, 53, true));  // Output Slot
+        this.addSlot(new MachineSlot(inventory, 3, 106, 53, true)); // Waste/Byproduct Slot
 
         addPlayerInventory(playerInventory);
         addPlayerHotbar(playerInventory);
@@ -50,14 +51,14 @@ public class CellProcessorScreenHandler extends ScreenHandler {
 
     @Override
     public boolean onButtonClick(PlayerEntity player, int id) {
-        if (blockEntity == null) return false;
+        if (blockEntity == null || !canUse(player)) return false;
         if (!NetGuards.isPlayerClose(player, blockEntity.getWorld(), blockEntity.getPos())) return false;
 
         if (id == 0) { // Assuming 0 is the 'start' button
             blockEntity.startProcessing(player);
             return true;
         }
-        return super.onButtonClick(player, id);
+        return false;
     }
 
     @Override
@@ -66,9 +67,11 @@ public class CellProcessorScreenHandler extends ScreenHandler {
     }
 
     @Override
-    public ItemStack transferSlot(PlayerEntity player, int invSlot) {
+    public ItemStack quickMove(PlayerEntity player, int invSlot) {
         ItemStack newStack = ItemStack.EMPTY;
+        if(invSlot<0 || invSlot>=this.slots.size() || !canUse(player)) return ItemStack.EMPTY;
         Slot slot = this.slots.get(invSlot);
+        if(!slot.canTakeItems(player)) return ItemStack.EMPTY;
         if (slot != null && slot.hasStack()) {
             ItemStack originalStack = slot.getStack();
             newStack = originalStack.copy();
@@ -76,7 +79,7 @@ public class CellProcessorScreenHandler extends ScreenHandler {
                 if (!this.insertItem(originalStack, this.inventory.size(), this.slots.size(), true)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (!this.insertItem(originalStack, 0, this.inventory.size(), false)) {
+            } else if (!this.insertItem(originalStack, 0, 2, false)) {
                 return ItemStack.EMPTY;
             }
 

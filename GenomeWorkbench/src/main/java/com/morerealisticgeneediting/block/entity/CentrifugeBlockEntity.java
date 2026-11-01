@@ -1,4 +1,6 @@
 package com.morerealisticgeneediting.block.entity;
+import com.morerealisticgeneediting.util.StackData;
+import com.morerealisticgeneediting.screen.LabEquipmentScreenHandler;
 
 import com.morerealisticgeneediting.block.LabEquipmentBlockEntity;
 import com.morerealisticgeneediting.equipment.EquipmentTier;
@@ -25,7 +27,7 @@ import java.util.Random;
  * 
  * Process:
  * - Input: Biological sample (e.g., blood, cell culture)
- * - Output: Separated components (DNA, proteins, cell debris)
+ * - Output: Illustrative pellet and supernatant; centrifugation alone does not purify DNA.
  * 
  * Tier differences:
  * - Basic (Palm): Low speed, small capacity, room temp only
@@ -41,7 +43,7 @@ public class CentrifugeBlockEntity extends LabEquipmentBlockEntity {
     public static final int INTERFACE_SLOT = 3;    // Middle fraction (if applicable)
     
     private int rpm = 0;
-    private int targetRpm = 0;
+    private int targetRpm = 3000;
     private float temperature = 20.0f;  // Celsius
     private int runTime = 0;            // Ticks remaining
     
@@ -63,7 +65,7 @@ public class CentrifugeBlockEntity extends LabEquipmentBlockEntity {
     @Override
     protected boolean canProcess() {
         ItemStack input = getStack(INPUT_SLOT);
-        if (input.isEmpty()) return false;
+        if (input.isEmpty() || targetRpm<=0) return false;
         
         // Check if input is a valid sample
         if (!isValidInput(input)) return false;
@@ -74,59 +76,33 @@ public class CentrifugeBlockEntity extends LabEquipmentBlockEntity {
     
     @Override
     protected void completeProcess() {
-        ItemStack input = getStack(INPUT_SLOT);
-        if (input.isEmpty()) return;
-        
-        Random random = new Random();
-        
-        // Process based on input type and tier
-        if (isGenomeSample(input) || isDnaSample(input)) {
-            // DNA extraction centrifugation
-            // Pellet: cell debris
-            // Supernatant: DNA in solution
-            
-            if (getStack(PELLET_SLOT).isEmpty()) {
-                setStack(PELLET_SLOT, new ItemStack(Items.GRAY_DYE, 1)); // Placeholder for debris
-            }
-            
-            if (getStack(SUPERNATANT_SLOT).isEmpty()) {
-                // Higher tier = better yield
-                float successChance = 0.7f + tier.getSuccessRateBonus();
-                if (random.nextFloat() < successChance) {
-                    setStack(SUPERNATANT_SLOT, new ItemStack(ModItems.DNA_SAMPLE, 1));
-                }
-            }
-        }
-        
-        // Consume input
-        input.decrement(1);
-        
-        // Reset RPM
-        rpm = 0;
+        if(!canProcess())return;
+        ItemStack input=getStack(INPUT_SLOT);
+        ItemStack pellet=input.copyWithCount(1);
+        NbtCompound pelletData=StackData.read(pellet);
+        pelletData.putString("Fraction","pellet");pelletData.putBoolean("Simulation",true);
+        pelletData.putBoolean("DnaPurificationPerformed",false);StackData.write(pellet,pelletData);
+        ItemStack supernatant=new ItemStack(Items.GLASS_BOTTLE);
+        NbtCompound liquidData=new NbtCompound();liquidData.putString("Fraction","supernatant");
+        liquidData.putBoolean("Simulation",true);liquidData.putBoolean("DnaPurificationPerformed",false);
+        StackData.write(supernatant,liquidData);
+        setStack(PELLET_SLOT,pellet);setStack(SUPERNATANT_SLOT,supernatant);input.decrement(1);
+        rpm=0;
     }
-    
     private boolean isValidInput(ItemStack stack) {
-        // Check for valid biological samples
-        return isGenomeSample(stack) || 
-               isDnaSample(stack) ||
-               stack.isOf(Items.ROTTEN_FLESH) ||  // Placeholder for biological material
-               stack.isOf(Items.BONE);
+        return stack.isOf(ModItems.CELL_CULTURE_FLASK) && "virtual_cell_culture".equals(StackData.read(stack).getString("SampleType")) && !StackData.read(stack).contains("Fraction");
     }
-    
-    private boolean isGenomeSample(ItemStack stack) {
-        return stack.isOf(ModItems.GENOME_SAMPLE);
-    }
-    
-    private boolean isDnaSample(ItemStack stack) {
-        return stack.isOf(ModItems.DNA_SAMPLE);
-    }
-    
     private boolean hasSpaceForOutputs() {
-        return getStack(PELLET_SLOT).isEmpty() || 
-               getStack(SUPERNATANT_SLOT).isEmpty() ||
-               getStack(INTERFACE_SLOT).isEmpty();
+        return getStack(PELLET_SLOT).isEmpty() && getStack(SUPERNATANT_SLOT).isEmpty();
     }
-    
+    @Override public boolean isValid(int slot,ItemStack stack) {
+        return super.isValid(slot,stack) && isValidInput(stack);
+    }
+    @Override public void tick() {
+        if(world==null || world.isClient || isRemoved() || world.getBlockEntity(pos)!=this)return;
+        if(canProcess())rpm=Math.min(targetRpm,rpm+100);else rpm=Math.max(0,rpm-200);
+        super.tick();
+    }
     // ========== Centrifuge-specific methods ==========
     
     /**
@@ -143,15 +119,15 @@ public class CentrifugeBlockEntity extends LabEquipmentBlockEntity {
     /**
      * Get current RCF (Relative Centrifugal Force)
      * RCF = 1.118 × 10^-5 × r × RPM²
-     * Assuming r = 10cm = 0.1m for benchtop
+     * The coefficient uses radius in centimetres; radius is illustrative, not a vendor specification.
      */
     public double getCurrentRcf() {
-        double r = tier == EquipmentTier.ELITE ? 0.15 : 0.10;  // meters
+        double r = tier == EquipmentTier.ELITE ? 15.0 : 10.0;  // centimetres
         return 1.118e-5 * r * rpm * rpm;
     }
     
     public void setTargetRpm(int rpm) {
-        this.targetRpm = Math.min(rpm, getMaxRpm());
+        this.targetRpm = Math.max(0, Math.min(rpm, getMaxRpm()));
     }
     
     public int getRpm() {
@@ -200,6 +176,6 @@ public class CentrifugeBlockEntity extends LabEquipmentBlockEntity {
     @Override
     public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
         // TODO: Create CentrifugeScreenHandler
-        return null;
+        return new LabEquipmentScreenHandler(syncId, playerInventory, this);
     }
 }

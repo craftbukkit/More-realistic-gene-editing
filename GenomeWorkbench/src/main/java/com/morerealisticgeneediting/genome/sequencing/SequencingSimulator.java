@@ -1,475 +1,221 @@
 package com.morerealisticgeneediting.genome.sequencing;
 
 import com.morerealisticgeneediting.genome.Genome;
-
 import java.util.*;
 
 /**
- * SequencingSimulator - Simulates next-generation DNA sequencing with realistic outcomes.
- * 
- * This simulator models key aspects of real NGS sequencing:
- * - Read generation with configurable length
- * - Quality score simulation (Phred scores)
- * - Coverage calculation
- * - Error modeling (substitution, insertion, deletion)
- * - Variant calling basics
- * 
- * Educational note: Illumina sequencing has ~0.1% error rate, while
- * long-read technologies (PacBio, Nanopore) have ~5-15% raw error rate
- * but can achieve high accuracy through consensus.
+ * Bounded teaching model of reference-positioned reads. Technology presets are
+ * illustrative game settings, not specifications of current instruments.
+ * Only substitutions are simulated/called; indels need an explicit alignment model.
  */
 public class SequencingSimulator {
-    
-    // Sequencing technology presets
+    public static final long MAX_GENERATED_BASES = 10_000_000;
+    public static final int MAX_READS = 200_000;
+    public static final long MAX_CALL_BASES = 1_000_000;
     public enum Technology {
-        ILLUMINA_SE50(50, false, 0.001, 40, "Illumina Short-read 50bp SE"),
-        ILLUMINA_SE150(150, false, 0.001, 35, "Illumina Short-read 150bp SE"),
-        ILLUMINA_PE150(150, true, 0.001, 35, "Illumina Short-read 150bp PE"),
-        ILLUMINA_PE300(300, true, 0.002, 30, "Illumina MiSeq 300bp PE"),
-        PACBIO_HIFI(15000, false, 0.001, 30, "PacBio HiFi Long-read"),
-        PACBIO_CLR(20000, false, 0.10, 10, "PacBio CLR Long-read"),
-        NANOPORE_R10(30000, false, 0.05, 15, "Oxford Nanopore R10"),
-        SANGER(800, false, 0.0001, 50, "Sanger Sequencing");
-        
+        ILLUMINA_SE50(50, false, 0.001, 40, "Illustrative short-read 50bp SE"),
+        ILLUMINA_SE150(150, false, 0.001, 35, "Illustrative short-read 150bp SE"),
+        ILLUMINA_PE150(150, true, 0.001, 35, "Illustrative short-read 150bp PE"),
+        ILLUMINA_PE300(300, true, 0.002, 30, "Illustrative short-read 300bp PE"),
+        PACBIO_HIFI(15000, false, 0.001, 30, "Illustrative HiFi-like long-read"),
+        PACBIO_CLR(20000, false, 0.10, 10, "Illustrative legacy noisy long-read"),
+        NANOPORE_R10(30000, false, 0.05, 15, "Illustrative nanopore-like long-read"),
+        SANGER(800, false, 0.0001, 40, "Illustrative Sanger-like read");
         public final int readLength;
         public final boolean pairedEnd;
+        /** Legacy display hint; actual errors are sampled from each base's Phred score. */
         public final double errorRate;
         public final int avgQuality;
         public final String description;
-        
-        Technology(int readLength, boolean pairedEnd, double errorRate, int avgQuality, String description) {
-            this.readLength = readLength;
-            this.pairedEnd = pairedEnd;
-            this.errorRate = errorRate;
-            this.avgQuality = avgQuality;
-            this.description = description;
+        Technology(int length, boolean paired, double error, int quality, String description) {
+            readLength = length; pairedEnd = paired; errorRate = error; avgQuality = quality; this.description = description;
         }
     }
-    
-    /**
-     * Represents a single sequencing read.
-     */
-    public record SequencingRead(
-        String id,
-        String sequence,
-        int[] qualityScores,  // Phred scores (0-40+)
-        long referencePosition,
-        boolean isReversed,
-        String mateId  // For paired-end reads
-    ) {
-        /**
-         * Get quality string in FASTQ format.
-         */
+    public record SequencingRead(String id, String sequence, int[] qualityScores,
+                                 long referencePosition, boolean isReversed, String mateId) {
+        public SequencingRead {
+            Objects.requireNonNull(id); Objects.requireNonNull(sequence); Objects.requireNonNull(qualityScores);
+            if (sequence.length() != qualityScores.length || referencePosition < 0
+                    || id.contains("\n") || id.contains("\r") || !sequence.matches("[ACGTNacgtn]*"))
+                throw new IllegalArgumentException("Invalid read or unequal sequence/quality lengths");
+            qualityScores = qualityScores.clone();
+            for (int q : qualityScores) if (q < 0 || q > 93) throw new IllegalArgumentException("Invalid Phred+33 value");
+            sequence = sequence.toUpperCase(Locale.ROOT);
+        }
+        @Override public int[] qualityScores() { return qualityScores.clone(); }
         public String getQualityString() {
-            StringBuilder sb = new StringBuilder(qualityScores.length);
-            for (int q : qualityScores) {
-                sb.append((char) (q + 33));  // Phred+33 encoding
-            }
-            return sb.toString();
+            StringBuilder out = new StringBuilder(qualityScores.length);
+            for (int q : qualityScores) out.append((char) (q + 33));
+            return out.toString();
         }
-        
-        /**
-         * Get average quality score.
-         */
-        public double getAverageQuality() {
-            return Arrays.stream(qualityScores).average().orElse(0);
-        }
-        
-        /**
-         * Get FASTQ formatted string.
-         */
-        public String toFastq() {
-            return String.format("@%s\n%s\n+\n%s", id, sequence, getQualityString());
-        }
+        public double getAverageQuality() { return Arrays.stream(qualityScores).average().orElse(0); }
+        public String toFastq() { return "@" + id + "\n" + sequence + "\n+\n" + getQualityString(); }
     }
-    
-    /**
-     * Summary statistics for a sequencing run.
-     */
-    public record SequencingStats(
-        int totalReads,
-        long totalBases,
-        double meanReadLength,
-        double meanQuality,
-        double q30Percentage,  // % of bases with Q>=30
-        double coverageDepth,
-        double gcContent,
-        int estimatedVariants,
-        Map<String, Object> additionalMetrics
-    ) {}
-    
-    /**
-     * Result of a sequencing run.
-     */
-    public record SequencingResult(
-        List<SequencingRead> reads,
-        SequencingStats stats,
-        Technology technology,
-        List<String> qualityWarnings,
-        String reportSummary
-    ) {}
-    
-    /**
-     * Represents a detected variant.
-     */
-    public record Variant(
-        long position,
-        String referenceAllele,
-        String alternateAllele,
-        VariantType type,
-        int depth,
-        double alleleFrequency,
-        double quality
-    ) {
-        public enum VariantType {
-            SNP, INSERTION, DELETION, COMPLEX
-        }
+    /** estimatedVariants=-1 means no independent-reference comparison has been performed. */
+    public record SequencingStats(int totalReads, long totalBases, double meanReadLength,
+                                  double meanQuality, double q30Percentage, double coverageDepth,
+                                  double gcContent, int estimatedVariants, Map<String, Object> additionalMetrics) {}
+    public record SequencingResult(List<SequencingRead> reads, SequencingStats stats, Technology technology,
+                                   List<String> qualityWarnings, String reportSummary) {}
+    public record Variant(long position, String referenceAllele, String alternateAllele,
+                          VariantType type, int depth, double alleleFrequency, double quality) {
+        public enum VariantType { SNP, INSERTION, DELETION, COMPLEX }
     }
-    
     private final Random random;
-    private final long seed;
-    
-    public SequencingSimulator(long seed) {
-        this.seed = seed;
-        this.random = new Random(seed);
+    public SequencingSimulator(long seed) { random = new Random(seed); }
+
+    public SequencingResult runSequencing(Genome genome, Technology technology, int targetCoverage,
+                                         long regionStart, long regionLength) {
+        Objects.requireNonNull(technology);
+        return simulate(genome, technology, regionStart, regionLength, targetCoverage, technology.readLength, technology.pairedEnd);
     }
-    
-    /**
-     * Run a sequencing simulation.
-     * 
-     * @param genome Target genome to sequence
-     * @param technology Sequencing technology to simulate
-     * @param targetCoverage Desired average coverage depth
-     * @param regionStart Start position (0 for whole genome)
-     * @param regionLength Length of region (0 for whole genome)
-     * @return SequencingResult with reads and statistics
-     */
-    public SequencingResult runSequencing(Genome genome, Technology technology, 
-                                          int targetCoverage, long regionStart, long regionLength) {
-        
-        List<SequencingRead> allReads = new ArrayList<>();
+    public SequencingResult runSequencing(Genome genome, Technology technology, long regionStart,
+                                         int regionLength, int targetCoverage, int readLength, boolean pairedEnd) {
+        return simulate(genome, technology, regionStart, regionLength, targetCoverage, readLength, pairedEnd);
+    }
+    private SequencingResult simulate(Genome genome, Technology technology, long start, long length,
+                                     int coverage, int requestedReadLength, boolean pairedEnd) {
+        Objects.requireNonNull(genome); Objects.requireNonNull(technology);
+        if (start < 0 || length < 0 || coverage < 1 || coverage > 1000 || requestedReadLength < 1 || requestedReadLength > 100_000)
+            throw new IllegalArgumentException("Invalid sequencing parameters");
+        if (length == 0) {
+            if (start != 0) throw new IllegalArgumentException("Whole-genome mode requires start=0");
+            length = genome.getTotalLength();
+        }
+        if (length < 1 || start > genome.getTotalLength() || length > genome.getTotalLength() - start)
+            throw new IllegalArgumentException("Invalid sequencing region");
+        if (length > MAX_GENERATED_BASES / coverage) throw new IllegalArgumentException("Sequencing base budget exceeded");
+        int readLength = (int) Math.min(length, requestedReadLength);
+        int readsPerTemplate = pairedEnd ? 2 : 1;
+        long basesPerTemplate = (long) readLength * readsPerTemplate;
+        long desiredBases = length * coverage;
+        long templates = (desiredBases + basesPerTemplate - 1) / basesPerTemplate;
+        if (templates * readsPerTemplate > MAX_READS || templates * basesPerTemplate > MAX_GENERATED_BASES)
+            throw new IllegalArgumentException("Sequencing read/base budget exceeded");
+        List<SequencingRead> reads = new ArrayList<>((int) templates * readsPerTemplate);
         List<String> warnings = new ArrayList<>();
-        
-        // Calculate region
-        long genomeLength = genome.getTotalLength();
-        if (regionLength <= 0) {
-            regionStart = 0;
-            regionLength = genomeLength;
+        if (readLength != requestedReadLength) warnings.add("Read length shortened to fit the requested region.");
+        // A toy fragment span, bounded to this requested region; both mates always exist.
+        int fragmentLength = (int) Math.min(length, pairedEnd ? 2L * readLength : readLength);
+        long possibleStarts = length - fragmentLength + 1;
+        for (int i = 0; i < templates; i++) {
+            long position = start + random.nextLong(possibleStarts);
+            String id = String.format(Locale.ROOT, "READ_%08d", i);
+            if (pairedEnd) {
+                reads.add(generateRead(genome, position, readLength, technology, id + "/1", false, id + "/2"));
+                reads.add(generateRead(genome, position + fragmentLength - readLength, readLength,
+                        technology, id + "/2", true, id + "/1"));
+            } else reads.add(generateRead(genome, position, readLength, technology, id, random.nextBoolean(), null));
         }
-        regionLength = Math.min(regionLength, genomeLength - regionStart);
-        
-        // Calculate number of reads needed
-        int readLength = technology.readLength;
-        int numReads = (int) ((regionLength * targetCoverage) / readLength);
-        if (technology.pairedEnd) {
-            numReads /= 2;  // Each pair covers 2x
-        }
-        
-        // Generate reads
-        int readCounter = 0;
-        for (int i = 0; i < numReads; i++) {
-            // Random position within region
-            long position = regionStart + (long) (random.nextDouble() * (regionLength - readLength));
-            position = Math.max(regionStart, Math.min(position, regionStart + regionLength - readLength));
-            
-            if (technology.pairedEnd) {
-                // Generate paired-end reads
-                int insertSize = 300 + random.nextInt(200);  // 300-500bp insert
-                
-                String readId1 = String.format("READ_%08d/1", readCounter);
-                String readId2 = String.format("READ_%08d/2", readCounter);
-                
-                SequencingRead read1 = generateRead(genome, position, readLength, 
-                    technology, readId1, false, readId2);
-                allReads.add(read1);
-                
-                long mate2Pos = position + insertSize - readLength;
-                if (mate2Pos > 0 && mate2Pos + readLength <= genomeLength) {
-                    SequencingRead read2 = generateRead(genome, mate2Pos, readLength,
-                        technology, readId2, true, readId1);
-                    allReads.add(read2);
-                }
-            } else {
-                // Single-end read
-                String readId = String.format("READ_%08d", readCounter);
-                boolean reversed = random.nextBoolean();
-                SequencingRead read = generateRead(genome, position, readLength,
-                    technology, readId, reversed, null);
-                allReads.add(read);
-            }
-            readCounter++;
-        }
-        
-        // Calculate statistics
-        SequencingStats stats = calculateStats(allReads, regionLength, technology);
-        
-        // Generate warnings
-        if (stats.coverageDepth() < 10) {
-            warnings.add("Low coverage: <10x may miss variants");
-        }
-        if (stats.q30Percentage() < 80) {
-            warnings.add("Low quality: <80% bases at Q30");
-        }
-        if (stats.gcContent() < 0.35 || stats.gcContent() > 0.65) {
-            warnings.add("Unusual GC content may indicate contamination or bias");
-        }
-        
-        // Generate report summary
-        String report = generateReport(stats, technology, warnings);
-        
-        return new SequencingResult(allReads, stats, technology, warnings, report);
+        SequencingStats stats = calculateStats(reads, length, technology, pairedEnd);
+        if (stats.coverageDepth() < 10) warnings.add("Low simulated depth; absence of a call is not absence of a variant.");
+        if (stats.q30Percentage() < 80) warnings.add("Many simulated bases have Q<30.");
+        warnings.add("Variant count not evaluated; comparison with an independent reference is required.");
+        String report = String.format(Locale.ROOT,
+                "SIMULATED READ REPORT\nPreset: %s\nReads: %d\nBases: %d\nMean read length: %.1f\nMean quality: %.1f\nQ30: %.1f%%\nDepth: %.1fx\nRead N50: %d\nVariants: not evaluated\nSubstitution-only teaching model.",
+                technology.description, stats.totalReads(), stats.totalBases(), stats.meanReadLength(), stats.meanQuality(),
+                stats.q30Percentage(), stats.coverageDepth(), calculateN50(reads));
+        return new SequencingResult(List.copyOf(reads), stats, technology, List.copyOf(warnings), report);
     }
-    
-    /**
-     * Call variants from sequencing data.
-     * 
-     * @param reads List of sequencing reads
-     * @param reference Reference genome
-     * @param minDepth Minimum read depth for calling
-     * @param minQuality Minimum quality score
-     * @return List of called variants
-     */
-    public List<Variant> callVariants(List<SequencingRead> reads, Genome reference,
-                                      int minDepth, double minQuality) {
-        
+
+    /** SNP-only pileup over already known reference positions; not an aligner. */
+    public List<Variant> callVariants(List<SequencingRead> reads, Genome reference, int minDepth, double minQuality) {
+        Objects.requireNonNull(reads); Objects.requireNonNull(reference);
+        if (minDepth < 1 || !Double.isFinite(minQuality) || minQuality < 0 || minQuality > 93 || reads.size() > MAX_READS)
+            throw new IllegalArgumentException("Invalid variant-calling parameters");
+        long baseCount = 0;
+        for (SequencingRead read : reads) {
+            baseCount += read.sequence().length();
+            if (baseCount > MAX_CALL_BASES || read.referencePosition() > reference.getTotalLength()
+                    || read.sequence().length() > reference.getTotalLength() - read.referencePosition())
+                throw new IllegalArgumentException("Read outside reference or pileup budget exceeded");
+        }
+        // Each allele stores its own count and quality sum; reference quality cannot rescue a poor alt.
+        Map<Long, long[]> pileup = new TreeMap<>();
+        for (SequencingRead read : reads) {
+            int[] qualities = read.qualityScores();
+            int n = read.sequence().length();
+            for (int i = 0; i < n; i++) {
+                int readIndex = read.isReversed() ? n - 1 - i : i;
+                int q = qualities[readIndex];
+                if (q < minQuality) continue;
+                char base = read.sequence().charAt(readIndex);
+                if (read.isReversed()) base = complement(base);
+                int allele = "ACGT".indexOf(base);
+                if (allele < 0) continue;
+                long[] counts = pileup.computeIfAbsent(read.referencePosition() + i, p -> new long[8]);
+                counts[allele]++; counts[allele + 4] += q;
+            }
+        }
         List<Variant> variants = new ArrayList<>();
-        
-        // Build pileup (simplified)
-        Map<Long, List<Character>> pileup = new HashMap<>();
-        Map<Long, List<Integer>> qualityPileup = new HashMap<>();
-        
+        for (var entry : pileup.entrySet()) {
+            long[] counts = entry.getValue();
+            int depth = (int) (counts[0] + counts[1] + counts[2] + counts[3]);
+            if (depth < minDepth) continue;
+            String ref = reference.getSequence(entry.getKey(), 1).toUpperCase(Locale.ROOT);
+            if (ref.length() != 1 || "ACGT".indexOf(ref.charAt(0)) < 0) continue;
+            for (int allele = 0; allele < 4; allele++) {
+                char alt = "ACGT".charAt(allele);
+                double fraction = (double) counts[allele] / depth;
+                if (alt != ref.charAt(0) && counts[allele] >= Math.max(1, (minDepth + 2) / 3) && fraction >= 0.1)
+                    variants.add(new Variant(entry.getKey(), ref, String.valueOf(alt), Variant.VariantType.SNP,
+                            depth, fraction, (double) counts[allele + 4] / counts[allele]));
+            }
+        }
+        return List.copyOf(variants);
+    }
+
+    private SequencingRead generateRead(Genome genome, long position, int length, Technology technology,
+                                        String id, boolean reversed, String mateId) {
+        if (position < 0 || position >= genome.getTotalLength() || length < 1)
+            throw new IllegalArgumentException("Invalid read interval");
+        int actualLength = (int) Math.min(length, genome.getTotalLength() - position);
+        String sequence = genome.getSequence(position, actualLength).toUpperCase(Locale.ROOT);
+        if (reversed) sequence = reverseComplement(sequence);
+        char[] bases = sequence.toCharArray();
+        int[] qualities = new int[bases.length];
+        for (int i = 0; i < bases.length; i++) {
+            double decay = 1.0 - 0.3 * i / Math.max(1.0, bases.length - 1);
+            int q = Math.max(2, Math.min(50, (int) Math.round(technology.avgQuality * decay + random.nextGaussian() * 3)));
+            qualities[i] = q;
+            if ("ACGT".indexOf(bases[i]) >= 0 && random.nextDouble() < Math.pow(10, -q / 10.0)) bases[i] = substitute(bases[i]);
+        }
+        return new SequencingRead(id, new String(bases), qualities, position, reversed, mateId);
+    }
+    private SequencingStats calculateStats(List<SequencingRead> reads, long regionLength, Technology technology, boolean pairedEnd) {
+        long bases = 0, q30 = 0, gc = 0, quality = 0;
         for (SequencingRead read : reads) {
-            for (int i = 0; i < read.sequence().length(); i++) {
-                long pos = read.referencePosition() + i;
-                pileup.computeIfAbsent(pos, k -> new ArrayList<>()).add(read.sequence().charAt(i));
-                qualityPileup.computeIfAbsent(pos, k -> new ArrayList<>()).add(read.qualityScores()[i]);
+            int[] qualities = read.qualityScores(); bases += qualities.length;
+            for (int i = 0; i < qualities.length; i++) {
+                quality += qualities[i]; if (qualities[i] >= 30) q30++;
+                if (read.sequence().charAt(i) == 'G' || read.sequence().charAt(i) == 'C') gc++;
             }
         }
-        
-        // Call variants at each position
-        for (Map.Entry<Long, List<Character>> entry : pileup.entrySet()) {
-            long pos = entry.getKey();
-            List<Character> bases = entry.getValue();
-            List<Integer> qualities = qualityPileup.get(pos);
-            
-            if (bases.size() < minDepth) continue;
-            
-            // Get reference base
-            String refSeq = reference.getSequence(pos, 1);
-            if (refSeq.isEmpty()) continue;
-            char refBase = refSeq.charAt(0);
-            
-            // Count alleles
-            Map<Character, Integer> alleleCounts = new HashMap<>();
-            for (char base : bases) {
-                alleleCounts.merge(base, 1, Integer::sum);
-            }
-            
-            // Check for non-reference alleles
-            for (Map.Entry<Character, Integer> allele : alleleCounts.entrySet()) {
-                char altBase = allele.getKey();
-                int count = allele.getValue();
-                
-                if (altBase != refBase && count >= minDepth / 3) {
-                    double af = (double) count / bases.size();
-                    double avgQual = qualities.stream().mapToInt(Integer::intValue).average().orElse(0);
-                    
-                    if (avgQual >= minQuality && af >= 0.1) {
-                        variants.add(new Variant(
-                            pos,
-                            String.valueOf(refBase),
-                            String.valueOf(altBase),
-                            Variant.VariantType.SNP,
-                            bases.size(),
-                            af,
-                            avgQual
-                        ));
-                    }
-                }
-            }
-        }
-        
-        return variants;
+        Map<String, Object> additional = Map.of("technology", technology.description, "pairedEnd", pairedEnd,
+                "readN50", calculateN50(reads), "variantCountEvaluated", false, "model", "substitution-only teaching simulation");
+        return new SequencingStats(reads.size(), bases, reads.isEmpty() ? 0 : (double) bases / reads.size(),
+                bases == 0 ? 0 : (double) quality / bases, bases == 0 ? 0 : q30 * 100.0 / bases,
+                (double) bases / regionLength, bases == 0 ? 0 : (double) gc / bases, -1, additional);
     }
-    
-    /**
-     * Generate a single sequencing read.
-     */
-    private SequencingRead generateRead(Genome genome, long position, int length,
-                                        Technology tech, String id, boolean reversed, String mateId) {
-        
-        // Get sequence from genome
-        String sequence = genome.getSequence(position, length);
-        
-        // Reverse complement if needed
-        if (reversed) {
-            sequence = reverseComplement(sequence);
-        }
-        
-        // Add sequencing errors
-        char[] chars = sequence.toCharArray();
-        int[] qualities = new int[length];
-        
-        for (int i = 0; i < chars.length; i++) {
-            // Quality decreases towards end of read (typical for Illumina)
-            double positionEffect = 1.0 - (double) i / length * 0.3;
-            int baseQuality = (int) (tech.avgQuality * positionEffect);
-            baseQuality += random.nextGaussian() * 5;  // Add noise
-            baseQuality = Math.max(2, Math.min(41, baseQuality));
-            qualities[i] = baseQuality;
-            
-            // Introduce errors based on technology error rate
-            if (random.nextDouble() < tech.errorRate) {
-                // Error type: mostly substitutions
-                double errorType = random.nextDouble();
-                if (errorType < 0.9) {
-                    // Substitution
-                    chars[i] = substituteBase(chars[i]);
-                    qualities[i] = Math.min(qualities[i], 10);  // Low quality for errors
-                }
-                // Could add insertions/deletions for long-read tech
-            }
-        }
-        
-        return new SequencingRead(id, new String(chars), qualities, position, reversed, mateId);
-    }
-    
-    /**
-     * Calculate statistics from reads.
-     */
-    private SequencingStats calculateStats(List<SequencingRead> reads, long regionLength, Technology tech) {
-        if (reads.isEmpty()) {
-            return new SequencingStats(0, 0, 0, 0, 0, 0, 0, 0, Map.of());
-        }
-        
-        long totalBases = 0;
-        long q30Bases = 0;
-        long gcBases = 0;
-        double totalQuality = 0;
-        
-        for (SequencingRead read : reads) {
-            totalBases += read.sequence().length();
-            
-            for (int i = 0; i < read.sequence().length(); i++) {
-                if (read.qualityScores()[i] >= 30) q30Bases++;
-                char base = read.sequence().charAt(i);
-                if (base == 'G' || base == 'C' || base == 'g' || base == 'c') gcBases++;
-                totalQuality += read.qualityScores()[i];
-            }
-        }
-        
-        double meanLength = (double) totalBases / reads.size();
-        double meanQuality = totalQuality / totalBases;
-        double q30Pct = (double) q30Bases / totalBases * 100;
-        double coverage = (double) totalBases / regionLength;
-        double gcContent = (double) gcBases / totalBases;
-        
-        // Estimate variants (rough heuristic)
-        int estimatedVariants = (int) (regionLength * 0.001 * (coverage / 30));
-        
-        Map<String, Object> additional = new HashMap<>();
-        additional.put("technology", tech.description);
-        additional.put("readLength", tech.readLength);
-        additional.put("pairedEnd", tech.pairedEnd);
-        
-        return new SequencingStats(
-            reads.size(),
-            totalBases,
-            meanLength,
-            meanQuality,
-            q30Pct,
-            coverage,
-            gcContent,
-            estimatedVariants,
-            additional
-        );
-    }
-    
-    /**
-     * Generate a quality report.
-     */
-    private String generateReport(SequencingStats stats, Technology tech, List<String> warnings) {
-        StringBuilder sb = new StringBuilder();
-        
-        sb.append("=== SEQUENCING QUALITY REPORT ===\n\n");
-        sb.append(String.format("Technology: %s\n", tech.description));
-        sb.append(String.format("Total Reads: %,d\n", stats.totalReads()));
-        sb.append(String.format("Total Bases: %,d\n", stats.totalBases()));
-        sb.append(String.format("Mean Read Length: %.1f bp\n", stats.meanReadLength()));
-        sb.append(String.format("Mean Quality Score: Q%.1f\n", stats.meanQuality()));
-        sb.append(String.format("Q30 Bases: %.1f%%\n", stats.q30Percentage()));
-        sb.append(String.format("Coverage Depth: %.1fx\n", stats.coverageDepth()));
-        sb.append(String.format("GC Content: %.1f%%\n", stats.gcContent() * 100));
-        sb.append(String.format("Estimated Variants: ~%d\n", stats.estimatedVariants()));
-        
-        if (!warnings.isEmpty()) {
-            sb.append("\n--- WARNINGS ---\n");
-            for (String warning : warnings) {
-                sb.append("⚠ ").append(warning).append("\n");
-            }
-        }
-        
-        sb.append("\n--- QUALITY ASSESSMENT ---\n");
-        if (stats.q30Percentage() >= 90 && stats.coverageDepth() >= 30) {
-            sb.append("✓ High quality data suitable for variant calling\n");
-        } else if (stats.q30Percentage() >= 80 && stats.coverageDepth() >= 15) {
-            sb.append("◐ Moderate quality data - may miss some variants\n");
-        } else {
-            sb.append("✗ Low quality data - consider re-sequencing\n");
-        }
-        
-        return sb.toString();
-    }
-    
-    /**
-     * Substitute a base with a random different base.
-     */
-    private char substituteBase(char original) {
-        char[] bases = {'A', 'C', 'G', 'T'};
-        char result;
-        do {
-            result = bases[random.nextInt(4)];
-        } while (result == Character.toUpperCase(original));
-        return result;
-    }
-    
-    /**
-     * Get reverse complement of a sequence.
-     */
-    private String reverseComplement(String seq) {
-        StringBuilder sb = new StringBuilder(seq.length());
-        for (int i = seq.length() - 1; i >= 0; i--) {
-            char c = seq.charAt(i);
-            sb.append(switch (Character.toUpperCase(c)) {
-                case 'A' -> 'T';
-                case 'T' -> 'A';
-                case 'G' -> 'C';
-                case 'C' -> 'G';
-                default -> 'N';
-            });
-        }
-        return sb.toString();
-    }
-    
-    /**
-     * Calculate N50 (common quality metric for assemblies).
-     */
     public int calculateN50(List<SequencingRead> reads) {
-        List<Integer> lengths = reads.stream()
-            .map(r -> r.sequence().length())
-            .sorted(Comparator.reverseOrder())
-            .toList();
-        
-        long totalLength = lengths.stream().mapToLong(Integer::longValue).sum();
-        long halfLength = totalLength / 2;
-        
+        List<Integer> lengths = reads.stream().map(r -> r.sequence().length()).sorted(Comparator.reverseOrder()).toList();
+        long total = lengths.stream().mapToLong(Integer::longValue).sum();
+        if (total == 0) return 0;
+        long threshold = total / 2 + total % 2;
         long cumulative = 0;
-        for (int length : lengths) {
-            cumulative += length;
-            if (cumulative >= halfLength) {
-                return length;
-            }
-        }
+        for (int length : lengths) { cumulative += length; if (cumulative >= threshold) return length; }
         return 0;
+    }
+    private char substitute(char original) {
+        int index = "ACGT".indexOf(original);
+        return "ACGT".charAt((index + 1 + random.nextInt(3)) % 4);
+    }
+    private static char complement(char c) {
+        return switch (c) { case 'A' -> 'T'; case 'T' -> 'A'; case 'G' -> 'C'; case 'C' -> 'G'; default -> 'N'; };
+    }
+    private static String reverseComplement(String sequence) {
+        StringBuilder out = new StringBuilder(sequence.length());
+        for (int i = sequence.length() - 1; i >= 0; i--) out.append(complement(sequence.charAt(i)));
+        return out.toString();
     }
 }

@@ -8,3 +8,4 @@ pluginManagement {
 		gradlePluginPortal()
 	}
 }
+rootProject.name = "more-realistic-gene-editing"

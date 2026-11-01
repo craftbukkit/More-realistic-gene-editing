@@ -48,8 +48,8 @@ public class EditOutcome {
         this.size = size;
         this.sequence = sequence;
         this.description = description;
-        this.offTargetRisk = 0.0;
-        this.chimerism = 0.0;
+        this.offTargetRisk = Double.NaN;
+        this.chimerism = Double.NaN;
     }
 
     /**
@@ -115,13 +115,14 @@ public class EditOutcome {
     public double getChimerism() { return chimerism; }
 
     /**
-     * Check if this outcome causes a frameshift (deletion/insertion not divisible by 3)
+     * Coding context is absent from this result. Legacy false means not established,
+     * not proof that an edit preserves a reading frame. Use the explicit-context overload.
      */
-    public boolean causesFrameshift() {
-        if (type == Type.DELETION || type == Type.INSERTION) {
-            return size % 3 != 0;
-        }
-        return false;
+    public boolean causesFrameshift() { return false; }
+    public boolean causesFrameshift(boolean codingContextEstablished) {
+        if(!codingContextEstablished)return false;
+        int netLength=switch(type){case DELETION -> -size;case INSERTION -> sequence.length();case REPLACEMENT -> sequence.length()-size;default -> 0;};
+        return netLength%3!=0;
     }
 
     /**
@@ -158,7 +159,7 @@ public class EditOutcome {
                         case 'C', 'c' -> 1;
                         case 'G', 'g' -> 2;
                         case 'T', 't' -> 3;
-                        default -> 0;
+                        default -> throw new IllegalArgumentException("Invalid point mutation base");
                     };
                     patch.addPointMutation(position, base);
                 }

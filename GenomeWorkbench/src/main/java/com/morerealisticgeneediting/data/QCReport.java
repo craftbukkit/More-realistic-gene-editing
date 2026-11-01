@@ -27,7 +27,7 @@ public class QCReport {
         this.gcContent = gcContent;
     }
 
-    // Getters...
+    public UUID getQcReportId(){return qcReportId;} public UUID getReadSetId(){return readSetId;} public double getQualityScore(){return qualityScore;} public double getGcContent(){return gcContent;}
 
     public NbtCompound writeNbt() {
         NbtCompound nbt = new NbtCompound();

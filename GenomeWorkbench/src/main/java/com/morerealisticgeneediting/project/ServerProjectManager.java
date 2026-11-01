@@ -1,71 +1,63 @@
 package com.morerealisticgeneediting.project;
 
 import com.morerealisticgeneediting.network.s2c.S2CPlayerProjectStatePacket;
+import com.morerealisticgeneediting.genome.GenomeRepository;
 import net.minecraft.server.network.ServerPlayerEntity;
-
+import net.minecraft.server.MinecraftServer;
+import net.minecraft.text.Text;
 import java.util.HashSet;
-import java.util.Set;
 import java.util.UUID;
 
-public class ServerProjectManager {
-
-    public static void onPlayerJoin(ServerPlayerEntity player) {
-        ProjectStatePersistence serverState = ProjectStatePersistence.getServerState(player.getServer());
-        PlayerProjectState playerState = serverState.getPlayerState(player.getUuid());
-        S2CPlayerProjectStatePacket.send(player, playerState);
+public final class ServerProjectManager {
+    private static ProjectStatePersistence store(ServerPlayerEntity player) {return ProjectStatePersistence.getServerState(player.getServer());}
+    public static void onPlayerJoin(ServerPlayerEntity player) {S2CPlayerProjectStatePacket.send(player,getPlayerState(player));}
+    public static void onPlayerLeave(ServerPlayerEntity player) { }
+    public static PlayerProjectState getPlayerState(ServerPlayerEntity player) {return store(player).getPlayerState(player.getUuid());}
+    public static void startProject(ServerPlayerEntity player,String id) {
+        ProjectStatePersistence store=store(player); PlayerProjectState state=getPlayerState(player);
+        ResearchProject project=ProjectRegistry.getProject(id);
+        if(!ProjectCompletionRules.mayStart(project,state)) {player.sendMessage(Text.translatable("message.morerealisticgeneediting.project_unavailable"),false);return;}
+        HashSet<String> active=new HashSet<>(state.activeProjectIds());active.add(id);
+        PlayerProjectState updated=new PlayerProjectState(active,state.completedProjectIds());store.setPlayerState(player.getUuid(),updated);
+        S2CPlayerProjectStatePacket.send(player,updated);
     }
-
-    public static void onPlayerLeave(ServerPlayerEntity player) {
-        // State is persisted automatically.
-    }
-
-    public static PlayerProjectState getPlayerState(ServerPlayerEntity player) {
-        ProjectStatePersistence serverState = ProjectStatePersistence.getServerState(player.getServer());
-        return serverState.getPlayerState(player.getUuid());
-    }
-
-    public static void startProject(ServerPlayerEntity player, String projectId) {
-        ProjectStatePersistence serverState = ProjectStatePersistence.getServerState(player.getServer());
-        PlayerProjectState currentState = serverState.getPlayerState(player.getUuid());
-
-        ResearchProject project = ProjectRegistry.getProject(projectId);
-
-        if (project == null || currentState.isActive(projectId) || currentState.isCompleted(projectId)) {
-            return;
+    public static void completeProject(ServerPlayerEntity player,String id) {
+        ProjectStatePersistence store=store(player); PlayerProjectState state=getPlayerState(player);
+        ResearchProject project=ProjectRegistry.getProject(id);
+        if(!ProjectCompletionRules.mayComplete(project,state,store.getEvidence(player.getUuid()),store.hasReadIntroduction(player.getUuid()))) {
+            player.sendMessage(Text.translatable("message.morerealisticgeneediting.project_evidence_missing"),false);return;
         }
-
-        Set<String> newActiveProjects = new HashSet<>(currentState.activeProjectIds());
-        newActiveProjects.add(projectId);
-
-        PlayerProjectState newState = new PlayerProjectState(
-            newActiveProjects,
-            currentState.completedProjectIds()
-        );
-
-        serverState.setPlayerState(player.getUuid(), newState);
-        S2CPlayerProjectStatePacket.send(player, newState);
+        HashSet<String> active=new HashSet<>(state.activeProjectIds());active.remove(id);
+        HashSet<String> completed=new HashSet<>(state.completedProjectIds());completed.add(id);
+        PlayerProjectState updated=new PlayerProjectState(active,completed);store.setPlayerState(player.getUuid(),updated);
+        S2CPlayerProjectStatePacket.send(player,updated);
+        player.sendMessage(Text.translatable("message.morerealisticgeneediting.project_completed",project.title()),false);
     }
-
-    public static void completeProject(ServerPlayerEntity player, String projectId) {
-        ProjectStatePersistence serverState = ProjectStatePersistence.getServerState(player.getServer());
-        PlayerProjectState currentState = serverState.getPlayerState(player.getUuid());
-
-        if (!currentState.isActive(projectId)) {
-            return; // Can't complete a project that isn't active.
-        }
-
-        Set<String> newActiveProjects = new HashSet<>(currentState.activeProjectIds());
-        newActiveProjects.remove(projectId);
-
-        Set<String> newCompletedProjects = new HashSet<>(currentState.completedProjectIds());
-        newCompletedProjects.add(projectId);
-
-        PlayerProjectState newState = new PlayerProjectState(
-            newActiveProjects,
-            newCompletedProjects
-        );
-
-        serverState.setPlayerState(player.getUuid(), newState);
-        S2CPlayerProjectStatePacket.send(player, newState);
+    public static void acknowledgeIntroduction(ServerPlayerEntity player) {store(player).acknowledgeIntroduction(player.getUuid());}
+    private static boolean ownsCurrentRevision(ServerPlayerEntity player,UUID sample,long revision) {
+        return revision >= 0 && GenomeRepository.get(player.getServer()).findOwned(sample,player.getUuid())
+            .filter(genome -> genome.getRevision() == revision).isPresent();
+    }
+    public static void recordSampled(ServerPlayerEntity player,UUID sample,long revision) {
+        if (!ownsCurrentRevision(player,sample,revision)) return;
+        ProjectStatePersistence store=store(player);
+        if(store.getEvidence(player.getUuid(),sample).isEmpty())store.putEvidence(player.getUuid(),ExperimentEvidence.sampled(sample,revision));
+    }
+    public static void recordEdited(ServerPlayerEntity player,UUID sample,long revision) {
+        if (!ownsCurrentRevision(player,sample,revision)) return;
+        ProjectStatePersistence store=store(player);
+        store.getEvidence(player.getUuid(),sample).ifPresent(e->store.putEvidence(player.getUuid(),e.edited(revision)));
+    }
+    /** Call only after a completed server-run sequence concordance validation of this exact revision. */
+    public static void recordVerified(ServerPlayerEntity player,UUID sample,long revision) {
+        recordVerified(player.getServer(),player.getUuid(),sample,revision);
+    }
+    /** Machine jobs retain their authenticated owner when that player logs out before completion. */
+    public static void recordVerified(MinecraftServer server,UUID owner,UUID sample,long revision) {
+        if (server == null || owner == null || sample == null || revision < 0) return;
+        if (GenomeRepository.get(server).findOwned(sample,owner)
+                .filter(genome -> genome.getRevision() == revision).isEmpty()) return;
+        ProjectStatePersistence store=ProjectStatePersistence.getServerState(server);
+        store.getEvidence(owner,sample).ifPresent(e->store.putEvidence(owner,e.verified(revision)));
     }
 }

@@ -11,6 +11,7 @@ import net.minecraft.screen.ArrayPropertyDelegate;
 import net.minecraft.screen.PropertyDelegate;
 import net.minecraft.screen.ScreenHandler;
 import net.minecraft.screen.slot.Slot;
+import com.morerealisticgeneediting.screen.slot.MachineSlot;
 import org.jetbrains.annotations.Nullable;
 
 public class SequencerScreenHandler extends ScreenHandler {
@@ -34,8 +35,8 @@ public class SequencerScreenHandler extends ScreenHandler {
 
         this.blockEntity = (inventory instanceof SequencerBlockEntity) ? (SequencerBlockEntity) inventory : null;
 
-        this.addSlot(new Slot(inventory, 0, 80, 11)); // Input slot
-        this.addSlot(new Slot(inventory, 1, 80, 59)); // Output slot
+        this.addSlot(new MachineSlot(inventory, 0, 80, 11, false)); // Input slot
+        this.addSlot(new MachineSlot(inventory, 1, 80, 59, true)); // Output slot
 
         addPlayerInventory(playerInventory);
         addPlayerHotbar(playerInventory);
@@ -59,13 +60,15 @@ public class SequencerScreenHandler extends ScreenHandler {
             blockEntity.startSequencing(player);
             return true;
         }
-        return super.onButtonClick(player, id);
+        return false;
     }
 
     @Override
-    public ItemStack transferSlot(PlayerEntity player, int invSlot) {
+    public ItemStack quickMove(PlayerEntity player, int invSlot) {
         ItemStack newStack = ItemStack.EMPTY;
+        if(invSlot<0 || invSlot>=this.slots.size() || !canUse(player)) return ItemStack.EMPTY;
         Slot slot = this.slots.get(invSlot);
+        if(!slot.canTakeItems(player)) return ItemStack.EMPTY;
         if (slot != null && slot.hasStack()) {
             ItemStack originalStack = slot.getStack();
             newStack = originalStack.copy();
@@ -73,7 +76,7 @@ public class SequencerScreenHandler extends ScreenHandler {
                 if (!this.insertItem(originalStack, this.inventory.size(), this.slots.size(), true)) {
                     return ItemStack.EMPTY;
                 }
-            } else if (!this.insertItem(originalStack, 0, this.inventory.size(), false)) {
+            } else if (!this.insertItem(originalStack, 0, 1, false)) {
                 return ItemStack.EMPTY;
             }
 

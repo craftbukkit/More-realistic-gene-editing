@@ -1,6 +1,7 @@
 package com.morerealisticgeneediting.item;
 
 import com.morerealisticgeneediting.MoreRealisticGeneEditing;
+import com.morerealisticgeneediting.item.custom.PortableSequencerItem;
 import com.morerealisticgeneediting.equipment.EquipmentTier;
 import net.fabricmc.fabric.api.itemgroup.v1.ItemGroupEvents;
 import net.minecraft.item.Item;
@@ -31,7 +32,7 @@ public class LabEquipmentItems {
     // ========== 测序设备 (Sequencing - Hand-held) ==========
     
     public static final Item PORTABLE_SEQUENCER = registerItem("portable_sequencer",
-            new Item(new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON)),
+            new PortableSequencerItem(new Item.Settings().maxCount(1).rarity(Rarity.UNCOMMON)),
             EquipmentTier.BASIC, "MinION Mk1C - Oxford Nanopore");
     
     // ========== 移液工具 (Pipetting Tools) ==========

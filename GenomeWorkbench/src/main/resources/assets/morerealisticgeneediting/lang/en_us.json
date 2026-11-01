@@ -1,29 +1,22 @@
 {
   "itemGroup.morerealisticgeneediting.mrge_items": "More Realistic Gene Editing",
   "itemGroup.morerealisticgeneediting.group": "More Realistic Gene Editing",
-
   "_comment_items": "========== Items ==========",
-
   "item.morerealisticgeneediting.petri_dish": "Petri Dish",
   "item.morerealisticgeneediting.pipette": "Pipette",
   "item.morerealisticgeneediting.dna_sample": "DNA Sample",
   "item.morerealisticgeneediting.genome_sample": "Genome Sample",
   "item.morerealisticgeneediting.genome_workbench": "Genome Workbench",
-
   "item.morerealisticgeneediting.genome_sample.tooltip_empty": "Empty Sample",
   "item.morerealisticgeneediting.genome_sample.tooltip_filled": "Sample from: %s",
-
   "_comment_pcr": "========== PCR & Molecular Biology ==========",
-
   "item.morerealisticgeneediting.primer": "Primer",
   "item.morerealisticgeneediting.primer.tooltip": "Short oligonucleotide for PCR amplification",
   "item.morerealisticgeneediting.pcr_tube": "PCR Tube",
   "item.morerealisticgeneediting.pcr_tube.tooltip": "0.2mL thin-walled tube for thermal cycling",
   "item.morerealisticgeneediting.amplified_gene_fragment": "Amplified Gene Fragment",
   "item.morerealisticgeneediting.amplified_gene_fragment.tooltip": "PCR-amplified DNA fragment",
-
   "_comment_cloning": "========== Cloning & Vector ==========",
-
   "item.morerealisticgeneediting.restriction_enzyme": "Restriction Enzyme",
   "item.morerealisticgeneediting.restriction_enzyme.tooltip": "Molecular scissors for DNA cutting",
   "item.morerealisticgeneediting.plasmid_vector": "Plasmid Vector",
@@ -32,9 +25,7 @@
   "item.morerealisticgeneediting.dna_ligase.tooltip": "Enzyme that joins DNA fragments",
   "item.morerealisticgeneediting.recombinant_plasmid": "Recombinant Plasmid",
   "item.morerealisticgeneediting.recombinant_plasmid.tooltip": "Plasmid containing inserted gene",
-
   "_comment_crispr": "========== Gene Editing ==========",
-
   "item.morerealisticgeneediting.gene_syringe": "Gene Syringe",
   "item.morerealisticgeneediting.gene_syringe.tooltip": "Delivers gene editing components to target cells",
   "item.morerealisticgeneediting.crispr_cas9": "CRISPR-Cas9",
@@ -43,32 +34,24 @@
   "item.morerealisticgeneediting.guide_rna.tooltip": "Directs Cas9 to target DNA sequence",
   "item.morerealisticgeneediting.cas9_grna_complex": "Cas9-gRNA Complex",
   "item.morerealisticgeneediting.cas9_grna_complex.tooltip": "Active CRISPR editing complex",
-
   "_comment_delivery": "========== Delivery System ==========",
-
   "item.morerealisticgeneediting.lipid_nanoparticle": "Lipid Nanoparticle (LNP)",
   "item.morerealisticgeneediting.lipid_nanoparticle.tooltip": "Delivery vehicle for gene therapy",
   "item.morerealisticgeneediting.electroporation_cuvette": "Electroporation Cuvette",
   "item.morerealisticgeneediting.electroporation_cuvette.tooltip": "For electrical delivery of DNA into cells",
-
   "_comment_cell_culture": "========== Cell Culture ==========",
-
   "item.morerealisticgeneediting.cell_culture_flask": "Cell Culture Flask",
   "item.morerealisticgeneediting.cell_culture_flask.tooltip": "T-75 flask for growing cells",
   "item.morerealisticgeneediting.growth_medium": "Growth Medium",
   "item.morerealisticgeneediting.growth_medium.tooltip": "Nutrient solution for cell growth",
-
   "_comment_analysis": "========== Analysis & QC ==========",
-
   "item.morerealisticgeneediting.sequencing_chip": "Sequencing Chip",
   "item.morerealisticgeneediting.sequencing_chip.tooltip": "For next-generation DNA sequencing",
   "item.morerealisticgeneediting.agarose_gel": "Agarose Gel",
   "item.morerealisticgeneediting.agarose_gel.tooltip": "For gel electrophoresis analysis",
   "item.morerealisticgeneediting.dna_ladder": "DNA Ladder",
   "item.morerealisticgeneediting.dna_ladder.tooltip": "Size marker for gel electrophoresis",
-
   "_comment_blocks": "========== Blocks ==========",
-
   "block.morerealisticgeneediting.cell_processor": "Cell Processor",
   "block.morerealisticgeneediting.cell_processor.tooltip": "Processes biological samples",
   "block.morerealisticgeneediting.electrophoresis_tank": "Electrophoresis Tank",
@@ -81,9 +64,7 @@
   "block.morerealisticgeneediting.incubator.tooltip": "Maintains optimal conditions for cell growth",
   "block.morerealisticgeneediting.genome_terminal": "Genome Terminal",
   "block.morerealisticgeneediting.genome_terminal.tooltip": "Interface for viewing and editing genomes",
-
   "_comment_gui": "========== GUI ==========",
-
   "gui.morerealisticgeneediting.genome_terminal.title": "Genome Terminal",
   "gui.morerealisticgeneediting.genome_terminal.search": "Search Motif...",
   "gui.morerealisticgeneediting.genome_terminal.position": "Position: %d",
@@ -92,40 +73,88 @@
   "gui.morerealisticgeneediting.genome_terminal.find_pam": "Find PAM Sites",
   "gui.morerealisticgeneediting.genome_terminal.edit": "Edit",
   "gui.morerealisticgeneediting.genome_terminal.no_sample": "Insert a genome sample to begin",
-
   "gui.morerealisticgeneediting.pcr_machine.title": "PCR Machine",
   "gui.morerealisticgeneediting.pcr_machine.cycles": "Cycles: %d",
   "gui.morerealisticgeneediting.pcr_machine.temperature": "Temperature: %d°C",
   "gui.morerealisticgeneediting.pcr_machine.status_idle": "Idle",
   "gui.morerealisticgeneediting.pcr_machine.status_running": "Running...",
   "gui.morerealisticgeneediting.pcr_machine.status_complete": "Complete",
-
   "gui.morerealisticgeneediting.electrophoresis.title": "Gel Electrophoresis",
   "gui.morerealisticgeneediting.electrophoresis.voltage": "Voltage: %d V",
   "gui.morerealisticgeneediting.electrophoresis.time": "Time: %d min",
   "gui.morerealisticgeneediting.electrophoresis.run": "Run Gel",
-
   "gui.morerealisticgeneediting.sequencer.title": "DNA Sequencer",
   "gui.morerealisticgeneediting.sequencer.read_length": "Read Length: %d bp",
   "gui.morerealisticgeneediting.sequencer.coverage": "Coverage: %dx",
   "gui.morerealisticgeneediting.sequencer.quality": "Quality Score: Q%d",
-
   "_comment_messages": "========== Messages ==========",
-
   "message.morerealisticgeneediting.sample_collected": "Collected genome sample from %s",
   "message.morerealisticgeneediting.editing_success": "Gene editing successful!",
   "message.morerealisticgeneediting.editing_failed": "Gene editing failed: %s",
   "message.morerealisticgeneediting.pcr_complete": "PCR amplification complete",
   "message.morerealisticgeneediting.sequencing_complete": "Sequencing complete",
-
   "_comment_ethics": "========== Ethics ==========",
-
   "ethics.morerealisticgeneediting.title": "Ethics Case Study",
   "ethics.morerealisticgeneediting.warning": "This mod is for educational purposes only",
   "ethics.morerealisticgeneediting.compliance_score": "Compliance Score: %d%%",
-
   "_comment_commands": "========== Commands ==========",
-
   "command.morerealisticgeneediting.ethics.usage": "Usage: /ethics <case_id>",
-  "command.morerealisticgeneediting.ethics.case_loaded": "Loaded ethics case: %s"
+  "command.morerealisticgeneediting.ethics.case_loaded": "Loaded ethics case: %s",
+  "message.morerealisticgeneediting.project_unavailable": "Project unavailable: check prerequisites; reference cases are read-only.",
+  "message.morerealisticgeneediting.project_evidence_missing": "Project incomplete: the required server-recorded evidence is missing.",
+  "message.morerealisticgeneediting.project_completed": "Completed: %s",
+  "message.morerealisticgeneediting.science_simulation": "Educational simulation; not a validated biological prediction.",
+  "message.morerealisticgeneediting.measurement_unavailable": "Not measurable with this instrument",
+  "message.morerealisticgeneediting.not_evaluated": "Not evaluated",
+  "button.mrge.start": "Start",
+  "button.mrge.stop": "Stop",
+  "button.mrge.cancel": "Cancel",
+  "button.mrge.genome": "Sequence",
+  "button.mrge.projects": "Projects",
+  "button.mrge.search": "Search",
+  "button.mrge.next_pam": "Next NGG PAM",
+  "button.mrge.edit": "Edit selected site",
+  "button.mrge.previous": "Previous",
+  "button.mrge.next": "Next",
+  "button.mrge.complete": "Complete",
+  "button.mrge.reference": "Reference only",
+  "button.mrge.template_edit": "Template repair",
+  "button.mrge.indel_edit": "Indel repair",
+  "button.mrge.blank": "Blank",
+  "button.mrge.measure": "Measure",
+  "button.mrge.pulse": "Pulse",
+  "button.mrge.start_a": "Start A",
+  "button.mrge.start_b": "Start B",
+  "button.mrge.reset_a": "Reset A",
+  "button.mrge.reset_b": "Reset B",
+  "button.mrge.next_protocol": "Next protocol",
+  "button.mrge.harvest": "Harvest",
+  "button.mrge.reset": "Reset",
+  "button.mrge.airflow": "Airflow",
+  "button.mrge.uv": "UV cycle",
+  "screen.mrge.edit_title": "Virtual sample editing",
+  "screen.mrge.genome_title": "Sequence viewer",
+  "screen.mrge.motif": "DNA motif (A/C/G/T)",
+  "screen.mrge.donor": "Donor sequence",
+  "screen.mrge.edit_materials": "Teaching model. Each attempt uses Cas9 and guide RNA. Template repair also requires a matching amplified fragment.",
+  "screen.mrge.search_result": "Matches: %s; range [%s, %s)%s",
+  "screen.mrge.not_observed": "Not measured",
+  "screen.mrge.results_on_report": "Results on output report",
+  "screen.mrge.teaching_model": "Teaching model",
+  "screen.mrge.no_case": "No discussion case available",
+  "screen.mrge.idle": "Idle",
+  "screen.mrge.running": "Running",
+  "screen.mrge.protocol_0": "Serial dilution",
+  "screen.mrge.protocol_1": "PCR setup",
+  "screen.mrge.protocol_2": "Library preparation",
+  "screen.mrge.protocol_3": "Cherry picking",
+  "screen.mrge.protocol_4": "Plate replication",
+  "screen.mrge.protocol_5": "DNA normalization",
+  "screen.mrge.protocol_6": "Custom protocol",
+  "screen.mrge.virtual_gel": "Virtual gel: normalized migration",
+  "screen.mrge.waiting_bands": "Run the sample to obtain bands",
+  "message.mrge.missing_edit_materials": "Editing needs Cas9 and guide RNA; template repair also needs an amplified fragment with exactly the donor sequence.",
+  "message.mrge.edit_result": "Simulated repair: %s. Reopen the sample and independently verify its sequence.",
+  "message.mrge.edit_conflict": "This repair conflicts with an existing edit. No materials were consumed; select another site.",
+  "message.mrge.storage_full": "The world genome storage budget is full. No materials were consumed."
 }

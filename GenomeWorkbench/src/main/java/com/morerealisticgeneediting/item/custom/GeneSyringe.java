@@ -1,44 +1,26 @@
 package com.morerealisticgeneediting.item.custom;
-
-import com.morerealisticgeneediting.item.ModItems;
-import net.minecraft.entity.LivingEntity;
+import com.morerealisticgeneediting.genome.*;
+import com.morerealisticgeneediting.item.*;
+import net.minecraft.entity.*;
 import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.item.Item;
-import net.minecraft.item.ItemStack;
+import net.minecraft.item.*;
 import net.minecraft.nbt.NbtCompound;
+import net.minecraft.server.network.ServerPlayerEntity;
 import net.minecraft.text.Text;
-import net.minecraft.util.ActionResult;
-import net.minecraft.util.Hand;
-
+import net.minecraft.util.*;
+/** Records a game delivery event. Delivery is not evidence of editing, expression or phenotype. */
 public class GeneSyringe extends Item {
-    public GeneSyringe(Settings settings) {
-        super(settings);
-    }
-
-    @Override
-    public ActionResult useOnEntity(ItemStack stack, PlayerEntity user, LivingEntity entity, Hand hand) {
-        if (!user.world.isClient) {
-            // Check if the syringe contains a recombinant plasmid
-            // For now, we'll just check if the player is holding one in their offhand
-            ItemStack offhandStack = user.getOffHandStack();
-            if (offhandStack.getItem() == ModItems.RECOMBINANT_PLASMID) {
-                // TODO: Read NBT data from the plasmid and apply the genetic modification
-
-                // For now, as a placeholder, we'll just change the entity's name
-                NbtCompound plasmidNbt = offhandStack.getNbt();
-                if (plasmidNbt != null && plasmidNbt.contains("gene")) {
-                    String gene = plasmidNbt.getString("gene");
-                    entity.setCustomName(Text.of("Modified " + entity.getName().getString() + " with " + gene));
-                    entity.setCustomNameVisible(true);
-
-                    // Consume the plasmid and damage the syringe
-                    offhandStack.decrement(1);
-                    stack.damage(1, user, (p) -> p.sendToolBreakStatus(hand));
-
-                    return ActionResult.SUCCESS;
-                }
-            }
-        }
-        return ActionResult.PASS;
+    public GeneSyringe(Settings settings){super(settings);}
+    @Override public ActionResult useOnEntity(ItemStack stack,PlayerEntity user,LivingEntity entity,Hand hand){
+        if(!(user instanceof ServerPlayerEntity player))return ActionResult.SUCCESS;
+        ItemStack plasmid=user.getStackInHand(hand==Hand.MAIN_HAND?Hand.OFF_HAND:Hand.MAIN_HAND);
+        if(!plasmid.isOf(ModItems.RECOMBINANT_PLASMID))return ActionResult.PASS;
+        java.util.UUID id=GenomeSampleItem.getGenomeId(plasmid);GenomeRepository store=GenomeRepository.get(player.getServer());
+        Genome genome=id==null?null:store.findOwned(id,player.getUuid()).orElse(null);
+        if(genome==null||genome.getRevision()<1){player.sendMessage(Text.literal("The construct must reference an owned, edited virtual sample."),true);return ActionResult.FAIL;}
+        try{store.recordDelivery(entity.getUuid(),genome);}catch(IllegalStateException failure){player.sendMessage(Text.literal(failure.getMessage()),true);return ActionResult.FAIL;}
+        plasmid.decrement(1);stack.damage(1,player,hand==Hand.MAIN_HAND?EquipmentSlot.MAINHAND:EquipmentSlot.OFFHAND);
+        player.sendMessage(Text.literal("Virtual delivery recorded. Expression and phenotype remain unverified."),true);
+        return ActionResult.SUCCESS;
     }
 }

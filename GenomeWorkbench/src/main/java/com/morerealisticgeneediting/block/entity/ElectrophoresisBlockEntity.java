@@ -1,492 +1,182 @@
 package com.morerealisticgeneediting.block.entity;
 
 import com.morerealisticgeneediting.block.LabEquipmentBlockEntity;
-import com.morerealisticgeneediting.equipment.EquipmentSpecs;
-import com.morerealisticgeneediting.equipment.EquipmentTier;
-import com.morerealisticgeneediting.item.LabEquipmentItems;
-import com.morerealisticgeneediting.item.ModItems;
+import com.morerealisticgeneediting.equipment.*;
+import com.morerealisticgeneediting.item.*;
+import com.morerealisticgeneediting.screen.equipment.ElectrophoresisScreenHandler;
+import com.morerealisticgeneediting.util.StackData;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.entity.BlockEntityType;
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
+import net.minecraft.entity.player.*;
+import net.minecraft.inventory.Inventories;
 import net.minecraft.item.ItemStack;
-import net.minecraft.nbt.NbtCompound;
-import net.minecraft.nbt.NbtList;
+import net.minecraft.nbt.*;
 import net.minecraft.registry.RegistryWrapper;
-import net.minecraft.screen.ScreenHandler;
+import net.minecraft.screen.*;
 import net.minecraft.text.Text;
+import net.minecraft.util.ItemScatterer;
+import net.minecraft.util.collection.DefaultedList;
 import net.minecraft.util.math.BlockPos;
-import org.jetbrains.annotations.Nullable;
+import net.minecraft.world.World;
+import java.util.*;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Random;
-
-/**
- * Electrophoresis System Block Entity - Simulates gel electrophoresis.
- * 
- * Based on real equipment:
- * - T1: blueGel Portable (8 wells, 48V, built-in transilluminator)
- * - T2: DYCZ-24DN Vertical (24 wells, up to 300V, separate power)
- * - T3: Agilent 4200 TapeStation (96 samples, fully automated)
- * 
- * Process:
- * 1. Prepare agarose gel with buffer (TAE/TBE)
- * 2. Load DNA samples with loading dye
- * 3. Load DNA ladder in reference lane
- * 4. Apply voltage and run
- * 5. Visualize with stain (EtBr/SYBR Safe)
- * 
- * DNA migration: smaller fragments move faster
- * Distance ∝ log(1/size)
- */
+/** Virtual gel: explicit fragment metadata and fictional migration, never inferred sequence identity. */
 public class ElectrophoresisBlockEntity extends LabEquipmentBlockEntity {
-
-    // Slots
-    public static final int GEL_SLOT = 0;           // Agarose gel
-    public static final int BUFFER_SLOT = 1;        // TAE or TBE
-    public static final int LADDER_SLOT = 2;        // DNA ladder
-    public static final int STAIN_SLOT = 3;         // EtBr or SYBR Safe
-    public static final int LOADING_DYE_SLOT = 4;   // Loading dye
-    public static final int SAMPLE_START_SLOT = 5;  // Samples start here
-    public static final int MAX_SAMPLE_SLOTS = 8;   // Up to 8 samples (T1)
-
-    // Running state
-    public enum ElectrophoresisPhase {
-        IDLE,
-        PREPARING,      // Gel solidifying
-        LOADING,        // Samples being loaded
-        RUNNING,        // Voltage applied
-        STAINING,       // Stain application
-        VISUALIZING,    // UV/Blue light visualization
-        COMPLETE
-    }
-
-    private ElectrophoresisPhase phase = ElectrophoresisPhase.IDLE;
-    private int voltage = 0;
-    private int targetVoltage = 100;
-    private int runTimeRemaining = 0;  // Ticks
-    private int totalRunTime = 0;
-    private float gelPercentage = 1.0f;  // 0.5% - 3% agarose
-
-    // Gel state
-    private boolean gelReady = false;
-    private List<BandPattern> bandPatterns = new ArrayList<>();
-
-    // Results - positions of bands for each lane (0-100 scale)
-    private float[][] bandPositions;  // [lane][band]
-    private int[] bandCounts;         // Number of bands per lane
-
+    public static final int GEL_SLOT=0,BUFFER_SLOT=1,LADDER_SLOT=2,STAIN_SLOT=3,LOADING_DYE_SLOT=4,
+            SAMPLE_START_SLOT=5,MAX_SAMPLE_SLOTS=8,LANES=9,MAX_BANDS=20,SLOTS=13;
+    public enum ElectrophoresisPhase { IDLE, PREPARING, LOADING, RUNNING, STAINING, VISUALIZING, COMPLETE }
+    private ElectrophoresisPhase phase=ElectrophoresisPhase.IDLE;
+    private int voltage,targetVoltage=48,runTimeRemaining,totalRunTime=400;
+    private float gelPercentage=1;
+    private boolean gelReady;
+    private final float[][] bandPositions=new float[LANES][MAX_BANDS];
+    private final int[] bandCounts=new int[LANES];
+    private final List<BandPattern> bandPatterns=new ArrayList<>();
+    private final DefaultedList<ItemStack> reserved=DefaultedList.ofSize(SLOTS,ItemStack.EMPTY);
+    private final NbtCompound[] sampleSnapshots=new NbtCompound[MAX_SAMPLE_SLOTS];
     private EquipmentSpecs.ElectrophoresisSpec spec;
-
-    public ElectrophoresisBlockEntity(BlockEntityType<?> type, BlockPos pos, BlockState state) {
-        super(type, pos, state, SAMPLE_START_SLOT + MAX_SAMPLE_SLOTS + 1);
-        updateSpec();
-        bandPositions = new float[MAX_SAMPLE_SLOTS + 1][10];  // +1 for ladder
-        bandCounts = new int[MAX_SAMPLE_SLOTS + 1];
-    }
-
-    private void updateSpec() {
-        this.spec = EquipmentSpecs.getElectrophoresisSpec(tier);
-    }
-
-    @Override
-    public void setTier(EquipmentTier tier) {
-        super.setTier(tier);
-        updateSpec();
-        // Increase sample capacity for higher tiers
-        if (tier == EquipmentTier.ADVANCED) {
-            // 24 wells
-        } else if (tier == EquipmentTier.ELITE) {
-            // 96 wells (TapeStation)
+    private final PropertyDelegate measurements=new PropertyDelegate(){
+        public int size(){return ElectrophoresisScreenHandler.PROPERTY_COUNT;}
+        public void set(int index,int value){} // Authoritative server observations.
+        public int get(int index){
+            if(index>=7&&index<7+LANES)return bandCounts[index-7];
+            int offset=index-7-LANES;
+            if(offset>=0&&offset<LANES*MAX_BANDS)return Math.round(bandPositions[offset/MAX_BANDS][offset%MAX_BANDS]*100);
+            return switch(index){case 0->progress;case 1->maxProgress;case 2->voltage;case 3->runTimeRemaining;
+                case 4->Math.round(gelPercentage*10);case 5->tier.getLevel();case 6->isProcessing?1:0;
+                case ElectrophoresisScreenHandler.PHASE_INDEX->phase.ordinal();default->0;};
         }
-    }
-
-    @Override
-    protected boolean isInputSlot(int slot) {
-        return slot <= SAMPLE_START_SLOT + MAX_SAMPLE_SLOTS;
-    }
-
-    @Override
-    protected boolean isOutputSlot(int slot) {
-        return false;  // No output - results are visual
-    }
-
-    @Override
-    protected boolean canProcess() {
-        if (phase != ElectrophoresisPhase.IDLE) return true;
-
-        // Check required materials
-        ItemStack gel = getStack(GEL_SLOT);
-        ItemStack buffer = getStack(BUFFER_SLOT);
-        ItemStack ladder = getStack(LADDER_SLOT);
-
-        if (gel.isEmpty() || buffer.isEmpty() || ladder.isEmpty()) return false;
-
-        // Check for at least one sample
-        for (int i = 0; i < MAX_SAMPLE_SLOTS; i++) {
-            if (!getStack(SAMPLE_START_SLOT + i).isEmpty()) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    @Override
-    public void tick() {
-        if (world == null || world.isClient) return;
-
-        switch (phase) {
-            case IDLE -> {
-                if (canProcess()) {
-                    startElectrophoresis();
-                }
-            }
-            case PREPARING -> tickPreparing();
-            case LOADING -> tickLoading();
-            case RUNNING -> tickRunning();
-            case STAINING -> tickStaining();
-            case VISUALIZING -> {
-                // Results visible, waiting for player
-            }
-            case COMPLETE -> {
-                // Stay in complete until reset
-            }
-        }
-    }
-
-    private void startElectrophoresis() {
-        phase = ElectrophoresisPhase.PREPARING;
-        progress = 0;
-        maxProgress = 100;  // 5 seconds to prepare gel
-        gelReady = false;
-        bandPatterns.clear();
-        setActive(true);
-        markDirty();
-    }
-
-    private void tickPreparing() {
-        progress++;
-        if (progress >= maxProgress) {
-            gelReady = true;
-            phase = ElectrophoresisPhase.LOADING;
-            progress = 0;
-            maxProgress = 40;  // 2 seconds to load
-        }
-        markDirty();
-    }
-
-    private void tickLoading() {
-        progress++;
-        if (progress >= maxProgress) {
-            // Analyze samples and create band patterns
-            analyzeSamples();
-            
-            phase = ElectrophoresisPhase.RUNNING;
-            progress = 0;
-            voltage = targetVoltage;
-            totalRunTime = calculateRunTime();
-            runTimeRemaining = totalRunTime;
-            maxProgress = totalRunTime;
-        }
-        markDirty();
-    }
-
-    private void tickRunning() {
-        if (runTimeRemaining > 0) {
-            runTimeRemaining--;
-            progress = totalRunTime - runTimeRemaining;
-
-            // Simulate band migration
-            updateBandPositions();
-        }
-
-        if (runTimeRemaining <= 0) {
-            voltage = 0;
-            
-            // Check if stain is available
-            if (!getStack(STAIN_SLOT).isEmpty()) {
-                phase = ElectrophoresisPhase.STAINING;
-                progress = 0;
-                maxProgress = 60;  // 3 seconds staining
-            } else {
-                phase = ElectrophoresisPhase.VISUALIZING;
-            }
-        }
-        markDirty();
-    }
-
-    private void tickStaining() {
-        progress++;
-        if (progress >= maxProgress) {
-            getStack(STAIN_SLOT).decrement(1);
-            phase = ElectrophoresisPhase.VISUALIZING;
-        }
-        markDirty();
-    }
-
-    private void analyzeSamples() {
-        Random random = new Random();
-        
-        // Analyze ladder first (lane 0)
-        ItemStack ladder = getStack(LADDER_SLOT);
-        if (isValidLadder(ladder)) {
-            int[] ladderSizes = getLadderSizes(ladder);
-            bandCounts[0] = ladderSizes.length;
-            for (int i = 0; i < ladderSizes.length; i++) {
-                // Initial position at well (0)
-                bandPositions[0][i] = 0;
-                // Store size in pattern for later calculation
-                bandPatterns.add(new BandPattern(0, i, ladderSizes[i], 1.0f));
-            }
-        }
-
-        // Analyze samples
-        for (int lane = 0; lane < MAX_SAMPLE_SLOTS; lane++) {
-            ItemStack sample = getStack(SAMPLE_START_SLOT + lane);
-            if (!sample.isEmpty() && isValidSample(sample)) {
-                // Get sample info from NBT or estimate
-                int[] fragmentSizes = estimateFragmentSizes(sample, random);
-                bandCounts[lane + 1] = fragmentSizes.length;
-                
-                for (int i = 0; i < fragmentSizes.length; i++) {
-                    bandPositions[lane + 1][i] = 0;
-                    float intensity = 0.5f + random.nextFloat() * 0.5f;
-                    bandPatterns.add(new BandPattern(lane + 1, i, fragmentSizes[i], intensity));
-                }
-            }
-        }
-    }
-
-    private void updateBandPositions() {
-        // DNA migration follows: distance ∝ log(1/size) * voltage * time
-        float migrationFactor = voltage / 100.0f * (1.0f / gelPercentage);
-        
-        for (BandPattern band : bandPatterns) {
-            // Smaller fragments move faster
-            float speed = (float) (Math.log10(10000.0 / band.size) * migrationFactor * 0.1);
-            float newPos = bandPositions[band.lane][band.bandIndex] + speed;
-            
-            // Cap at 100 (end of gel)
-            bandPositions[band.lane][band.bandIndex] = Math.min(100, newPos);
-        }
-    }
-
-    private int calculateRunTime() {
-        int baseTime = spec != null ? spec.runTimeMinutes() * 20 : 600;  // Convert to ticks
-        // Higher voltage = faster
-        float voltageFactor = 100.0f / Math.max(50, targetVoltage);
-        return (int) (baseTime * voltageFactor);
-    }
-
-    private int[] getLadderSizes(ItemStack ladder) {
-        if (ladder.isOf(LabEquipmentItems.DNA_LADDER_100BP)) {
-            return new int[]{100, 200, 300, 400, 500, 600, 700, 800, 900, 1000};
-        } else if (ladder.isOf(LabEquipmentItems.DNA_LADDER_1KB)) {
-            return new int[]{250, 500, 750, 1000, 1500, 2000, 2500, 3000, 4000, 5000, 6000, 8000, 10000};
-        } else if (ladder.isOf(LabEquipmentItems.DNA_LADDER_1KB_PLUS)) {
-            return new int[]{100, 200, 300, 400, 500, 650, 850, 1000, 1650, 2000, 3000, 4000, 5000, 6000, 8000, 10000, 12000};
-        }
-        return new int[]{500, 1000, 2000, 3000, 5000};  // Default
-    }
-
-    private int[] estimateFragmentSizes(ItemStack sample, Random random) {
-        // Check NBT for actual sizes
-        NbtCompound nbt = sample.getNbt();
-        if (nbt != null && nbt.contains("FragmentSizes")) {
-            return nbt.getIntArray("FragmentSizes");
-        }
-
-        // Estimate based on item type
-        if (sample.isOf(ModItems.AMPLIFIED_GENE_FRAGMENT)) {
-            // PCR product - typically single band
-            int size = 500 + random.nextInt(2000);
-            return new int[]{size};
-        } else if (sample.isOf(ModItems.DNA_SAMPLE)) {
-            // Genomic DNA - may be degraded or intact
-            int numBands = 1 + random.nextInt(3);
-            int[] sizes = new int[numBands];
-            for (int i = 0; i < numBands; i++) {
-                sizes[i] = 1000 + random.nextInt(10000);
-            }
-            return sizes;
-        }
-
-        return new int[]{1000};
-    }
-
-    private boolean isValidLadder(ItemStack stack) {
-        return stack.isOf(LabEquipmentItems.DNA_LADDER_100BP) ||
-               stack.isOf(LabEquipmentItems.DNA_LADDER_1KB) ||
-               stack.isOf(LabEquipmentItems.DNA_LADDER_1KB_PLUS);
-    }
-
-    private boolean isValidSample(ItemStack stack) {
-        return stack.isOf(ModItems.DNA_SAMPLE) ||
-               stack.isOf(ModItems.AMPLIFIED_GENE_FRAGMENT) ||
-               stack.isOf(ModItems.GENOME_SAMPLE);
-    }
-
-    @Override
-    protected void completeProcess() {
-        // Consume reagents
-        getStack(GEL_SLOT).decrement(1);
-        getStack(BUFFER_SLOT).decrement(1);
-        getStack(LADDER_SLOT).decrement(1);
-        if (!getStack(LOADING_DYE_SLOT).isEmpty()) {
-            getStack(LOADING_DYE_SLOT).decrement(1);
-        }
-
-        // Samples consumed during loading
-        for (int i = 0; i < MAX_SAMPLE_SLOTS; i++) {
-            ItemStack sample = getStack(SAMPLE_START_SLOT + i);
-            if (!sample.isEmpty()) {
-                sample.decrement(1);
-            }
-        }
-
-        phase = ElectrophoresisPhase.COMPLETE;
-        setActive(false);
-    }
-
-    public void reset() {
-        phase = ElectrophoresisPhase.IDLE;
-        voltage = 0;
-        runTimeRemaining = 0;
-        progress = 0;
-        gelReady = false;
-        bandPatterns.clear();
-        for (int i = 0; i < bandCounts.length; i++) {
-            bandCounts[i] = 0;
-        }
-        setActive(false);
-        markDirty();
-    }
-
-    // ========== Getters ==========
-
-    public ElectrophoresisPhase getPhase() { return phase; }
-    public int getVoltage() { return voltage; }
-    public int getTargetVoltage() { return targetVoltage; }
-    public int getRunTimeRemaining() { return runTimeRemaining; }
-    public float getGelPercentage() { return gelPercentage; }
-    public boolean isGelReady() { return gelReady; }
-    public float[][] getBandPositions() { return bandPositions; }
-    public int[] getBandCounts() { return bandCounts; }
-    public List<BandPattern> getBandPatterns() { return bandPatterns; }
-
-    public void setTargetVoltage(int v) {
-        int maxV = spec != null ? spec.maxVoltage() : 100;
-        this.targetVoltage = Math.max(10, Math.min(maxV, v));
-    }
-
-    public void setGelPercentage(float pct) {
-        this.gelPercentage = Math.max(0.5f, Math.min(3.0f, pct));
-    }
-
-    // ========== NBT ==========
-
-    @Override
-    protected void writeNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
-        super.writeNbt(nbt, registryLookup);
-        nbt.putString("Phase", phase.name());
-        nbt.putInt("Voltage", voltage);
-        nbt.putInt("TargetVoltage", targetVoltage);
-        nbt.putInt("RunTimeRemaining", runTimeRemaining);
-        nbt.putInt("TotalRunTime", totalRunTime);
-        nbt.putFloat("GelPercentage", gelPercentage);
-        nbt.putBoolean("GelReady", gelReady);
-        nbt.putIntArray("BandCounts", bandCounts);
-
-        // Save band positions
-        NbtList posList = new NbtList();
-        for (float[] lanePositions : bandPositions) {
-            NbtCompound laneNbt = new NbtCompound();
-            for (int i = 0; i < lanePositions.length; i++) {
-                laneNbt.putFloat("b" + i, lanePositions[i]);
-            }
-            posList.add(laneNbt);
-        }
-        nbt.put("BandPositions", posList);
-
-        // Save band patterns
-        NbtList patternList = new NbtList();
-        for (BandPattern pattern : bandPatterns) {
-            NbtCompound p = new NbtCompound();
-            p.putInt("Lane", pattern.lane);
-            p.putInt("Index", pattern.bandIndex);
-            p.putInt("Size", pattern.size);
-            p.putFloat("Intensity", pattern.intensity);
-            patternList.add(p);
-        }
-        nbt.put("BandPatterns", patternList);
-    }
-
-    @Override
-    protected void readNbt(NbtCompound nbt, RegistryWrapper.WrapperLookup registryLookup) {
-        super.readNbt(nbt, registryLookup);
-        try {
-            phase = ElectrophoresisPhase.valueOf(nbt.getString("Phase"));
-        } catch (Exception e) {
-            phase = ElectrophoresisPhase.IDLE;
-        }
-        voltage = nbt.getInt("Voltage");
-        targetVoltage = nbt.getInt("TargetVoltage");
-        runTimeRemaining = nbt.getInt("RunTimeRemaining");
-        totalRunTime = nbt.getInt("TotalRunTime");
-        gelPercentage = nbt.getFloat("GelPercentage");
-        gelReady = nbt.getBoolean("GelReady");
-
-        int[] counts = nbt.getIntArray("BandCounts");
-        if (counts.length > 0) {
-            System.arraycopy(counts, 0, bandCounts, 0, Math.min(counts.length, bandCounts.length));
-        }
-
-        // Load band positions
-        NbtList posList = nbt.getList("BandPositions", 10);
-        for (int lane = 0; lane < Math.min(posList.size(), bandPositions.length); lane++) {
-            NbtCompound laneNbt = posList.getCompound(lane);
-            for (int i = 0; i < bandPositions[lane].length; i++) {
-                bandPositions[lane][i] = laneNbt.getFloat("b" + i);
-            }
-        }
-
-        // Load band patterns
-        bandPatterns.clear();
-        NbtList patternList = nbt.getList("BandPatterns", 10);
-        for (int i = 0; i < patternList.size(); i++) {
-            NbtCompound p = patternList.getCompound(i);
-            bandPatterns.add(new BandPattern(
-                p.getInt("Lane"),
-                p.getInt("Index"),
-                p.getInt("Size"),
-                p.getFloat("Intensity")
-            ));
-        }
-
-        updateSpec();
-    }
-
-    // ========== Screen ==========
-
-    @Override
-    public Text getDisplayName() {
-        String key = switch (tier) {
-            case BASIC -> "block.morerealisticgeneediting.portable_electrophoresis";
-            case ADVANCED -> "block.morerealisticgeneediting.vertical_electrophoresis";
-            case ELITE -> "block.morerealisticgeneediting.auto_electrophoresis";
+    };
+    public ElectrophoresisBlockEntity(BlockEntityType<?> type,BlockPos pos,BlockState state){super(type,pos,state,SLOTS);updateSpec();}
+    private void updateSpec(){spec=EquipmentSpecs.getElectrophoresisSpec(tier);}
+    @Override public void setTier(EquipmentTier tier){super.setTier(tier);updateSpec();if(!isProcessing)targetVoltage=Math.min(targetVoltage,spec.maxVoltage());}
+    @Override protected boolean isInputSlot(int slot){return slot>=0&&slot<SLOTS;}
+    @Override protected boolean isOutputSlot(int slot){return false;}
+    @Override public boolean isValid(int slot,ItemStack stack){
+        if(isProcessing||stack.isEmpty()||slot<0||slot>=SLOTS)return false;
+        return switch(slot){
+            case GEL_SLOT->stack.isOf(ModItems.AGAROSE_GEL);
+            case BUFFER_SLOT->stack.isOf(LabEquipmentItems.TAE_BUFFER)||stack.isOf(LabEquipmentItems.TBE_BUFFER);
+            case LADDER_SLOT->getLadderSizes(stack).length>0;
+            case STAIN_SLOT->stack.isOf(LabEquipmentItems.SYBR_SAFE)||stack.isOf(LabEquipmentItems.ETHIDIUM_BROMIDE);
+            case LOADING_DYE_SLOT->stack.isOf(LabEquipmentItems.LOADING_DYE);
+            default->isSample(stack)&&fragments(stack).length>0;
         };
-        return Text.translatable(key);
     }
-
-    @Nullable
-    @Override
-    public ScreenHandler createMenu(int syncId, PlayerInventory playerInventory, PlayerEntity player) {
-        // TODO: Create ElectrophoresisScreenHandler
-        return null;
+    private boolean isSample(ItemStack stack){return stack.isOf(ModItems.DNA_SAMPLE)||stack.isOf(ModItems.GENOME_SAMPLE)||stack.isOf(ModItems.AMPLIFIED_GENE_FRAGMENT);}
+    private int[] fragments(ItemStack sample){NbtCompound data=StackData.read(sample);return MeasurementModels.fragmentSizes(data.getIntArray("FragmentSizes"),data.getInt("FragmentLength"));}
+    @Override protected boolean canProcess(){
+        if(phase!=ElectrophoresisPhase.IDLE||isProcessing||reserved.stream().anyMatch(stack->!stack.isEmpty()))return false;
+        for(int slot=0;slot<SAMPLE_START_SLOT;slot++)if(!isValid(slot,getStack(slot)))return false;
+        boolean any=false;
+        for(int slot=SAMPLE_START_SLOT;slot<SLOTS;slot++)if(!getStack(slot).isEmpty()){
+            if(!isValid(slot,getStack(slot)))return false;any=true;
+        }
+        return any;
     }
-
-    // ========== Inner Classes ==========
-
-    public record BandPattern(int lane, int bandIndex, int size, float intensity) {}
+    public void startElectrophoresis(){
+        if(world==null||world.isClient||!canProcess())return;
+        clearResults();
+        addBands(0,getLadderSizes(getStack(LADDER_SLOT)));
+        for(int sample=0;sample<MAX_SAMPLE_SLOTS;sample++){
+            ItemStack stack=getStack(SAMPLE_START_SLOT+sample);
+            if(!stack.isEmpty()){sampleSnapshots[sample]=StackData.read(stack);addBands(sample+1,fragments(stack));}
+        }
+        for(int slot=0;slot<SLOTS;slot++)if(!getStack(slot).isEmpty())reserved.set(slot,getStack(slot).split(1));
+        phase=ElectrophoresisPhase.PREPARING;progress=0;maxProgress=40;voltage=0;runTimeRemaining=0;
+        setActive(true);markDirty();
+    }
+    private void addBands(int lane,int[] sizes){
+        bandCounts[lane]=Math.min(MAX_BANDS,sizes.length);
+        for(int band=0;band<bandCounts[lane];band++)bandPatterns.add(new BandPattern(lane,band,sizes[band],1));
+    }
+    @Override public void tick(){
+        if(world==null||world.isClient||isRemoved())return;
+        if(!isProcessing){if(reserved.stream().anyMatch(stack->!stack.isEmpty())||(phase!=ElectrophoresisPhase.IDLE&&phase!=ElectrophoresisPhase.COMPLETE))reset();return;}
+        progress++;
+        if(phase==ElectrophoresisPhase.RUNNING){
+            runTimeRemaining=Math.max(0,totalRunTime-progress);
+            for(BandPattern band:bandPatterns)bandPositions[band.lane][band.bandIndex]=MeasurementModels.bandPosition(
+                    band.size,voltage/(float)Math.max(1,spec.maxVoltage()),Math.min(1,(float)progress/totalRunTime),gelPercentage);
+        }
+        if(progress>=maxProgress)switch(phase){
+            case PREPARING->{gelReady=true;phase=ElectrophoresisPhase.LOADING;progress=0;maxProgress=20;}
+            case LOADING->{phase=ElectrophoresisPhase.RUNNING;voltage=targetVoltage;progress=0;maxProgress=totalRunTime;runTimeRemaining=totalRunTime;}
+            case RUNNING->{voltage=0;phase=ElectrophoresisPhase.STAINING;progress=0;maxProgress=20;}
+            case STAINING->{phase=ElectrophoresisPhase.VISUALIZING;progress=0;maxProgress=20;}
+            case VISUALIZING->completeProcess();
+            default->reset();
+        }
+        markDirty();
+    }
+    @Override protected void completeProcess(){
+        reserved.replaceAll(stack->ItemStack.EMPTY);phase=ElectrophoresisPhase.COMPLETE;progress=maxProgress;
+        voltage=0;runTimeRemaining=0;setActive(false);markDirty();
+    }
+    public void reset(){
+        if(world==null||world.isClient)return;
+        refundReserved();clearResults();phase=ElectrophoresisPhase.IDLE;voltage=0;runTimeRemaining=0;progress=0;maxProgress=40;setActive(false);markDirty();
+    }
+    private void clearResults(){
+        gelReady=false;bandPatterns.clear();Arrays.fill(bandCounts,0);Arrays.fill(sampleSnapshots,null);
+        for(float[] positions:bandPositions)Arrays.fill(positions,0);
+    }
+    private void refundReserved(){
+        for(int slot=0;slot<SLOTS;slot++){
+            ItemStack refund=reserved.get(slot);if(refund.isEmpty())continue;ItemStack current=getStack(slot);
+            if(current.isEmpty())inventory.set(slot,refund);
+            else if(ItemStack.areItemsAndComponentsEqual(current,refund)&&current.getCount()+refund.getCount()<=current.getMaxCount())current.increment(refund.getCount());
+            else ItemScatterer.spawn(world,pos.getX()+.5,pos.getY()+.5,pos.getZ()+.5,refund);
+            reserved.set(slot,ItemStack.EMPTY);
+        }
+    }
+    @Override public void dropContents(World world,BlockPos pos){ItemScatterer.spawn(world,pos,reserved);reserved.replaceAll(stack->ItemStack.EMPTY);super.dropContents(world,pos);}
+    private int[] getLadderSizes(ItemStack ladder){
+        if(ladder.isOf(LabEquipmentItems.DNA_LADDER_100BP))return new int[]{100,200,300,400,500,600,700,800,900,1000};
+        if(ladder.isOf(LabEquipmentItems.DNA_LADDER_1KB))return new int[]{250,500,750,1000,1500,2000,2500,3000,4000,5000,6000,8000,10000};
+        if(ladder.isOf(LabEquipmentItems.DNA_LADDER_1KB_PLUS))return new int[]{100,200,300,400,500,650,850,1000,1650,2000,3000,4000,5000,6000,8000,10000,12000};
+        if(ladder.isOf(ModItems.DNA_LADDER))return new int[]{500,1000,2000,3000,5000};
+        return new int[0];
+    }
+    public ElectrophoresisPhase getPhase(){return phase;}public int getVoltage(){return voltage;}
+    public int getTargetVoltage(){return targetVoltage;}public int getRunTimeRemaining(){return runTimeRemaining;}
+    public float getGelPercentage(){return gelPercentage;}public boolean isGelReady(){return gelReady;}
+    public float[][] getBandPositions(){return Arrays.stream(bandPositions).map(float[]::clone).toArray(float[][]::new);}
+    public int[] getBandCounts(){return bandCounts.clone();}public List<BandPattern> getBandPatterns(){return List.copyOf(bandPatterns);}
+    public void setTargetVoltage(int value){if(!isProcessing){targetVoltage=Math.max(0,Math.min(spec.maxVoltage(),value));markDirty();}}
+    public void setGelPercentage(float value){if(!isProcessing&&Float.isFinite(value)){gelPercentage=Math.max(.5f,Math.min(3,value));markDirty();}}
+    @Override protected void writeNbt(NbtCompound nbt,RegistryWrapper.WrapperLookup lookup){
+        super.writeNbt(nbt,lookup);nbt.putString("Phase",phase.name());nbt.putInt("TargetVoltage",targetVoltage);nbt.putInt("Voltage",voltage);
+        nbt.putInt("RunTimeRemaining",runTimeRemaining);nbt.putInt("TotalRunTime",totalRunTime);nbt.putFloat("GelPercentage",gelPercentage);nbt.putBoolean("GelReady",gelReady);
+        NbtCompound held=new NbtCompound();Inventories.writeNbt(held,reserved,lookup);nbt.put("Reserved",held);
+        NbtList patterns=new NbtList();
+        for(BandPattern band:bandPatterns){NbtCompound b=new NbtCompound();b.putInt("Lane",band.lane);b.putInt("Index",band.bandIndex);b.putInt("Size",band.size);
+            b.putFloat("Position",bandPositions[band.lane][band.bandIndex]);patterns.add(b);}
+        nbt.put("MeasuredBands",patterns);NbtList samples=new NbtList();
+        for(int lane=0;lane<sampleSnapshots.length;lane++)if(sampleSnapshots[lane]!=null){NbtCompound s=new NbtCompound();s.putInt("Lane",lane);s.put("Sample",sampleSnapshots[lane].copy());samples.add(s);}
+        nbt.put("SampleSnapshots",samples);
+    }
+    @Override protected void readNbt(NbtCompound nbt,RegistryWrapper.WrapperLookup lookup){
+        super.readNbt(nbt,lookup);updateSpec();clearResults();
+        try{phase=ElectrophoresisPhase.valueOf(nbt.getString("Phase"));}catch(IllegalArgumentException e){phase=ElectrophoresisPhase.IDLE;}
+        targetVoltage=Math.max(0,Math.min(spec.maxVoltage(),nbt.getInt("TargetVoltage")));voltage=Math.max(0,Math.min(spec.maxVoltage(),nbt.getInt("Voltage")));
+        totalRunTime=Math.max(1,Math.min(2000,nbt.getInt("TotalRunTime")));runTimeRemaining=Math.max(0,Math.min(totalRunTime,nbt.getInt("RunTimeRemaining")));
+        float pct=nbt.getFloat("GelPercentage");gelPercentage=Float.isFinite(pct)?Math.max(.5f,Math.min(3,pct)):1;gelReady=nbt.getBoolean("GelReady");
+        reserved.replaceAll(stack->ItemStack.EMPTY);Inventories.readNbt(nbt.getCompound("Reserved"),reserved,lookup);
+        NbtList patterns=nbt.getList("MeasuredBands",NbtElement.COMPOUND_TYPE);
+        for(int i=0;i<Math.min(LANES*MAX_BANDS,patterns.size());i++){
+            NbtCompound b=patterns.getCompound(i);int lane=b.getInt("Lane"),band=b.getInt("Index"),size=b.getInt("Size");float position=b.getFloat("Position");
+            if(lane<0||lane>=LANES||band<0||band>=MAX_BANDS||size<1||size>1_000_000||!Float.isFinite(position))continue;
+            bandPatterns.add(new BandPattern(lane,band,size,1));bandCounts[lane]=Math.max(bandCounts[lane],band+1);bandPositions[lane][band]=Math.max(0,Math.min(100,position));
+        }
+        NbtList samples=nbt.getList("SampleSnapshots",NbtElement.COMPOUND_TYPE);
+        for(int i=0;i<Math.min(MAX_SAMPLE_SLOTS,samples.size());i++){NbtCompound s=samples.getCompound(i);int lane=s.getInt("Lane");if(lane>=0&&lane<MAX_SAMPLE_SLOTS)sampleSnapshots[lane]=s.getCompound("Sample").copy();}
+        boolean held=reserved.stream().anyMatch(stack->!stack.isEmpty());
+        isProcessing=held&&phase!=ElectrophoresisPhase.IDLE&&phase!=ElectrophoresisPhase.COMPLETE;
+        if(!held&&phase!=ElectrophoresisPhase.COMPLETE){phase=ElectrophoresisPhase.IDLE;clearResults();}
+        progress=Math.max(0,Math.min(maxProgress,progress));
+    }
+    @Override public Text getDisplayName(){return Text.translatable(switch(tier){case BASIC->"block.morerealisticgeneediting.portable_electrophoresis";case ADVANCED->"block.morerealisticgeneediting.vertical_electrophoresis";case ELITE->"block.morerealisticgeneediting.auto_electrophoresis";});}
+    @Override public ScreenHandler createMenu(int id,PlayerInventory inventory,PlayerEntity player){return new ElectrophoresisScreenHandler(id,inventory,this,measurements);}
+    public record BandPattern(int lane,int bandIndex,int size,float intensity){}
 }

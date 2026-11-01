@@ -5,17 +5,10 @@ import com.morerealisticgeneediting.genome.Genome;
 import java.util.*;
 
 /**
- * PcrSimulator - Simulates Polymerase Chain Reaction with realistic outcomes.
- * 
- * This simulator models key aspects of real PCR:
- * - Primer binding and specificity
- * - Amplification efficiency
- * - Error rates (Taq polymerase ~1 error per 10,000 bases)
- * - Cycle-dependent exponential amplification
- * - Non-specific amplification and primer dimers
- * 
- * Educational note: Real PCR efficiency is typically 90-100% per cycle,
- * with amplification following 2^n kinetics where n is the number of cycles.
+ * Bounded educational PCR abstraction. Tm is an approximate sequence-only
+ * heuristic (no salt/concentration correction). Yield, polymerase error and
+ * ranking weights are gameplay settings, not experimentally validated predictions.
+ * One simulated descendant molecule is returned, not a population consensus.
  */
 public class PcrSimulator {
     
@@ -30,7 +23,7 @@ public class PcrSimulator {
     // Melting temperature constants (simplified)
     private static final double TM_BASE = 64.9;
     private static final double TM_GC_CONTRIB = 0.41;
-    private static final double TM_LENGTH_PENALTY = 600.0;
+    public static final int MAX_SEARCH_BASES = 1_000_000;
     
     private final Random random;
     private final long seed;
@@ -52,7 +45,19 @@ public class PcrSimulator {
         boolean hasSelfComplementarity,
         boolean hasPrimerDimerRisk
     ) {
+        public Primer {
+            Objects.requireNonNull(sequence);
+            sequence = sequence.toUpperCase(Locale.ROOT);
+            if (sequence.length() < 6 || sequence.length() > 1000 || !sequence.matches("[ACGT]+")
+                    || !Double.isFinite(meltingTemperature) || !Double.isFinite(gcContent)
+                    || gcContent < 0 || gcContent > 1 || !Double.isFinite(specificity) || specificity < 0 || specificity > 1)
+                throw new IllegalArgumentException("Invalid primer");
+        }
         public static Primer design(String sequence, boolean isForward) {
+            Objects.requireNonNull(sequence);
+            sequence = sequence.toUpperCase(Locale.ROOT);
+            if (sequence.length() < 6 || sequence.length() > 1000 || !sequence.matches("[ACGT]+"))
+                throw new IllegalArgumentException("Invalid primer sequence");
             double tm = calculateMeltingTemperature(sequence);
             double gc = calculateGcContent(sequence);
             double specificity = calculateSpecificity(sequence);
@@ -63,15 +68,16 @@ public class PcrSimulator {
         }
         
         private static double calculateMeltingTemperature(String seq) {
-            // Simplified Tm calculation (Wallace rule + salt adjustment)
+            // Approximate long-oligonucleotide expression; no additional salt correction is modeled.
             int gc = 0, at = 0;
             for (char c : seq.toUpperCase().toCharArray()) {
                 if (c == 'G' || c == 'C') gc++;
                 else if (c == 'A' || c == 'T') at++;
             }
-            // Basic formula: Tm = 4(G+C) + 2(A+T) for short oligos
-            // More accurate: Tm = 64.9 + 41*(G+C-16.4)/N
-            return TM_BASE + TM_GC_CONTRIB * (gc - 16.4) * 100 / seq.length() - TM_LENGTH_PENALTY / seq.length();
+            // Short inputs are accepted only as toy sequences; this long-oligo
+            // approximation is not a thermodynamic model for short oligomers.
+            // Sequence-only approximation: Tm = 64.9 + 41*(G+C-16.4)/N
+            return TM_BASE + TM_GC_CONTRIB * (gc - 16.4) * 100 / seq.length();
         }
         
         private static double calculateGcContent(String seq) {
@@ -82,8 +88,8 @@ public class PcrSimulator {
         }
         
         private static double calculateSpecificity(String seq) {
-            // Simplified specificity score based on sequence uniqueness
-            double score = 0.8;
+            // Sequence-complexity ranking; no genome-wide specificity search.
+            double score = 0.8; // Complexity ranking only; not a reference-genome specificity measurement.
             
             // Penalize repetitive sequences
             if (hasRepeats(seq)) score -= 0.2;
@@ -145,6 +151,13 @@ public class PcrSimulator {
         double mgConcentration,  // mM
         double dntpConcentration  // uM
     ) {
+        public ReactionParameters {
+            if (cycles < 1 || cycles > 60 || !Double.isFinite(annealingTemp) || annealingTemp < 0 || annealingTemp > 100
+                    || !Double.isFinite(extensionTime) || extensionTime <= 0 || extensionTime > 10_000
+                    || !Double.isFinite(mgConcentration) || mgConcentration < 0
+                    || !Double.isFinite(dntpConcentration) || dntpConcentration < 0)
+                throw new IllegalArgumentException("Invalid simulation settings");
+        }
         public static ReactionParameters standard() {
             return new ReactionParameters(30, 55.0, 60.0, false, 1.5, 200.0);
         }
@@ -174,9 +187,9 @@ public class PcrSimulator {
      */
     public record PcrQualityMetrics(
         double efficiency,      // Per-cycle efficiency
-        double specificity,     // Single band vs multiple bands
-        boolean hasPrimerDimers,
-        boolean hasNonSpecificBands,
+        double specificity,     // Legacy name for sequence-complexity ranking
+        boolean hasPrimerDimers, // Legacy name: heuristic risk, not observed dimers
+        boolean hasNonSpecificBands, // False means not modeled, not excluded
         double estimatedPurity
     ) {}
     
@@ -190,11 +203,15 @@ public class PcrSimulator {
      * @return Pair of forward and reverse primers
      */
     public List<Primer> designPrimers(Genome genome, long targetStart, long targetEnd, int primerLength) {
-        // Get flanking sequences for primer design
-        int flankingSize = primerLength + 50;  // Extra for optimization
-        
-        String upstreamRegion = genome.getSequence(targetStart - flankingSize, flankingSize);
-        String downstreamRegion = genome.getSequence(targetEnd, flankingSize);
+        Objects.requireNonNull(genome);
+        if (primerLength < MIN_PRIMER_LENGTH || primerLength > MAX_PRIMER_LENGTH || targetStart < 0
+                || targetEnd < targetStart || targetEnd > genome.getTotalLength())
+            throw new IllegalArgumentException("Invalid design interval or primer length");
+        int flankingSize = primerLength + 50;
+        long upstreamStart = Math.max(0, targetStart - flankingSize);
+        String upstreamRegion = genome.getSequence(upstreamStart, (int) (targetStart - upstreamStart));
+        String downstreamRegion = genome.getSequence(targetEnd,
+                (int) Math.min(flankingSize, genome.getTotalLength() - targetEnd));
         
         List<Primer> candidates = new ArrayList<>();
         
@@ -230,8 +247,18 @@ public class PcrSimulator {
      * @return PCR result
      */
     public PcrResult runPcr(Genome genome, Primer forwardPrimer, Primer reversePrimer, ReactionParameters params) {
+        Objects.requireNonNull(genome); Objects.requireNonNull(params);
+        Objects.requireNonNull(forwardPrimer); Objects.requireNonNull(reversePrimer);
+        if (!forwardPrimer.isForward() || reversePrimer.isForward())
+            throw new IllegalArgumentException("Expected forward and reverse primers");
+        if (genome.getTotalLength() > MAX_SEARCH_BASES)
+            throw new IllegalArgumentException("PCR search budget exceeded; use a bounded sample");
         List<String> warnings = new ArrayList<>();
-        
+        warnings.add("Teaching approximation: sequence-only Tm and illustrative yield/error settings; not a laboratory protocol.");
+        if (params.dntpConcentration() == 0 || params.mgConcentration() == 0) {
+            warnings.add("Required reaction components are absent in the simulated mixture.");
+            return failedResult(warnings);
+        }
         // Validate primers
         if (!validatePrimerPair(forwardPrimer, reversePrimer, warnings)) {
             return new PcrResult(false, "", 0, 0, 0, 0, List.of(), warnings,
@@ -245,14 +272,16 @@ public class PcrSimulator {
             return failedResult(warnings);
         }
         
-        long reverseSite = findPrimerBindingSite(genome, reversePrimer, forwardSite, genome.getTotalLength());
+        long reverseSite = findPrimerBindingSite(genome, reversePrimer, forwardSite + forwardPrimer.sequence().length(), genome.getTotalLength());
         if (reverseSite < 0) {
             warnings.add("Reverse primer binding site not found");
             return failedResult(warnings);
         }
         
         // Calculate amplicon length
-        int ampliconLength = (int)(reverseSite - forwardSite + reversePrimer.sequence().length());
+        long span = reverseSite - forwardSite + reversePrimer.sequence().length();
+        if (span < 1 || span > MAX_SEARCH_BASES) throw new IllegalArgumentException("Amplicon exceeds simulation budget");
+        int ampliconLength = (int) span;
         if (ampliconLength > 10000) {
             warnings.add("Amplicon too long for standard PCR: " + ampliconLength + "bp");
         }
@@ -273,19 +302,19 @@ public class PcrSimulator {
         // Calculate quality metrics
         double specificity = calculateSpecificityScore(forwardPrimer, reversePrimer);
         boolean hasDimers = forwardPrimer.hasPrimerDimerRisk() || reversePrimer.hasPrimerDimerRisk();
-        boolean hasNonSpecific = random.nextDouble() < (1 - specificity);
+        boolean hasNonSpecific = false; // No alternative-product search is implemented; do not invent detections.
         
         PcrQualityMetrics quality = new PcrQualityMetrics(
             efficiency,
             specificity,
             hasDimers,
             hasNonSpecific,
-            hasDimers || hasNonSpecific ? 0.7 : 0.95
+            Double.NaN // Purity requires a separate observation model.
         );
         
         // Check for warnings
-        if (hasDimers) warnings.add("Primer dimers detected");
-        if (hasNonSpecific) warnings.add("Non-specific amplification detected");
+        if (hasDimers) warnings.add("Primer-dimer risk heuristic; presence is not experimentally established");
+        if (hasNonSpecific) warnings.add("Non-specific amplification not evaluated");
         if (!mutations.isEmpty()) warnings.add("PCR errors introduced: " + mutations.size());
         
         return new PcrResult(
@@ -318,11 +347,8 @@ public class PcrSimulator {
                 return pos + idx;
             }
             
-            // Also check for mismatched binding (up to 2 mismatches at 5' end)
-            idx = findWithMismatches(chunk, searchSeq, 2);
-            if (idx >= 0) {
-                return pos + idx;
-            }
+            // This bounded teaching model requires an exact site. Mismatch tolerance
+            // and 3-prime extension kinetics need a separate validated model.
         }
         
         return -1;  // Not found
@@ -390,10 +416,10 @@ public class PcrSimulator {
         char[] result = template.toCharArray();
         char[] bases = {'A', 'C', 'G', 'T'};
         
-        // Error probability increases with cycles (errors accumulate)
-        // Simplified model: total error rate = 1 - (1 - errorRate)^(cycles * length)
+        // A single descendant lineage: per-base probability of one or more errors.
+        double accumulatedError = -Math.expm1(cycles * Math.log1p(-errorRate));
         for (int i = 0; i < result.length; i++) {
-            if (random.nextDouble() < errorRate * cycles) {
+            if (random.nextDouble() < accumulatedError) {
                 char original = result[i];
                 char newBase;
                 do {

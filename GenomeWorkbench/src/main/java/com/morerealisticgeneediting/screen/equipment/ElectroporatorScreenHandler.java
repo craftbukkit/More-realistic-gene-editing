@@ -1,138 +1,51 @@
 package com.morerealisticgeneediting.screen.equipment;
 
-import net.minecraft.entity.player.PlayerEntity;
-import net.minecraft.entity.player.PlayerInventory;
-import net.minecraft.inventory.Inventory;
-import net.minecraft.inventory.SimpleInventory;
+import com.morerealisticgeneediting.block.entity.ElectroporatorBlockEntity;
+import com.morerealisticgeneediting.screen.slot.MachineSlot;
+import net.minecraft.entity.player.*;
+import net.minecraft.inventory.*;
 import net.minecraft.item.ItemStack;
-import net.minecraft.screen.ArrayPropertyDelegate;
-import net.minecraft.screen.PropertyDelegate;
-import net.minecraft.screen.ScreenHandler;
+import net.minecraft.screen.*;
 import net.minecraft.screen.slot.Slot;
 
-/**
- * Screen Handler for Electroporator equipment
- * 
- * Slot Layout:
- * - Slot 0: Cells to transform
- * - Slot 1: DNA/Plasmid to introduce
- * - Slot 2: Electroporation cuvette
- * - Slot 3: Electroporation buffer
- * - Slot 4: Output (transformed cells)
- */
 public class ElectroporatorScreenHandler extends ScreenHandler {
-    
+    private static final int SLOTS=5,INPUTS=4;
     private final Inventory inventory;
-    private final PropertyDelegate propertyDelegate;
-    
-    // Property indices
-    public static final int VOLTAGE_INDEX = 0;
-    public static final int PULSE_LENGTH_INDEX = 1;
-    public static final int PULSE_COUNT_INDEX = 2;
-    public static final int PROGRESS_INDEX = 3;
-    public static final int MAX_PROGRESS_INDEX = 4;
-    public static final int TIER_INDEX = 5;
-    
-    public ElectroporatorScreenHandler(int syncId, PlayerInventory playerInventory) {
-        this(syncId, playerInventory, new SimpleInventory(5), new ArrayPropertyDelegate(6));
+    private final PropertyDelegate properties;
+    public ElectroporatorScreenHandler(int id,PlayerInventory playerInventory){this(id,playerInventory,new SimpleInventory(SLOTS),new ArrayPropertyDelegate(6));}
+    public ElectroporatorScreenHandler(int id,PlayerInventory playerInventory,Inventory inventory,PropertyDelegate properties){
+        super(ModEquipmentScreenHandlers.ELECTROPORATOR_SCREEN_HANDLER,id);checkSize(inventory,SLOTS);checkDataCount(properties,6);
+        this.inventory=inventory;this.properties=properties;inventory.onOpen(playerInventory.player);
+        addSlot(new MachineSlot(inventory,0,26,17,false));
+        addSlot(new MachineSlot(inventory,1,44,17,false));
+        addSlot(new MachineSlot(inventory,2,26,53,false));
+        addSlot(new MachineSlot(inventory,3,44,53,false));
+        addSlot(new MachineSlot(inventory,4,116,35,true));
+        addPlayerSlots(playerInventory);addProperties(properties);
     }
-    
-    public ElectroporatorScreenHandler(int syncId, PlayerInventory playerInventory,
-                                       Inventory inventory, PropertyDelegate delegate) {
-        super(ModEquipmentScreenHandlers.ELECTROPORATOR_SCREEN_HANDLER, syncId);
-        
-        checkSize(inventory, 5);
-        this.inventory = inventory;
-        this.propertyDelegate = delegate;
-        
-        inventory.onOpen(playerInventory.player);
-        
-        // Cells slot
-        this.addSlot(new Slot(inventory, 0, 35, 17) {
-            @Override public boolean canInsert(ItemStack stack) {
-                return stack.getItem().toString().contains("cell") ||
-                       stack.getItem().toString().contains("culture");
-            }
-        });
-        
-        // DNA/Plasmid slot
-        this.addSlot(new Slot(inventory, 1, 53, 17) {
-            @Override public boolean canInsert(ItemStack stack) {
-                return stack.getItem().toString().contains("dna") ||
-                       stack.getItem().toString().contains("plasmid") ||
-                       stack.getItem().toString().contains("rnp");
-            }
-        });
-        
-        // Cuvette slot
-        this.addSlot(new Slot(inventory, 2, 44, 35) {
-            @Override public boolean canInsert(ItemStack stack) {
-                return stack.getItem().toString().contains("cuvette");
-            }
-        });
-        
-        // Buffer slot
-        this.addSlot(new Slot(inventory, 3, 44, 53) {
-            @Override public boolean canInsert(ItemStack stack) {
-                return stack.getItem().toString().contains("buffer") ||
-                       stack.getItem().toString().contains("electroporation");
-            }
-        });
-        
-        // Output slot
-        this.addSlot(new OutputSlot(inventory, 4, 116, 35));
-        
-        addPlayerInventory(playerInventory);
-        addPlayerHotbar(playerInventory);
-        addProperties(delegate);
+    @Override public boolean onButtonClick(PlayerEntity player,int id){
+        if(!canUse(player)||!(inventory instanceof ElectroporatorBlockEntity machine)||player.getWorld().isClient)return false;
+        switch(id){case 0->machine.pulse();case 1->machine.cancel();default->{return false;}}
+        return true;
     }
-    
-    @Override
-    public ItemStack quickMove(PlayerEntity player, int invSlot) {
-        ItemStack newStack = ItemStack.EMPTY;
-        Slot slot = this.slots.get(invSlot);
-        if (slot != null && slot.hasStack()) {
-            ItemStack originalStack = slot.getStack();
-            newStack = originalStack.copy();
-            if (invSlot < 5) {
-                if (!this.insertItem(originalStack, 5, 41, true)) return ItemStack.EMPTY;
-            } else {
-                if (!this.insertItem(originalStack, 0, 4, false)) return ItemStack.EMPTY;
-            }
-            if (originalStack.isEmpty()) slot.setStack(ItemStack.EMPTY);
-            else slot.markDirty();
-        }
-        return newStack;
+    @Override public boolean canUse(PlayerEntity player){return inventory.canPlayerUse(player);}
+    @Override public void onClosed(PlayerEntity player){super.onClosed(player);inventory.onClose(player);}
+    @Override public ItemStack quickMove(PlayerEntity player,int index){
+        if(index<0||index>=slots.size()||!canUse(player))return ItemStack.EMPTY;
+        Slot slot=slots.get(index);if(!slot.hasStack()||!slot.canTakeItems(player))return ItemStack.EMPTY;
+        ItemStack source=slot.getStack(),before=source.copy();
+        if(index<SLOTS){if(!insertItem(source,SLOTS,slots.size(),true))return ItemStack.EMPTY;}
+        else if(!insertItem(source,0,INPUTS,false))return ItemStack.EMPTY;
+        if(source.isEmpty())slot.setStack(ItemStack.EMPTY);else slot.markDirty();
+        slot.onTakeItem(player,source);return before;
     }
-    
-    @Override
-    public boolean canUse(PlayerEntity player) { return inventory.canPlayerUse(player); }
-    
-    private void addPlayerInventory(PlayerInventory inv) {
-        for (int i = 0; i < 3; ++i)
-            for (int l = 0; l < 9; ++l)
-                this.addSlot(new Slot(inv, l + i * 9 + 9, 8 + l * 18, 84 + i * 18));
+    private void addPlayerSlots(PlayerInventory inventory){
+        for(int row=0;row<3;row++)for(int column=0;column<9;column++)
+            addSlot(new Slot(inventory,9+row*9+column,8+column*18,84+row*18));
+        for(int column=0;column<9;column++)addSlot(new Slot(inventory,column,8+column*18,142));
     }
-    
-    private void addPlayerHotbar(PlayerInventory inv) {
-        for (int i = 0; i < 9; ++i)
-            this.addSlot(new Slot(inv, i, 8 + i * 18, 142));
-    }
-    
-    // Property getters
-    public int getVoltage() { return propertyDelegate.get(VOLTAGE_INDEX); }
-    public int getPulseLength() { return propertyDelegate.get(PULSE_LENGTH_INDEX); }
-    public int getPulseCount() { return propertyDelegate.get(PULSE_COUNT_INDEX); }
-    public int getProgress() { return propertyDelegate.get(PROGRESS_INDEX); }
-    public int getMaxProgress() { return propertyDelegate.get(MAX_PROGRESS_INDEX); }
-    public float getProgressPercent() {
-        int max = getMaxProgress();
-        return max > 0 ? (float) getProgress() / max : 0;
-    }
-    public int getTier() { return propertyDelegate.get(TIER_INDEX); }
-    
-    private static class OutputSlot extends Slot {
-        public OutputSlot(Inventory inv, int i, int x, int y) { super(inv, i, x, y); }
-        @Override public boolean canInsert(ItemStack stack) { return false; }
-    }
+    public static final int VOLTAGE_INDEX=0,PULSE_LENGTH_INDEX=1,PULSE_COUNT_INDEX=2,PROGRESS_INDEX=3,MAX_PROGRESS_INDEX=4,TIER_INDEX=5;
+    public int getVoltage(){return properties.get(0);}public int getPulseLength(){return properties.get(1);}public int getPulseCount(){return properties.get(2);}
+    public int getProgress(){return properties.get(3);}public int getMaxProgress(){return properties.get(4);}public int getTier(){return properties.get(5);}
+    public float getProgressPercent(){return getMaxProgress()>0?(float)getProgress()/getMaxProgress():0;}
 }

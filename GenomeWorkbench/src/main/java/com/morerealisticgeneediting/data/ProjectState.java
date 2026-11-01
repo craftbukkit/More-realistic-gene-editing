@@ -75,7 +75,7 @@ public class ProjectState {
      * Advances the project to a new step. Logic should be server-side.
      */
     public void advanceTo(Step newStep) {
-        // In a real implementation, we would check for valid state transitions
+        if(newStep==null || completed || newStep==Step.COMPLETED || newStep.ordinal()!=currentStep.ordinal()+1) throw new IllegalStateException("Invalid project transition");
         this.currentStep = newStep;
     }
 
@@ -83,7 +83,7 @@ public class ProjectState {
      * Adds a piece of evidence, checking for size limits. Server-side only.
      */
     public boolean addEvidence(UUID reportId) {
-        if (evidenceChain.size() < MAX_EVIDENCE_CHAIN_SIZE) {
+        if (reportId!=null && !completed && !evidenceChain.contains(reportId) && evidenceChain.size() < MAX_EVIDENCE_CHAIN_SIZE) {
             return this.evidenceChain.add(reportId);
         }
         return false;
@@ -93,6 +93,7 @@ public class ProjectState {
      * Completes the project. Server-side only.
      */
     public void completeProject(double finalScore) {
+        if(completed || currentStep!=Step.PEER_REVIEWED || evidenceChain.isEmpty() || !Double.isFinite(finalScore) || finalScore<0 || finalScore>100)throw new IllegalStateException("Project completion requires reviewed evidence and a valid score");
         this.score = finalScore;
         this.completed = true;
         this.currentStep = Step.COMPLETED;
@@ -102,6 +103,7 @@ public class ProjectState {
      * Marks the reward as claimed. Server-side only.
      */
     public void claimReward() {
+        if(!completed || rewardClaimed)throw new IllegalStateException("Reward unavailable");
         this.rewardClaimed = true;
     }
 

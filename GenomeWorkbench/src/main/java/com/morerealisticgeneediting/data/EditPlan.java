@@ -27,7 +27,7 @@ public class EditPlan {
         this.targetLocus = targetLocus;
     }
 
-    // Getters...
+    public UUID getPlanId(){return planId;} public UUID getTargetSampleId(){return targetSampleId;} public UUID getConstructId(){return constructId;} public long getTargetLocus(){return targetLocus;}
 
     public NbtCompound writeNbt() {
         NbtCompound nbt = new NbtCompound();
